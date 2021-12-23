@@ -6,38 +6,47 @@ from word_embedding_layer import WordEmbeddingLayer
 
 
 class TestWordEmbeddingLayer(TestCase):
-    def test_build(self):
-        self.fail()
 
     def test_call(self):
+        # ####################
         # Arrange
+        # ####################
         emb_size = 5
-        emb_matrix = np.asarray([
-            [1, 2, 3, 4, 5],
-            [6, 7, 8, 9, 10],
-            [11, 12, 13, 14, 15],
-            [16, 17, 18, 19, 20]  # <UNK>
-        ])
-        # 4 words
-        # 0 = padding
-        # 1 - 19 = vocab_size
-        # 20 = <UNK>
-        n_special_words = 1
-        vocab_size = len(emb_matrix)  # - n_special_words + 1  # +1 for padding
+        vocab_size = 4
+        max_input_length = 8
 
-        s = WordEmbeddingLayer(emb_size, emb_matrix, vocab_size, n_special_words)
+        # Force float32 precision, otherwise the comparison with tensors would not work correctly.
+        emb_matrix = np.random.rand(vocab_size, emb_size).astype(np.float32)
 
-        sentence_input = np.asarray(
-            [[1, 2, 3, 2, 4, 3, 0, 0]]
+        # 0 is padding reserved, and it is considered in the layer itself
+        n_special_words = 1  # just the <UNK>
+        vocab_size = len(emb_matrix)
+
+        emb_layer = WordEmbeddingLayer(emb_size, emb_matrix, vocab_size, n_special_words)
+
+        sentences_input = np.asarray(
+            [
+                [1, 2, 3, 2, 4, 3, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [2, 0, 0, 0, 0, 0, 0, 0],
+                [4, 0, 0, 0, 0, 0, 0, 0]
+            ]
         )
 
+        # Create the expected output result
+        expexted_result = np.zeros((len(sentences_input), max_input_length, emb_size), dtype=np.float32)
+        for i, sentence in enumerate(sentences_input):
+            for j, token in enumerate(sentence):
+                if token != 0:
+                    expexted_result[i, j] = emb_matrix[token - 1]
 
+        # ####################
         # Act
-        res = s(sentence_input)
+        # ####################
+        result = emb_layer(sentences_input)
 
+        # ####################
         # Assert
+        # ####################
+        np.testing.assert_array_equal(result, expexted_result)
 
-        self.fail()
-
-    def test__set_weights(self):
-        self.fail()

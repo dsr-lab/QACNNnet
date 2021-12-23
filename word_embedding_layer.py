@@ -5,7 +5,7 @@ import tensorflow as tf
 class WordEmbeddingLayer(tf.keras.layers.Layer):
 
     # input-independent initialization
-    def __init__(self, emb_size, emb_weight_matrix, vocab_size, n_special_tokens):
+    def __init__(self, emb_size, pretrained_weights, vocab_size, n_special_tokens):
         super(WordEmbeddingLayer, self).__init__()
 
         # Set variables
@@ -13,12 +13,12 @@ class WordEmbeddingLayer(tf.keras.layers.Layer):
         self.vocab_size = vocab_size
         self.n_special_tokens = n_special_tokens
 
-        # Placeholders (Defined later).
+        # Placeholders (Defined later)
         self.emb_layer = None
         self.special_emb_layer = None
 
         self.emb_layer_weights, self.special_emb_layer_weights = \
-            self._set_weights(emb_weight_matrix, emb_size, n_special_tokens)
+            self._set_weights(pretrained_weights, emb_size, n_special_tokens)
 
     # input-dependent initialization
     def build(self, input_lenght):
@@ -60,12 +60,14 @@ class WordEmbeddingLayer(tf.keras.layers.Layer):
     def _set_weights(pretrained_weights, emb_size, n_special_tokens):
         zero_val = np.zeros((1, emb_size))
 
+        # Set normal words embedding layer weights
         emb_layer_weights = pretrained_weights[:-n_special_tokens]
         emb_layer_weights = np.insert(emb_layer_weights, 0, zero_val, axis=0)  # Add padding
 
         for i in range(n_special_tokens):
             emb_layer_weights = np.append(emb_layer_weights, zero_val, axis=0)
 
+        # Set special words embedding layer weights
         special_emb_layer_weights = pretrained_weights[-n_special_tokens:]
         special_emb_layer_weights = np.insert(special_emb_layer_weights, 0, zero_val, axis=0)  # Add padding
 
