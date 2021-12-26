@@ -1,8 +1,7 @@
 from unittest import TestCase
 
 import numpy as np
-import tensorflow as tf
-from word_embedding_layer import WordEmbeddingLayer
+from input_embedding.word_embedding_layer import WordEmbeddingLayer
 
 
 class TestWordEmbeddingLayer(TestCase):

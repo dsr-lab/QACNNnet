@@ -1,31 +1,11 @@
 import tensorflow as tf
 import numpy as np
 
+from input_embedding.input_embedding_layer import InputEmbeddingLayer
+
 
 def main():
     print('main function')
-
-    a = np.asarray(
-        [
-            [
-                [
-                    [1, 2, 3, 66, 5],
-                    [1, 2, 32, 4, 5],
-                    [1, 100, 3, 4, 5],
-                    [99, 2, 3, 4, 58]
-                ],
-                [
-                    [1, 2, 3, 4, 5],
-                    [1, 2, 3, 4, 5],
-                    [1, 2, 3, 4, 5],
-                    [1, 2, 3, 4, 5]
-                ],
-            ]
-        ]
-
-    )
-    b = a.shape
-    c = tf.math.reduce_max(a, axis=2)
 
     BATCH_SIZE = 2
     N_WORDS = 2
@@ -35,8 +15,26 @@ def main():
     CONV_SIZE = 3  # blog=5
     VOCAB_SIZE = 100
 
-    sentence_input = np.random.randint(VOCAB_SIZE, size=(BATCH_SIZE, N_WORDS, N_CHAR))
+    c_sentence_input = np.random.randint(50, size=(BATCH_SIZE, N_WORDS, N_CHAR))
+    w_sentences_input = np.random.randint(100, size=(BATCH_SIZE, N_WORDS))
 
+
+    input_embedding_layer = InputEmbeddingLayer(
+        w_emb_size=20,
+        w_pretrained_weights=np.random.rand(100, 20).astype(np.float32),
+        w_vocab_size=100,
+        w_n_special_tokens=1,
+        c_emb_size=20,
+        c_vocab_size=50,
+        c_conv_output_size=5)
+
+    embedded_input = input_embedding_layer(w_sentences_input, c_sentence_input)
+    embedded_input_shape = embedded_input.shape
+
+    # s3 = tf.concat([s1, s2], axis=2)
+    # s4 = tf.keras.layers.concatenate([s1, s2], axis=2)
+
+    sentence_input = np.random.randint(50, size=(BATCH_SIZE, N_WORDS, N_CHAR))
     emb = tf.keras.layers.Embedding(VOCAB_SIZE, EMB_SIZE, input_length=6)
     x = emb(sentence_input)
 
@@ -50,7 +48,8 @@ def main():
     x2 = tf.reshape(x, [BATCH_SIZE * N_WORDS, N_CHAR, EMB_SIZE])
     y2 = conv_layer(x2)
 
-    y2 = tf.reduce_max(y2, axis=1)
+    # y2 = tf.reduce_max(y2, axis=1)
+    y2 = tf.keras.layers.GlobalMaxPool1D()(y2)
     y2 = tf.reshape(y2, [BATCH_SIZE, N_WORDS, N_FILTER])
 
     if (y.numpy() == y2.numpy()).all():
@@ -62,7 +61,6 @@ def main():
 
 
 def highway(x, activation=None, num_layers=2, dropout=0.0):
-
     # size = kernel_number (last x dimension)
     n_filters = x.shape[-1]  # output channels equal to input channels
     kernel_size = 1

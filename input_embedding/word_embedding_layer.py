@@ -8,17 +8,17 @@ class WordEmbeddingLayer(tf.keras.layers.Layer):
     def __init__(self, emb_size, pretrained_weights, vocab_size, n_special_tokens):
         super(WordEmbeddingLayer, self).__init__()
 
-        # Set variables
+        # Class variables
         self.emb_size = emb_size
         self.vocab_size = vocab_size
         self.n_special_tokens = n_special_tokens
 
-        # Placeholders (Defined later)
-        self.emb_layer = None
-        self.special_emb_layer = None
-
         self.emb_layer_weights, self.special_emb_layer_weights = \
             self._set_weights(pretrained_weights, emb_size, n_special_tokens)
+
+        # Trainable layers
+        self.emb_layer = None
+        self.special_emb_layer = None
 
     # input-dependent initialization
     def build(self, input_lenght):

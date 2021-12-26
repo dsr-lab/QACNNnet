@@ -1,28 +1,18 @@
-import numpy as np
 import tensorflow as tf
 
 
 class CharEmbeddingLayer(tf.keras.layers.Layer):
 
-    """
-    The input that we should expect here is:
-    [
-        [[h, e, l, l, o], [w, o, r, l, d]],  # Sentece 1
-        [[h, e, l, l, o], [w, o, r, l, d]],  # Sentece 2
-        ...                                  # batch size
-    ]
-    """
-
-    # Create a matrix with all the words s
-
-
     # input-independent initialization
-    def __init__(self, emb_size):
+    def __init__(self, emb_size, vocab_size, conv_output_size=96, conv_kernel_size=5):
+        super(CharEmbeddingLayer, self).__init__()
 
-        # Set variables
+        # Class variables
         self.emb_size = emb_size
+        self.vocab_size = vocab_size
 
-        # Placeholders (Defined later)
+        # Layers
+        self.conv_layer = tf.keras.layers.Conv1D(conv_output_size, conv_kernel_size, activation='relu')
         self.emb_layer = None
 
     # input-dependent initialization
@@ -37,4 +27,9 @@ class CharEmbeddingLayer(tf.keras.layers.Layer):
 
     # forward computation
     def call(self, inputs):
-        pass
+        y = self.emb_layer(inputs)
+        y = self.conv_layer(y)
+        y = tf.math.reduce_max(y, axis=2)
+
+        return y
+
