@@ -33,9 +33,9 @@ class InputEmbeddingLayer(tf.keras.layers.Layer):
         w_emb = self.word_embedding(w_inputs)
         c_emb = self.char_embedding(c_inputs)
 
-        full_emb = tf.keras.layers.concatenate([w_emb, c_emb], axis=2)
+        final_emb = tf.keras.layers.concatenate([w_emb, c_emb], axis=2)
 
         for highway in self.highway_layers:
-            full_emb = highway(full_emb)
+            final_emb = highway(final_emb)
 
-        return full_emb
+        return final_emb

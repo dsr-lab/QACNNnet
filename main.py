@@ -7,7 +7,7 @@ from input_embedding.input_embedding_layer import InputEmbeddingLayer
 def main():
     print('main function')
 
-    BATCH_SIZE = 2
+    BATCH_SIZE = 2  # 32 in the paper
     N_WORDS = 2
     N_CHAR = 6
     N_FILTER = 96  # blog=96
@@ -18,7 +18,6 @@ def main():
     c_sentence_input = np.random.randint(50, size=(BATCH_SIZE, N_WORDS, N_CHAR))
     w_sentences_input = np.random.randint(100, size=(BATCH_SIZE, N_WORDS))
 
-
     input_embedding_layer = InputEmbeddingLayer(
         w_emb_size=20,
         w_pretrained_weights=np.random.rand(100, 20).astype(np.float32),
@@ -26,13 +25,13 @@ def main():
         w_n_special_tokens=1,
         c_emb_size=20,
         c_vocab_size=50,
-        c_conv_output_size=5)
+        c_conv_output_size=5,  # 96 in the blog code, 128 in the paper
+        c_conv_kernel_size=5,  # 5 in the blog code, not clear in the paper (maybe 7??)
+    )
 
     embedded_input = input_embedding_layer(w_sentences_input, c_sentence_input)
     embedded_input_shape = embedded_input.shape
 
-    # s3 = tf.concat([s1, s2], axis=2)
-    # s4 = tf.keras.layers.concatenate([s1, s2], axis=2)
 
     sentence_input = np.random.randint(50, size=(BATCH_SIZE, N_WORDS, N_CHAR))
     emb = tf.keras.layers.Embedding(VOCAB_SIZE, EMB_SIZE, input_length=6)
