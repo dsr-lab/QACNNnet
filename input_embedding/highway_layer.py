@@ -33,7 +33,6 @@ class HighwayLayer(tf.keras.layers.Layer):
 
         if self.dropout is not None:
             h = self.dropout(h)
-            #h = tf.nn.dropout(h, self.dropout)
 
         result = h * t + inputs * (1.0 - t)
         return result

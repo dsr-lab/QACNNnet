@@ -29,11 +29,13 @@ class InputEmbeddingLayer(tf.keras.layers.Layer):
         pass
 
     # forward computation
-    def call(self, w_inputs, c_inputs):
+    def call(self, inputs):
+        w_inputs, c_inputs = inputs
         w_emb = self.word_embedding(w_inputs)
         c_emb = self.char_embedding(c_inputs)
 
-        final_emb = tf.keras.layers.concatenate([w_emb, c_emb], axis=2)
+        #final_emb = tf.keras.layers.concatenate([w_emb, c_emb], axis=2)
+        final_emb = tf.keras.layers.Concatenate(axis=2)([w_emb, c_emb])
 
         for highway in self.highway_layers:
             final_emb = highway(final_emb)
