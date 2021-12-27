@@ -29,7 +29,11 @@ class CharEmbeddingLayer(tf.keras.layers.Layer):
     def call(self, inputs):
         y = self.emb_layer(inputs)
         y = self.conv_layer(y)
-        y = tf.math.reduce_max(y, axis=2)
+        y = self._maxpool(y)
 
         return y
 
+    @staticmethod
+    def _maxpool(x):
+        y = tf.math.reduce_max(x, axis=2)
+        return y
