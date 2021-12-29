@@ -3,8 +3,6 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-#TODO: handle masks
-
 class ContextQueryAttentionLayer (layers.Layer):
 
     def __init__(self, d_model):
@@ -17,8 +15,8 @@ class ContextQueryAttentionLayer (layers.Layer):
 
     def build_similarity_matrix(self, context, query):
 
-        n = tf.shape(context)[1]
-        m = tf.shape(query)[1]
+        n = int(tf.shape(context)[1])
+        m = int(tf.shape(query)[1])
 
         conc_layer = layers.Concatenate(axis=1)
         reshape_layer = layers.Reshape((n,m,self.d_model))
@@ -40,13 +38,22 @@ class ContextQueryAttentionLayer (layers.Layer):
 
         return similarity_matrix
 
-    def build_softmaxed_matrices (self, context, query, similarity_matrix):
+    def build_softmaxed_matrices (self, similarity_matrix, c_mask, q_mask):
+
+        n = int(tf.shape(similarity_matrix)[1])
+        m = int(tf.shape(similarity_matrix)[2])
+
+        repeated_q_mask = layers.RepeatVector(n) (q_mask)
+
+        reshaped_c_mask = layers.Reshape((n,1)) (c_mask)
+        repeated_c_mask = layers.Concatenate(axis=-1) ([reshaped_c_mask for _ in range(m)])
+        repeated_c_mask = layers.Reshape((n,m)) (repeated_c_mask)
 
         softmax_context_layer = layers.Softmax(axis=2)
         softmax_query_layer = layers.Softmax(axis=1)
 
-        context_softmaxed_matrix = softmax_context_layer(similarity_matrix)
-        query_softmaxed_matrix = softmax_query_layer(similarity_matrix)
+        context_softmaxed_matrix = softmax_context_layer(similarity_matrix, mask=repeated_q_mask)
+        query_softmaxed_matrix = softmax_query_layer(similarity_matrix, mask=repeated_c_mask)
 
         return context_softmaxed_matrix, query_softmaxed_matrix
 
@@ -90,7 +97,7 @@ class ContextQueryAttentionLayer (layers.Layer):
 
         similarity_matrix = self.build_similarity_matrix(context, query)
 
-        context_softmaxed_matrix, query_softmaxed_matrix = self.build_softmaxed_matrices(context, query, similarity_matrix)
+        context_softmaxed_matrix, query_softmaxed_matrix = self.build_softmaxed_matrices(similarity_matrix, c_mask, q_mask)
 
         context_to_query, query_to_context = self.build_attention_matrices(context, query, context_softmaxed_matrix, query_softmaxed_matrix)
 
@@ -98,8 +105,11 @@ class ContextQueryAttentionLayer (layers.Layer):
 
         return output
 
+#Test
 test = ContextQueryAttentionLayer(20)
-a = tf.constant(2,shape=(10,5,20),dtype=tf.float32)
-b = tf.constant(3,shape=(10,7,20),dtype=tf.float32)
-build = test([a,b],[None,None])
+a = tf.constant(2,shape=(1,5,20),dtype=tf.float32)
+b = tf.constant(3,shape=(1,7,20),dtype=tf.float32)
+c_mask = tf.convert_to_tensor([[True,True,False,False,False]])
+q_mask = tf.convert_to_tensor([[True,True,True,True,False,False, False]])
+build = test([a,b],[c_mask,q_mask])
 print(build)

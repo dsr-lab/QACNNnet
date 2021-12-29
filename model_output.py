@@ -3,8 +3,6 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-#TODO: handle masks
-
 class OutputLayer (layers.Layer):
 
     def __init__ (self):
@@ -18,28 +16,38 @@ class OutputLayer (layers.Layer):
 
         self.softmax_layer = layers.Softmax(axis=-1)
 
-    def compute_probabilities (self, input_1, input_2, start):
+    def compute_probabilities (self, input_1, input_2, start, mask):
+
+        n = int(tf.shape(input_1)[1])
 
         concat = self.concatenate_layer([input_1, input_2])
 
         weighted = self.w1(concat) if start else self.w2(concat)
 
-        softmaxed = self.softmax_layer(weighted)
+        reshaped = layers.Reshape((n,)) (weighted)
 
-        n = tf.shape(input_1)[1]
-        softmaxed = layers.Reshape((n)) (softmaxed)
+        softmaxed = self.softmax_layer(reshaped, mask=mask)
 
         return softmaxed
 
-    def call (self, inputs):
+    def call (self, inputs, mask=None):
 
-        assert len(input)==3
+        assert len(inputs)==3
 
         m0 = inputs[0]
         m1 = inputs[1]
         m2 = inputs[2]
 
-        start_probbabilities = self.compute_probabilities(m0, m1, True)
-        end_probabilities = self.compute_probabilities(m0, m2, False)
+        start_probbabilities = self.compute_probabilities(m0, m1, True, mask)
+        end_probabilities = self.compute_probabilities(m0, m2, False, mask)
 
         return start_probbabilities, end_probabilities
+
+#Test
+test = OutputLayer()
+a = tf.constant(2,shape=(1,5,128),dtype=tf.float32)
+b = tf.constant(5,shape=(1,5,128),dtype=tf.float32)
+c = tf.constant(7,shape=(1,5,128),dtype=tf.float32)
+_mask = tf.convert_to_tensor([[True,True,True,False,False]])
+build = test([a,b,c], mask=_mask)
+print(build)
