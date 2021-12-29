@@ -1,9 +1,7 @@
 import positional_encoding
 import stochastic_dropout
 
-import numpy as np
 import tensorflow as tf
-from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras import regularizers
 
@@ -19,7 +17,7 @@ class Encoding_Layer(layers.Layer):
                  survival_prob: float,
                  l2_value: float,
                  block_num: int):
-        '''
+        """
         Parameters:
         -----------
         embedding_size: int
@@ -41,7 +39,7 @@ class Encoding_Layer(layers.Layer):
             L2 value used in L2 regularization
         block_num: int
             Index of the current encoding layer
-        '''
+        """
 
         super(Encoding_Layer, self).__init__()
 
@@ -187,7 +185,7 @@ class EncoderLayer(layers.Layer):
                  survival_prob: float,
                  l2_value: float,
                  n_blocks: int):
-        '''
+        """
         Parameters:
         -----------
         embedding_size: int
@@ -209,7 +207,7 @@ class EncoderLayer(layers.Layer):
             L2 value used in L2 regularization
         n_blocks: int
             Number of encoding layers to stack
-        '''
+        """
 
         super(EncoderLayer, self).__init__()
 
@@ -224,10 +222,10 @@ class EncoderLayer(layers.Layer):
                                                i) for i in range(n_blocks)]
 
     def call(self, x, training, mask=None):
-        '''
+        """
         Override of keras.layers.Layer method: computes the output of an Encoder Layer,
         by computing the output of all the stacked Encoding layers.
-        '''
+        """
 
         for encoding_block in self.encoding_blocks:
             x = encoding_block(x, training=training, mask=mask)
