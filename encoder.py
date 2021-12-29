@@ -7,17 +7,18 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras import regularizers
 
-class Encoding_Layer (layers.Layer):
+
+class Encoding_Layer(layers.Layer):
     def __init__(self,
-                embedding_size: int,
-                d_model: int,
-                kernel_size: int,
-                n_conv_layers: int,
-                n_heads: int,
-                maximum_position_encoding: int,
-                survival_prob: float,
-                l2_value: float,
-                block_num: int):
+                 embedding_size: int,
+                 d_model: int,
+                 kernel_size: int,
+                 n_conv_layers: int,
+                 n_heads: int,
+                 maximum_position_encoding: int,
+                 survival_prob: float,
+                 l2_value: float,
+                 block_num: int):
         '''
         Parameters:
         -----------
@@ -52,47 +53,46 @@ class Encoding_Layer (layers.Layer):
         self.l2_decay = regularizers.l2(l2_value)
 
         conv_layer_params = {
-        "filters": d_model,
-        "kernel_size": kernel_size,
-        "padding": "same",
-        "data_format": "channels_last",
-        "kernel_regularizer": self.l2_decay
+            "filters": d_model,
+            "kernel_size": kernel_size,
+            "padding": "same",  # necessary for residual blocks
+            "data_format": "channels_last",
+            "kernel_regularizer": self.l2_decay
         }
 
         self_attention_layer_params = {
-        "num_heads": n_heads,
-        "key_dim": d_model,
-        "kernel_regularizer": self.l2_decay
+            "num_heads": n_heads,
+            "key_dim": d_model,
+            "kernel_regularizer": self.l2_decay
         }
 
         feed_forward_layer_params = {
-        "units": d_model,
-        "activation": "tanh", #or Relu?
-        "kernel_regularizer": self.l2_decay
+            "units": d_model,
+            "activation": "tanh",  # or Relu?
+            "kernel_regularizer": self.l2_decay
         }
 
         self.pos_encoding = positional_encoding.get_encoding(maximum_position_encoding, embedding_size)
 
         self.norm_layers = [layers.LayerNormalization() for _ in range(self.n_layers)]
 
-        self.conv_layers = [layers.SeparableConv1D(** conv_layer_params) for _ in range(n_conv_layers)]
+        self.conv_layers = [layers.SeparableConv1D(**conv_layer_params) for _ in range(n_conv_layers)]
 
-        self.self_attention_layer = layers.MultiHeadAttention(** self_attention_layer_params)
+        self.self_attention_layer = layers.MultiHeadAttention(**self_attention_layer_params)
 
-        self.feed_forward_layer = layers.Dense(** feed_forward_layer_params) #Is one layer enough?
+        self.feed_forward_layer = layers.Dense(**feed_forward_layer_params)  # Is one layer enough?
 
     def compute_attention_mask(self, mask):
 
         n = int(tf.shape(mask)[1])
 
-        horizontal_mask = layers.RepeatVector(n) (mask)
+        horizontal_mask = layers.RepeatVector(n)(mask)
 
-        reshaped_mask = layers.Reshape((n,1)) (mask)
-        vertical_mask = layers.Concatenate(axis=-1) ([reshaped_mask for _ in range(n)])
-        vertical_mask = layers.Reshape((n,n)) (vertical_mask)
+        reshaped_mask = layers.Reshape((n, 1))(mask)
+        vertical_mask = layers.Concatenate(axis=-1)([reshaped_mask for _ in range(n)])
+        vertical_mask = layers.Reshape((n, n))(vertical_mask)
 
         attention_mask = horizontal_mask & vertical_mask
-
         return attention_mask
 
     def apply_layer(self,
@@ -100,7 +100,7 @@ class Encoding_Layer (layers.Layer):
                     layer_num: int,
                     layer: layers.Layer,
                     training: bool,
-                    attention_mask = None) -> tf.Tensor:
+                    attention_mask=None) -> tf.Tensor:
 
         '''
         Check whether a layer should be used or not (stochastic dropout), then:
@@ -129,8 +129,9 @@ class Encoding_Layer (layers.Layer):
         keep = stochastic_dropout.keep_layer(self.n_layers, layer_num, self.survival_prob) if training else True
         if keep:
             norm_x = self.norm_layers[layer_num](x)
-            f_x = layer(x) if type(layer)!=layers.MultiHeadAttention else layer(x, x, attention_mask=attention_mask)
-            if int(tf.shape(f_x)[-1])==int(tf.shape(x)[-1]):
+            f_x = layer(norm_x) if type(layer) != layers.MultiHeadAttention else layer(x, x,
+                                                                                       attention_mask=attention_mask)
+            if int(tf.shape(f_x)[-1]) == int(tf.shape(x)[-1]):
                 return f_x + x
             else:
                 return f_x
@@ -139,7 +140,7 @@ class Encoding_Layer (layers.Layer):
 
     def call(self, x, training, mask=None):
 
-        '''
+        """
         Override of keras.layers.Layer method: computes the output of an Encoding Layer:
         1. Apply positional_encoding if required;
         2. Apply a series of separable convolutional layers;
@@ -147,44 +148,44 @@ class Encoding_Layer (layers.Layer):
         4. Apply one dense layer.
 
         The input of each layer is the residual block using a normalization layer to the output of the previous layer.
-        '''
+        """
 
         attention_mask = self.compute_attention_mask(mask)
 
         current_layer_num = 0
 
-        #1. Apply positional encoding if it is the first block
-        if self.block_num==0:
+        # 1. Apply positional encoding if it is the first block
+        if self.block_num == 0:
             seq_len = tf.shape(x)[1]
-            x *= tf.math.sqrt(tf.cast(self.embedding_size, tf.float32)) #Necessary?
+            # x *= tf.math.sqrt(tf.cast(self.embedding_size, tf.float32)) #Necessary?
             x += self.pos_encoding[:, :seq_len, :]
 
-        #2. Convolution block
+        # 2. Convolution block
         for conv_layer in self.conv_layers:
             x = self.apply_layer(x, current_layer_num, conv_layer, training)
-            current_layer_num+=1
+            current_layer_num += 1
 
-        #3. Self-attention block
+        # 3. Self-attention block
         x = self.apply_layer(x, current_layer_num, self.self_attention_layer, training, attention_mask=attention_mask)
-        current_layer_num+=1
+        current_layer_num += 1
 
-        #4. Feed-forward block
+        # 4. Feed-forward block
         x = self.apply_layer(x, current_layer_num, self.feed_forward_layer, training)
 
         return x
 
-class EncoderLayer (layers.Layer):
-    def __init__(self,
-                embedding_size: int,
-                d_model: int,
-                kernel_size: int,
-                n_conv_layers: int,
-                n_heads: int,
-                maximum_position_encoding: int,
-                survival_prob: float,
-                l2_value: float,
-                n_blocks: int):
 
+class EncoderLayer(layers.Layer):
+    def __init__(self,
+                 embedding_size: int,
+                 d_model: int,
+                 kernel_size: int,
+                 n_conv_layers: int,
+                 n_heads: int,
+                 maximum_position_encoding: int,
+                 survival_prob: float,
+                 l2_value: float,
+                 n_blocks: int):
         '''
         Parameters:
         -----------
@@ -212,17 +213,16 @@ class EncoderLayer (layers.Layer):
         super(EncoderLayer, self).__init__()
 
         self.encoding_blocks = [Encoding_Layer(embedding_size,
-        d_model,
-        kernel_size,
-        n_conv_layers,
-        n_heads,
-        maximum_position_encoding,
-        survival_prob,
-        l2_value,
-        i) for i in range(n_blocks)]
+                                               d_model,
+                                               kernel_size,
+                                               n_conv_layers,
+                                               n_heads,
+                                               maximum_position_encoding,
+                                               survival_prob,
+                                               l2_value,
+                                               i) for i in range(n_blocks)]
 
-    def call (self, x, training, mask=None):
-
+    def call(self, x, training, mask=None):
         '''
         Override of keras.layers.Layer method: computes the output of an Encoder Layer,
         by computing the output of all the stacked Encoding layers.
@@ -233,19 +233,21 @@ class EncoderLayer (layers.Layer):
 
         return x
 
-#Test
+
+# Test
 embedding_size = 500
 d_model = 128
-kernel_size=7
-n_conv_layers=4
-n_heads=2
+kernel_size = 7
+n_conv_layers = 4
+n_heads = 2
 maximum_position_encoding = 1000
 survival_prob = 1
 l2_value = 0.005
 n_blocks = 1
 
-test = EncoderLayer(embedding_size, d_model, kernel_size, n_conv_layers, n_heads, maximum_position_encoding, survival_prob, l2_value, n_blocks)
-a = tf.constant(2,shape=(1,5,500),dtype=tf.float32)
-_mask = tf.convert_to_tensor([[True,True,True,False,False]])
-build = test(a,training=False, mask=_mask)
+test = EncoderLayer(embedding_size, d_model, kernel_size, n_conv_layers, n_heads, maximum_position_encoding,
+                    survival_prob, l2_value, n_blocks)
+a = tf.constant(2, shape=(1, 30, 500), dtype=tf.float32)
+_mask = tf.convert_to_tensor([[True, True, True, False, False]])
+build = test(a, training=False, mask=_mask)
 print(build)

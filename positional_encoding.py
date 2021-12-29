@@ -1,10 +1,10 @@
 import numpy as np
 import tensorflow as tf
 
-def get_angles(pos: int,
-              i: int,
-              d_model: int) ->np.ndarray:
 
+def get_angles(pos: int,
+               i: int,
+               d_model: int) -> np.ndarray:
     '''
     Apply official standard positional encoding formula to get positional
     angles of a series of positions in a given number of dimensions.
@@ -23,12 +23,12 @@ def get_angles(pos: int,
     Angles associated with each position.
     '''
 
-    angle_rates = 1 / np.power(10000, (2 * (i//2)) / np.float32(d_model))
+    angle_rates = 1 / np.power(10000, (2 * (i // 2)) / np.float32(d_model))
     return pos * angle_rates
 
-def get_encoding(length: int,
-                d_model: int) ->tf.Tensor:
 
+def get_encoding(length: int,
+                 d_model: int) -> tf.Tensor:
     '''
     Get the positional encoding of a set of positions.
 
@@ -45,18 +45,18 @@ def get_encoding(length: int,
         Positional encoding of the positions.
     '''
 
-    #Compute the angles of each position
+    # Compute the angles of each position
     angle_rads = get_angles(np.arange(length)[:, np.newaxis],
-                          np.arange(d_model)[np.newaxis, :],
-                          d_model)
+                            np.arange(d_model)[np.newaxis, :],
+                            d_model)
 
-    #Compute the sin of angles of even positions
+    # Compute the sin of angles of even positions
     angle_rads[:, 0::2] = np.sin(angle_rads[:, 0::2])
 
-    #Compute the cosin of angles of odd positions
+    # Compute the cosin of angles of odd positions
     angle_rads[:, 1::2] = np.cos(angle_rads[:, 1::2])
 
-    #Get positional encoding for each position
+    # Get positional encoding for each position
     pos_encoding = angle_rads[np.newaxis, ...]
 
-    return tf.cast(pos_encoding, dtype=tf.float32)
+    return tf.cast(pos_encoding, dtype=np.float32)

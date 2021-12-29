@@ -5,15 +5,15 @@ from input_embedding.input_embedding_layer import InputEmbeddingLayer
 
 
 def test_input_embedding():
-    N_WORDS = 2
-    N_CHAR = 6
-    W_EMB_SIZE = 200
+    N_WORDS = 30
+    N_CHAR = 16
+    W_EMB_SIZE = 300
     W_VOCAB_SIZE = 100
     W_SPECIAL_TOKENS = 1
 
-    C_EMB_SIZE = 64
+    C_EMB_SIZE = 200
     C_VOCAB_SIZE = 50
-    C_CONV_OUTPUT_SIZE = 96
+    C_CONV_OUTPUT_SIZE = C_EMB_SIZE
     C_CONV_KERNEL_SIZE = 5
 
     input_embedding_layer = InputEmbeddingLayer(
@@ -38,7 +38,25 @@ def test_input_embedding():
 
 def main():
     print('main function')
-    test_input_embedding()
+    # test_input_embedding()
+    questions = np.random.rand(32, 30, 128)
+    contexts = np.random.rand(32, 400, 128)
+    #w = np.random.rand(32, 400)
+
+    #c = np.dot(np.transpose(questions), w)
+    #print(c.shape)
+
+    #d = np.dot(c, contexts)
+    #print(d.shape)
+
+    q = np.random.rand(32, 30, 1)
+    t = np.random.rand(32, 400, 1)
+    dot = np.dot(q, t)
+    b = tf.concat((q,t), axis=1)
+    print(b.shape)
+
+
+    print()
 
 
 if __name__ == '__main__':
