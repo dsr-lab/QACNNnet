@@ -129,8 +129,9 @@ class Encoding_Layer(layers.Layer):
         keep = stochastic_dropout.keep_layer(self.n_layers, layer_num, self.survival_prob) if training else True
         if keep:
             norm_x = self.norm_layers[layer_num](x)
-            f_x = layer(norm_x) if type(layer) != layers.MultiHeadAttention else layer(x, x,
+            f_x = layer(norm_x) if type(layer) != layers.MultiHeadAttention else layer(norm_x, norm_x,
                                                                                        attention_mask=attention_mask)
+            # Residual link can't work for the very first encoder block
             if int(tf.shape(f_x)[-1]) == int(tf.shape(x)[-1]):
                 return f_x + x
             else:
@@ -241,13 +242,13 @@ kernel_size = 7
 n_conv_layers = 4
 n_heads = 2
 maximum_position_encoding = 1000
-survival_prob = 1
+survival_prob = 1.0
 l2_value = 0.005
 n_blocks = 1
 
 test = EncoderLayer(embedding_size, d_model, kernel_size, n_conv_layers, n_heads, maximum_position_encoding,
                     survival_prob, l2_value, n_blocks)
-a = tf.constant(2, shape=(1, 30, 500), dtype=tf.float32)
+a = tf.constant(2, shape=(1, 5, 500), dtype=tf.float32)
 _mask = tf.convert_to_tensor([[True, True, True, False, False]])
 build = test(a, training=False, mask=_mask)
 print(build)
