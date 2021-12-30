@@ -10,6 +10,7 @@ class OutputLayer (layers.Layer):
         super(OutputLayer, self).__init__()
 
         self.concatenate_layer = layers.Concatenate(axis=-1)
+        self.stack = layers.Concatenate(axis=1)
 
         self.w1 = layers.Dense(units=1, use_bias=False)
         self.w2 = layers.Dense(units=1, use_bias=False)
@@ -38,10 +39,12 @@ class OutputLayer (layers.Layer):
         m1 = inputs[1]
         m2 = inputs[2]
 
-        start_probbabilities = self.compute_probabilities(m0, m1, True, mask)
+        start_probabilities = self.compute_probabilities(m0, m1, True, mask)
         end_probabilities = self.compute_probabilities(m0, m2, False, mask)
 
-        return start_probbabilities, end_probabilities
+        output = self.stack([start_probabilities,end_probabilities])
+
+        return output
 
 #Test
 test = OutputLayer()
