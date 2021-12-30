@@ -26,7 +26,8 @@ class ContextQueryAttentionLayer (layers.Layer):
 
         conc_context = conc_layer([context for _ in range(m)])
 
-        conc_query = conc_layer([query for _ in range(n)])
+        transposed_query = layers.Reshape((1,m,self.d_model)) (query)
+        conc_query = conc_layer([transposed_query for _ in range(n)])
 
         c_matrix = reshape_layer(conc_context)
         q_matrix = reshape_layer(conc_query)
