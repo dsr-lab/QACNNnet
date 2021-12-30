@@ -38,25 +38,7 @@ def test_input_embedding():
 
 def main():
     print('main function')
-    # test_input_embedding()
-    questions = np.random.rand(32, 30, 128)
-    contexts = np.random.rand(32, 400, 128)
-    #w = np.random.rand(32, 400)
-
-    #c = np.dot(np.transpose(questions), w)
-    #print(c.shape)
-
-    #d = np.dot(c, contexts)
-    #print(d.shape)
-
-    q = np.random.rand(32, 30, 1)
-    t = np.random.rand(32, 400, 1)
-    dot = np.dot(q, t)
-    b = tf.concat((q,t), axis=1)
-    print(b.shape)
-
-
-    print()
+    test_input_embedding()
 
 
 if __name__ == '__main__':

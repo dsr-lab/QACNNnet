@@ -105,6 +105,7 @@ class ContextQueryAttentionLayer (layers.Layer):
 
         return output
 
+'''
 #Test
 test = ContextQueryAttentionLayer(20)
 a = tf.constant(2,shape=(1,5,20),dtype=tf.float32)
@@ -113,3 +114,4 @@ c_mask = tf.convert_to_tensor([[True,True,False,False,False]])
 q_mask = tf.convert_to_tensor([[True,True,True,True,False,False, False]])
 build = test([a,b],[c_mask,q_mask])
 print(build)
+'''
