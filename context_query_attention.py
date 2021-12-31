@@ -44,7 +44,7 @@ class ContextQueryAttentionLayer (layers.Layer):
         n = int(tf.shape(similarity_matrix)[1])
         m = int(tf.shape(similarity_matrix)[2])
 
-        repeated_q_mask = layers.RepeatVector(n) (q_mask)
+        repeated_q_mask = layers.RepeatVector(n)(q_mask)
 
         reshaped_c_mask = layers.Reshape((n,1)) (c_mask)
         repeated_c_mask = layers.Concatenate(axis=-1) ([reshaped_c_mask for _ in range(m)])
