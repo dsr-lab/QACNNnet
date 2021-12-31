@@ -91,7 +91,6 @@ class TestContextQueryAttentionLayer(TestCase):
         # Act
         result = layer.build_similarity_matrix(context, query)
 
-
         # Assert
         np.testing.assert_array_equal(result, expected_result)
 

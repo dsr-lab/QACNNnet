@@ -1,9 +1,8 @@
-import positional_encoding
-import stochastic_dropout
-
 import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras import regularizers
+
+from encoding import positional_encoding, stochastic_dropout
 
 
 class Encoding_Layer(layers.Layer):
@@ -13,7 +12,7 @@ class Encoding_Layer(layers.Layer):
                  kernel_size: int,
                  n_conv_layers: int,
                  n_heads: int,
-                 maximum_position_encoding: int,
+                 # maximum_position_encoding: int,
                  survival_prob: float,
                  l2_value: float,
                  block_num: int):
@@ -50,7 +49,7 @@ class Encoding_Layer(layers.Layer):
         self.block_num = block_num
         self.l2_decay = regularizers.l2(l2_value)
 
-        conv_layer_params = {
+        self.conv_layer_params = {
             "filters": d_model,
             "kernel_size": kernel_size,
             "padding": "same",  # necessary for residual blocks
@@ -70,11 +69,9 @@ class Encoding_Layer(layers.Layer):
             "kernel_regularizer": self.l2_decay
         }
 
-        self.pos_encoding = positional_encoding.get_encoding(maximum_position_encoding, embedding_size)
-
         self.norm_layers = [layers.LayerNormalization() for _ in range(self.n_layers)]
 
-        self.conv_layers = [layers.SeparableConv1D(**conv_layer_params) for _ in range(n_conv_layers)]
+        self.conv_layers = [layers.SeparableConv1D(**self.conv_layer_params) for _ in range(n_conv_layers)]
 
         self.self_attention_layer = layers.MultiHeadAttention(**self_attention_layer_params)
 
@@ -126,11 +123,16 @@ class Encoding_Layer(layers.Layer):
 
         keep = stochastic_dropout.keep_layer(self.n_layers, layer_num, self.survival_prob) if training else True
         if keep:
+
+            can_apply_residual_block = x.shape[-1] != self.d_model
+
             norm_x = self.norm_layers[layer_num](x)
             f_x = layer(norm_x) if type(layer) != layers.MultiHeadAttention else layer(norm_x, norm_x,
                                                                                        attention_mask=attention_mask)
+
             # Residual link can't work for the very first encoder block
-            if int(tf.shape(f_x)[-1]) == int(tf.shape(x)[-1]):
+            # if int(tf.shape(f_x)[-1]) == int(tf.shape(x)[-1]):
+            if not can_apply_residual_block:
                 return f_x + x
             else:
                 return f_x
@@ -148,6 +150,11 @@ class Encoding_Layer(layers.Layer):
 
         The input of each layer is the residual block using a normalization layer to the output of the previous layer.
         """
+        maximum_position_encoding = x.shape[1]
+        embedding_size = x.shape[2]
+        # TODO: optimizable?
+        pos_encoding = positional_encoding.get_encoding(maximum_position_encoding,
+                                                        embedding_size)  # self.embedding_size)
 
         attention_mask = self.compute_attention_mask(mask)
 
@@ -157,7 +164,7 @@ class Encoding_Layer(layers.Layer):
         if self.block_num == 0:
             seq_len = tf.shape(x)[1]
             # x *= tf.math.sqrt(tf.cast(self.embedding_size, tf.float32)) #Necessary?
-            x += self.pos_encoding[:, :seq_len, :]
+            x += pos_encoding[:, :seq_len, :]
 
         # 2. Convolution block
         for conv_layer in self.conv_layers:
@@ -181,7 +188,7 @@ class EncoderLayer(layers.Layer):
                  kernel_size: int,
                  n_conv_layers: int,
                  n_heads: int,
-                 maximum_position_encoding: int,
+                 # maximum_position_encoding: int,
                  survival_prob: float,
                  l2_value: float,
                  n_blocks: int):
@@ -216,7 +223,7 @@ class EncoderLayer(layers.Layer):
                                                kernel_size,
                                                n_conv_layers,
                                                n_heads,
-                                               maximum_position_encoding,
+                                               # maximum_position_encoding,
                                                survival_prob,
                                                l2_value,
                                                i) for i in range(n_blocks)]
@@ -228,11 +235,33 @@ class EncoderLayer(layers.Layer):
         """
 
         for encoding_block in self.encoding_blocks:
+            '''
+            if reuse:
+                # Norm layers
+                norm_layer = layers.LayerNormalization()
+                #norm_layer.set_weights(encoding_block.norm_layers[0].get_weights())
+                encoding_block.norm_layers[0] = norm_layer
+
+                # Conv layers
+                conv_init_bias = encoding_block.conv_layers[0].bias
+                bias_initializer = tf.keras.initializers.constant(conv_init_bias)
+
+                input = tf.keras.Input(shape=(x.shape[1], x.shape[2]))
+                conv_layer = layers.SeparableConv1D(**encoding_block.conv_layer_params)
+                conv_layer(input)
+
+                #conv_layer.set_weights(encoding_block.conv_layers[0].get_weights())
+                conv_layer.set_weights(encoding_block.conv_layers[0].get_weights())
+                print("DONE")
+                encoding_block.conv_layers[0] = conv_layer
+            '''
+
             x = encoding_block(x, training=training, mask=mask)
 
         return x
 
 
+'''
 # Test
 embedding_size = 500
 d_model = 128
@@ -250,3 +279,4 @@ a = tf.constant(2, shape=(1, 5, 500), dtype=tf.float32)
 _mask = tf.convert_to_tensor([[True, True, True, False, False]])
 build = test(a, training=False, mask=_mask)
 print(build)
+'''
