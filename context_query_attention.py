@@ -18,16 +18,13 @@ class ContextQueryAttentionLayer (layers.Layer):
         n = int(tf.shape(context)[1])
         m = int(tf.shape(query)[1])
 
-        conc_layer = layers.Concatenate(axis=1)
         reshape_layer = layers.Reshape((n,m,self.d_model))
         mult_layer = layers.Multiply()
         stack_layer = layers.Concatenate(axis=-1)
         matrix_reshape_layer = layers.Reshape((n,m))
 
-        conc_context = conc_layer([context for _ in range(m)])
-
-        transposed_query = layers.Reshape((1,m,self.d_model)) (query)
-        conc_query = conc_layer([transposed_query for _ in range(n)])
+        conc_context = layers.Concatenate(axis=-1) ([context for _ in range(m)])
+        conc_query = layers.Concatenate(axis=1) ([query for _ in range(n)])
 
         c_matrix = reshape_layer(conc_context)
         q_matrix = reshape_layer(conc_query)

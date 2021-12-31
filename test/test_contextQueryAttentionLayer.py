@@ -197,4 +197,3 @@ class TestContextQueryAttentionLayer(TestCase):
         attention_outputs = [c, c2q, c * c2q, c * q2c]
         attention_outputs = np.concatenate(attention_outputs, axis=-1)
         return attention_outputs
-
