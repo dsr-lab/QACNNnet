@@ -42,7 +42,7 @@ class OutputLayer (layers.Layer):
         start_probabilities = self.compute_probabilities(m0, m1, True, mask)
         end_probabilities = self.compute_probabilities(m0, m2, False, mask)
 
-        output = self.stack([start_probabilities,end_probabilities])
+        output = self.stack([start_probabilities, end_probabilities])
 
         return output
 

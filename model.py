@@ -25,12 +25,16 @@ def test_model():
 
     w_context = np.random.randint(1, W_VOCAB_SIZE, (BATCH_SIZE, N_CONTEXT))
 
+    claims_input = tf.keras.Input(shape=(N_CONTEXT), name="context")
+    evidences_input = tf.keras.Input(shape=(N_QUERY), name="query")
+
     # Force some random padding in the input
     for row in range(w_context.shape[0]):
         n_pad = np.random.randint(0, 16)
         if n_pad > 0:
             w_context[row][-n_pad:] = 0
     context_word_mask = w_context != 0
+    context_word_mask = tf.convert_to_tensor(context_word_mask)
     c_context = np.random.randint(0, 100, (BATCH_SIZE, N_CONTEXT, MAX_CHAR))
 
     w_query = np.random.randint(1, W_VOCAB_SIZE, (BATCH_SIZE, N_QUERY))
@@ -41,6 +45,7 @@ def test_model():
             w_query[row][-n_pad:] = 0
 
     query_word_mask = w_query != 0
+    query_word_mask = tf.convert_to_tensor(query_word_mask)
     c_query = np.random.randint(0, 100, (BATCH_SIZE, N_QUERY, MAX_CHAR))
 
     w_emb_weights = np.random.rand(W_VOCAB_SIZE, W_EMB_SIZE)
@@ -98,6 +103,11 @@ def test_model():
     m2 = model_encoder(m1, training=training, mask=context_word_mask)
 
     output = model_output([m0, m1, m2], mask=context_word_mask)
+
+    # model = tf.keras.Model(
+    #     inputs=[w_context, c_context],
+    #     outputs=[output]
+    # )
 
     print()
 
