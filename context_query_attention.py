@@ -36,6 +36,21 @@ class ContextQueryAttentionLayer (layers.Layer):
 
         return similarity_matrix
 
+    def build_similarity_matrix2(self, context, query):
+
+        stack_layer = tf.keras.layers.Concatenate(axis=-1)
+        reshape_layer = tf.keras.layers.Reshape((context.shape[1], query.shape[1]))
+
+        a = tf.repeat(context, query.shape[1], axis=1)
+        b = tf.tile(query, [1, context.shape[1], 1])
+        c = tf.multiply(a, b)
+
+        similarity_matrix = stack_layer([a, b, c])
+        similarity_matrix = self.w(similarity_matrix)
+        similarity_matrix = reshape_layer(similarity_matrix)
+
+        return similarity_matrix
+
     def build_softmaxed_matrices (self, similarity_matrix, c_mask, q_mask):
 
         n = int(tf.shape(similarity_matrix)[1])

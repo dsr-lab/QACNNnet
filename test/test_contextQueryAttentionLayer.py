@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import initializers
 
+
 class TestContextQueryAttentionLayer(TestCase):
 
     @classmethod
@@ -41,44 +42,50 @@ class TestContextQueryAttentionLayer(TestCase):
     def test_build_similarity_matrix(self):
 
         # Arrange
-        layer = ContextQueryAttentionLayer(2)
-        layer.w.kernel_initializer = initializers.ones
+        layer = ContextQueryAttentionLayer(self.N_DIM)
 
-        context = np.array(
-            [
-                [
-                    [
-                        1, 2
-                    ],
-                    [
-                        3, 4
-                    ],
-                    [
-                        5, 6
-                    ],
-                    [
-                        7, 8
-                    ]
-                ]
-            ]
-        )
+        # weights = tf.constant([[1], [2], [3], [4], [5], [6]], dtype=tf.float32)
+        # layer.w.kernel_initializer = tf.keras.initializers.Constant(weights)
+        #
+        # context = np.array(
+        #     [
+        #         [
+        #             [
+        #                 1, 2
+        #             ],
+        #             [
+        #                 3, 4
+        #             ],
+        #             [
+        #                 5, 6
+        #             ],
+        #             [
+        #                 7, 8
+        #             ]
+        #         ]
+        #     ]
+        # )
+        #
+        # query = np.array(
+        #     [
+        #         [
+        #             [
+        #                 1, 2
+        #             ],
+        #             [
+        #                 3, 4
+        #             ]
+        #         ]
+        #     ]
+        # )
 
-        query = np.array(
-            [
-                [
-                    [
-                        1, 2
-                    ],
-                    [
-                        3, 4
-                    ]
-                ]
-            ]
-        )
+        context = np.random.rand(self.BATCH_SIZE, self.N_CONTEXT, self.N_DIM).astype(np.float32)
+        query = np.random.rand(self.BATCH_SIZE, self.N_QUERY, self.N_DIM).astype(np.float32)
 
-        expected_result = np.zeros((self.BATCH_SIZE, self.N_CONTEXT * self.N_QUERY, self.N_DIM * 3))
-        idx = 0
+        expected_result = np.zeros((self.BATCH_SIZE, self.N_CONTEXT * self.N_QUERY, self.N_DIM * 3), dtype=np.float32)
+
         for b in range(self.BATCH_SIZE):
+            idx = 0
             for c in context[b]:
                 for q in query[b]:
                     c_q = np.concatenate((c, q))
@@ -86,13 +93,15 @@ class TestContextQueryAttentionLayer(TestCase):
                     expected_result[b, idx] = np.concatenate((c_q, c_dot_q))
                     idx += 1
         expected_result = layer.w(expected_result)
-        expected_result = np.reshape(expected_result, (self.BATCH_SIZE, self.N_CONTEXT, self.N_QUERY))
+        expected_result = np.reshape(expected_result, (self.BATCH_SIZE, self.N_CONTEXT, self.N_QUERY)).astype(
+            np.float32)
 
         # Act
         result = layer.build_similarity_matrix(context, query)
+        result2 = layer.build_similarity_matrix2(context, query)
 
         # Assert
-        np.testing.assert_array_equal(result, expected_result)
+        np.testing.assert_equal(result2, expected_result)
 
     def test_build_softmaxed_matrices(self):
         # Arrange
@@ -129,7 +138,7 @@ class TestContextQueryAttentionLayer(TestCase):
 
         similarity_matrix = layer.build_similarity_matrix(context, query)
         context_softmaxed_matrix, query_softmaxed_matrix = layer.build_softmaxed_matrices(
-            similarity_matrix, self.c_mask,self. q_mask)
+            similarity_matrix, self.c_mask, self.q_mask)
 
         # Act
         context_to_query, query_to_context = layer.build_attention_matrices(
