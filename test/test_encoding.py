@@ -1,7 +1,7 @@
 from unittest import TestCase
 import numpy as np
 
-from positional_encoding import get_encoding
+from encoding.positional_encoding import get_encoding
 
 
 class TestEncoding(TestCase):

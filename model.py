@@ -7,6 +7,7 @@ from tensorflow.keras import layers
 from context_query_attention import ContextQueryAttentionLayer
 from encoding.encoder import Encoding_Layer, EncoderLayer
 from input_embedding.input_embedding_layer import InputEmbeddingLayer
+from model_output import OutputLayer
 
 BATCH_SIZE = 32
 N_CONTEXT = 400
@@ -20,16 +21,25 @@ MAX_CHAR = 16
 
 
 def test_model():
-
     training = False
 
-    w_context = np.random.randint(0, W_VOCAB_SIZE, (BATCH_SIZE, N_CONTEXT))
-    w_context[:, -1] = 0
+    w_context = np.random.randint(1, W_VOCAB_SIZE, (BATCH_SIZE, N_CONTEXT))
+
+    # Force some random padding in the input
+    for row in range(w_context.shape[0]):
+        n_pad = np.random.randint(0, 16)
+        if n_pad > 0:
+            w_context[row][-n_pad:] = 0
     context_word_mask = w_context != 0
     c_context = np.random.randint(0, 100, (BATCH_SIZE, N_CONTEXT, MAX_CHAR))
 
-    w_query = np.random.randint(0, W_VOCAB_SIZE, (BATCH_SIZE, N_QUERY))
-    w_query[:, -2:] = 0
+    w_query = np.random.randint(1, W_VOCAB_SIZE, (BATCH_SIZE, N_QUERY))
+    # Force some random padding in the input
+    for row in range(w_query.shape[0]):
+        n_pad = np.random.randint(0, 5)
+        if n_pad > 0:
+            w_query[row][-n_pad:] = 0
+
     query_word_mask = w_query != 0
     c_query = np.random.randint(0, 100, (BATCH_SIZE, N_QUERY, MAX_CHAR))
 
@@ -63,9 +73,8 @@ def test_model():
         l2_value=3e-7,
         n_blocks=7)
 
-
     # 5. Output layer
-
+    model_output = OutputLayer()
 
     context_embedded = inputEmbeddingLayer([w_context, c_context])
     context_encoded = embedding_encoder(context_embedded, training=training, mask=context_word_mask)
@@ -84,9 +93,11 @@ def test_model():
     conv_1d = layers.SeparableConv1D(**conv_layer_params)
     attention_output = conv_1d(attention_output)
 
-    model_encoder_output_1 = model_encoder(attention_output, training=training, mask=context_word_mask)
-    model_encoder_output_2 = model_encoder(model_encoder_output_1, training=training, mask=context_word_mask)
-    model_encoder_output_3 = model_encoder(model_encoder_output_2, training=training, mask=context_word_mask)
+    m0 = model_encoder(attention_output, training=training, mask=context_word_mask)
+    m1 = model_encoder(m0, training=training, mask=context_word_mask)
+    m2 = model_encoder(m1, training=training, mask=context_word_mask)
+
+    output = model_output([m0, m1, m2], mask=context_word_mask)
 
     print()
 

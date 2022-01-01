@@ -46,6 +46,7 @@ class OutputLayer (layers.Layer):
 
         return output
 
+'''
 #Test
 test = OutputLayer()
 a = tf.constant(2,shape=(1,5,128),dtype=tf.float32)
@@ -54,3 +55,4 @@ c = tf.constant(7,shape=(1,5,128),dtype=tf.float32)
 _mask = tf.convert_to_tensor([[True,True,True,False,False]])
 build = test([a,b,c], mask=_mask)
 print(build)
+'''
