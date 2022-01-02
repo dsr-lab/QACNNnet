@@ -4,7 +4,7 @@ import tensorflow as tf
 class CharEmbeddingLayer(tf.keras.layers.Layer):
 
     # input-independent initialization
-    def __init__(self, emb_size, vocab_size, conv_output_size=96, conv_kernel_size=5):
+    def __init__(self, emb_size, vocab_size, conv_kernel_size):
         super(CharEmbeddingLayer, self).__init__()
 
         # Class variables
@@ -12,7 +12,7 @@ class CharEmbeddingLayer(tf.keras.layers.Layer):
         self.vocab_size = vocab_size
 
         # Layers
-        self.conv_layer = tf.keras.layers.Conv1D(conv_output_size, conv_kernel_size, activation='relu')
+        self.conv_layer = tf.keras.layers.Conv1D(emb_size, conv_kernel_size, activation='relu')
         self.emb_layer = None
 
     # input-dependent initialization

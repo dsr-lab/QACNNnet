@@ -5,23 +5,18 @@ from tensorflow.keras import regularizers
 from encoding import positional_encoding, stochastic_dropout
 
 
-class Encoding_Layer(layers.Layer):
+class EncodingLayer(layers.Layer):
     def __init__(self,
-                 embedding_size: int,
                  d_model: int,
                  kernel_size: int,
                  n_conv_layers: int,
                  n_heads: int,
-                 # maximum_position_encoding: int,
                  survival_prob: float,
                  l2_value: float,
                  block_num: int):
         """
         Parameters:
         -----------
-        embedding_size: int
-            Embedding size of the embedded model.
-            Set to None if this is not the first encoding layer
         d_model: int
             Dimensions of the model (input and output of each layer)
         kernel_size: int
@@ -30,8 +25,6 @@ class Encoding_Layer(layers.Layer):
             Number of Convolutional layers
         n_heads: int
             Number of heads for MultiHeadAttention
-        maximum_position_encoding: int
-            Maximum number of words to compute positional encoding
         survival_prob: float
             Survival probability of a layer for stochastic dropout.
         l2_value: float
@@ -40,10 +33,9 @@ class Encoding_Layer(layers.Layer):
             Index of the current encoding layer
         """
 
-        super(Encoding_Layer, self).__init__()
+        super(EncodingLayer, self).__init__()
 
         self.d_model = d_model
-        self.embedding_size = embedding_size
         self.n_layers = n_conv_layers + 2
         self.survival_prob = survival_prob
         self.block_num = block_num
@@ -79,7 +71,7 @@ class Encoding_Layer(layers.Layer):
 
     def compute_attention_mask(self, mask):
 
-        n = int(tf.shape(mask)[1])
+        n = mask.shape[1]
 
         horizontal_mask = layers.RepeatVector(n)(mask)
 
@@ -154,7 +146,7 @@ class Encoding_Layer(layers.Layer):
         embedding_size = x.shape[2]
         # TODO: optimizable?
         pos_encoding = positional_encoding.get_encoding(maximum_position_encoding,
-                                                        embedding_size)  # self.embedding_size)
+                                                        embedding_size)
 
         attention_mask = self.compute_attention_mask(mask)
 
@@ -183,21 +175,16 @@ class Encoding_Layer(layers.Layer):
 
 class EncoderLayer(layers.Layer):
     def __init__(self,
-                 embedding_size: int,
                  d_model: int,
                  kernel_size: int,
                  n_conv_layers: int,
                  n_heads: int,
-                 # maximum_position_encoding: int,
                  survival_prob: float,
                  l2_value: float,
                  n_blocks: int):
         """
         Parameters:
         -----------
-        embedding_size: int
-            Embedding size of the embedded model.
-            Set to None if this is not the first encoding layer
         d_model: int
             Dimensions of the model (input and output of each layer)
         kernel_size: int
@@ -206,8 +193,6 @@ class EncoderLayer(layers.Layer):
             Number of Convolutional layers
         n_heads: int
             Number of heads for MultiHeadAttention
-        maximum_position_encoding: int
-            Maximum number of words to compute positional encoding
         survival_prob: float
             Survival probability of a layer for stochastic dropout.
         l2_value: float
@@ -218,12 +203,10 @@ class EncoderLayer(layers.Layer):
 
         super(EncoderLayer, self).__init__()
 
-        self.encoding_blocks = [Encoding_Layer(embedding_size,
-                                               d_model,
+        self.encoding_blocks = [EncodingLayer(d_model,
                                                kernel_size,
                                                n_conv_layers,
                                                n_heads,
-                                               # maximum_position_encoding,
                                                survival_prob,
                                                l2_value,
                                                i) for i in range(n_blocks)]
@@ -259,24 +242,3 @@ class EncoderLayer(layers.Layer):
             x = encoding_block(x, training=training, mask=mask)
 
         return x
-
-
-'''
-# Test
-embedding_size = 500
-d_model = 128
-kernel_size = 7
-n_conv_layers = 4
-n_heads = 2
-maximum_position_encoding = 1000
-survival_prob = 1.0
-l2_value = 0.005
-n_blocks = 1
-
-test = EncoderLayer(embedding_size, d_model, kernel_size, n_conv_layers, n_heads, maximum_position_encoding,
-                    survival_prob, l2_value, n_blocks)
-a = tf.constant(2, shape=(1, 5, 500), dtype=tf.float32)
-_mask = tf.convert_to_tensor([[True, True, True, False, False]])
-build = test(a, training=False, mask=_mask)
-print(build)
-'''

@@ -19,7 +19,7 @@ class OutputLayer (layers.Layer):
 
     def compute_probabilities (self, input_1, input_2, start, mask):
 
-        n = int(tf.shape(input_1)[1])
+        n = input_1.shape[1]
 
         concat = self.concatenate_layer([input_1, input_2])
 
@@ -43,6 +43,7 @@ class OutputLayer (layers.Layer):
         end_probabilities = self.compute_probabilities(m0, m2, False, mask)
 
         output = self.stack([start_probabilities, end_probabilities])
+        output = layers.Reshape((2,m0.shape[1])) (output)
 
         return output
 

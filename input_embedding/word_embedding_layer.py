@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-
+from tensorflow.keras import layers
 
 class WordEmbeddingLayer(tf.keras.layers.Layer):
 
@@ -44,17 +44,18 @@ class WordEmbeddingLayer(tf.keras.layers.Layer):
     def call(self, inputs):
         # Tranform into padding all the tokens that are not considered as special (e.g., <UNK>)
         n_valid_tokens = self.vocab_size - self.n_special_tokens
-        special_tokens_input = tf.keras.layers.Lambda(lambda x: x - n_valid_tokens)(inputs)
-        special_tokens_input = tf.keras.layers.Activation('relu')(special_tokens_input)
+        special_tokens_input = layers.Lambda(lambda x: x - n_valid_tokens)(inputs)
+        special_tokens_input = layers.Activation('relu')(special_tokens_input)
 
         # Apply the embedding using both layers
         embedded_sequences = self.emb_layer(inputs)
+        mask = embedded_sequences._keras_mask
         embedded_special = self.special_emb_layer(special_tokens_input)
 
         # Add the matrices to obtain a single embedding result
-        embedded_sequences = tf.keras.layers.Add()([embedded_sequences, embedded_special])
+        embedded_sequences = layers.Add()([embedded_sequences, embedded_special])
 
-        return embedded_sequences
+        return embedded_sequences, mask
 
     @staticmethod
     def _set_weights(pretrained_weights, emb_size, n_special_tokens):

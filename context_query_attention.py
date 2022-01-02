@@ -5,20 +5,19 @@ from tensorflow.keras import layers
 
 class ContextQueryAttentionLayer (layers.Layer):
 
-    def __init__(self, d_model):
+    def __init__(self):
 
         super(ContextQueryAttentionLayer, self).__init__()
-
-        self.d_model = d_model
 
         self.w = layers.Dense(units=1, use_bias=False)
 
     def build_similarity_matrix(self, context, query):
 
-        n = int(tf.shape(context)[1])
-        m = int(tf.shape(query)[1])
+        n = context.shape[1]
+        m = query.shape[1]
+        d_model = context.shape[-1]
 
-        reshape_layer = layers.Reshape((n,m,self.d_model))
+        reshape_layer = layers.Reshape((n,m,d_model))
         mult_layer = layers.Multiply()
         stack_layer = layers.Concatenate(axis=-1)
         matrix_reshape_layer = layers.Reshape((n,m))
@@ -36,25 +35,10 @@ class ContextQueryAttentionLayer (layers.Layer):
 
         return similarity_matrix
 
-    def build_similarity_matrix2(self, context, query):
-
-        stack_layer = tf.keras.layers.Concatenate(axis=-1)
-        reshape_layer = tf.keras.layers.Reshape((context.shape[1], query.shape[1]))
-
-        a = tf.repeat(context, query.shape[1], axis=1)
-        b = tf.tile(query, [1, context.shape[1], 1])
-        c = tf.multiply(a, b)
-
-        similarity_matrix = stack_layer([a, b, c])
-        similarity_matrix = self.w(similarity_matrix)
-        similarity_matrix = reshape_layer(similarity_matrix)
-
-        return similarity_matrix
-
     def build_softmaxed_matrices (self, similarity_matrix, c_mask, q_mask):
 
-        n = int(tf.shape(similarity_matrix)[1])
-        m = int(tf.shape(similarity_matrix)[2])
+        n = similarity_matrix.shape[1]
+        m = similarity_matrix.shape[2]
 
         repeated_q_mask = layers.RepeatVector(n)(q_mask)
 
@@ -117,14 +101,3 @@ class ContextQueryAttentionLayer (layers.Layer):
         output = self.build_output(context, context_to_query, query_to_context)
 
         return output
-
-'''
-#Test
-test = ContextQueryAttentionLayer(20)
-a = tf.constant(2,shape=(1,5,20),dtype=tf.float32)
-b = tf.constant(3,shape=(1,7,20),dtype=tf.float32)
-c_mask = tf.convert_to_tensor([[True,True,False,False,False]])
-q_mask = tf.convert_to_tensor([[True,True,True,True,False,False, False]])
-build = test([a,b],[c_mask,q_mask])
-print(build)
-'''
