@@ -42,42 +42,7 @@ class TestContextQueryAttentionLayer(TestCase):
     def test_build_similarity_matrix(self):
 
         # Arrange
-        layer = ContextQueryAttentionLayer(self.N_DIM)
-
-        # weights = tf.constant([[1], [2], [3], [4], [5], [6]], dtype=tf.float32)
-        # layer.w.kernel_initializer = tf.keras.initializers.Constant(weights)
-        #
-        # context = np.array(
-        #     [
-        #         [
-        #             [
-        #                 1, 2
-        #             ],
-        #             [
-        #                 3, 4
-        #             ],
-        #             [
-        #                 5, 6
-        #             ],
-        #             [
-        #                 7, 8
-        #             ]
-        #         ]
-        #     ]
-        # )
-        #
-        # query = np.array(
-        #     [
-        #         [
-        #             [
-        #                 1, 2
-        #             ],
-        #             [
-        #                 3, 4
-        #             ]
-        #         ]
-        #     ]
-        # )
+        layer = ContextQueryAttentionLayer()
 
         context = np.random.rand(self.BATCH_SIZE, self.N_CONTEXT, self.N_DIM).astype(np.float32)
         query = np.random.rand(self.BATCH_SIZE, self.N_QUERY, self.N_DIM).astype(np.float32)
@@ -88,7 +53,8 @@ class TestContextQueryAttentionLayer(TestCase):
             idx = 0
             for c in context[b]:
                 for q in query[b]:
-                    c_q = np.concatenate((c, q))
+                    # c_q = np.concatenate((c, q))
+                    c_q = np.concatenate((q, c))
                     c_dot_q = np.multiply(c, q)
                     expected_result[b, idx] = np.concatenate((c_q, c_dot_q))
                     idx += 1
@@ -98,10 +64,9 @@ class TestContextQueryAttentionLayer(TestCase):
 
         # Act
         result = layer.build_similarity_matrix(context, query)
-        result2 = layer.build_similarity_matrix2(context, query)
 
         # Assert
-        np.testing.assert_equal(result2, expected_result)
+        np.testing.assert_equal(result, expected_result)
 
     def test_build_softmaxed_matrices(self):
         # Arrange
