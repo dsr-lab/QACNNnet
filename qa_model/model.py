@@ -148,9 +148,8 @@ model = build_model(input_embedding_params,
                     loss_function)
 
 print("Model succesfully built!")
-print(model.summary())
+model.summary()
 #tf.keras.utils.plot_model(model, "Architecture.png", show_shapes=True, expand_nested=True)
-
 
 # Test if trains...
 w_context = np.random.randint(1, WORD_VOCAB_SIZE, (BATCH_SIZE, MAX_CONTEXT_WORDS))
@@ -182,4 +181,3 @@ history = model.fit(x={"context words": w_context, "context characters": c_conte
                     verbose=1,
                     batch_size=4,
                     epochs=2)
-
