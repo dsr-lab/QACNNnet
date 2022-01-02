@@ -1,44 +1,101 @@
-import tensorflow as tf
-import numpy as np
-
-from input_embedding.input_embedding_layer import InputEmbeddingLayer
+from model.question_answer_model import QACNNnet
+from Config import *
 
 
-def test_input_embedding():
-    N_WORDS = 30
-    N_CHAR = 16
-    W_EMB_SIZE = 300
-    W_VOCAB_SIZE = 100
-    W_SPECIAL_TOKENS = 1
+# Build model and compile
+def build_model(input_embedding_params, embedding_encoder_params, conv_layer_params, model_encoder_params,
+                max_context_words, max_query_words, max_chars, optimizer, loss):
+    net = QACNNnet(input_embedding_params, embedding_encoder_params, conv_layer_params, model_encoder_params)
 
-    C_EMB_SIZE = 200
-    C_VOCAB_SIZE = 50
-    C_CONV_OUTPUT_SIZE = C_EMB_SIZE
-    C_CONV_KERNEL_SIZE = 5
+    model = net.model(max_context_words, max_query_words, max_chars)
 
-    input_embedding_layer = InputEmbeddingLayer(
-        w_emb_size=W_EMB_SIZE,
-        w_pretrained_weights=np.random.rand(W_VOCAB_SIZE, W_EMB_SIZE).astype(np.float32),
-        w_vocab_size=W_VOCAB_SIZE,
-        w_n_special_tokens=W_SPECIAL_TOKENS,
-        c_emb_size=C_EMB_SIZE,
-        c_vocab_size=C_VOCAB_SIZE,
-        c_conv_output_size=C_CONV_OUTPUT_SIZE,  # 96 in the blog code, 128 in the paper
-        c_conv_kernel_size=C_CONV_KERNEL_SIZE,  # 5 in the blog code, not clear in the paper (maybe 7??)
-    )
+    model.compile(optimizer=optimizer, loss=loss)
 
-    input1 = tf.keras.Input(shape=(N_WORDS), name="input_words")
-    input2 = tf.keras.Input(shape=(N_WORDS, N_CHAR), name="input_chars")
-    embedded_input = input_embedding_layer((input1, input2))
-    m = tf.keras.Model(inputs=[input1, input2], outputs=embedded_input)
-    m.summary()
+    return model
 
-    tf.keras.utils.plot_model(m, "sample_model.png", show_shapes=True, expand_nested=True)
+
+def loss_function(y_true, y_pred):
+    # y_true = (batch_size, 2, 1) or (batch_size, 2)
+    # y_pred = (batch_size, 2, n_words)
+    epsilon = 1e-8
+
+    assert y_true.shape[1] == 2
+    assert y_pred.shape[1] == 2
+
+    batch_size = y_true.shape[0]
+
+    y_true_start, y_true_end = tf.split(y_true, num_or_size_splits=2, axis=1)
+    y_pred_start, y_pred_end = tf.split(y_pred, num_or_size_splits=2, axis=1)
+
+    p1 = tf.gather(params=y_pred_start, indices=y_true_start, axis=-1, batch_dims=-1)
+    p2 = tf.gather(params=y_pred_end, indices=y_true_end, axis=-1, batch_dims=-1)
+
+    p1 = tf.reshape(p1, shape=(batch_size, 1))
+    p2 = tf.reshape(p2, shape=(batch_size, 1))
+
+    log_p1 = tf.math.log(p1 + epsilon)
+    log_p2 = tf.math.log(p2 + epsilon)
+
+    neg_log_p1 = tf.math.negative(log_p1)
+    neg_log_p2 = tf.math.negative(log_p2)
+
+    sum = neg_log_p1 + neg_log_p2
+
+    mean = tf.reduce_mean(sum)
+
+    # tf.print('\nlog_p1: ', log_p1)
+    # tf.print('\nlog_p2: ', log_p2)
+    # tf.print("\nloss:", mean)
+
+    return mean
 
 
 def main():
-    print('main function')
-    test_input_embedding()
+
+    model = build_model(input_embedding_params,
+                        embedding_encoder_params,
+                        conv_layer_params,
+                        model_encoder_params,
+                        MAX_CONTEXT_WORDS,
+                        MAX_QUERY_WORDS,
+                        MAX_CHARS,
+                        OPTIMIZER,
+                        loss_function)
+
+    print("Model succesfully built!")
+    model.summary()
+    # tf.keras.utils.plot_model(model, "Architecture.png", show_shapes=True, expand_nested=True)
+
+    # Test if trains...
+    w_context = np.random.randint(1, WORD_VOCAB_SIZE, (BATCH_SIZE, MAX_CONTEXT_WORDS))
+    # Force some random padding in the input
+    for row in range(w_context.shape[0]):
+        n_pad = np.random.randint(0, 16)
+        if n_pad > 0:
+            w_context[row][-n_pad:] = 0
+    context_word_mask = w_context != 0
+    context_word_mask = tf.convert_to_tensor(context_word_mask)
+    c_context = np.random.randint(0, 100, (BATCH_SIZE, MAX_CONTEXT_WORDS, MAX_CHARS))
+
+    w_query = np.random.randint(1, WORD_VOCAB_SIZE, (BATCH_SIZE, MAX_QUERY_WORDS))
+    # Force some random padding in the input
+    for row in range(w_query.shape[0]):
+        n_pad = np.random.randint(0, 5)
+        if n_pad > 0:
+            w_query[row][-n_pad:] = 0
+
+    query_word_mask = w_query != 0
+    query_word_mask = tf.convert_to_tensor(query_word_mask)
+    c_query = np.random.randint(0, 100, (BATCH_SIZE, MAX_QUERY_WORDS, MAX_CHARS))
+
+    labels = tf.random.uniform(shape=(BATCH_SIZE, 2, 1), minval=0, maxval=MAX_CONTEXT_WORDS, dtype=tf.int64)
+
+    history = model.fit(x={"context words": w_context, "context characters": c_context, "query words": w_query,
+                           "query characters": c_query},
+                        y=labels,
+                        verbose=1,
+                        batch_size=4,
+                        epochs=2)
 
 
 if __name__ == '__main__':
