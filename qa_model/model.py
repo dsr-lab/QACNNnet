@@ -43,7 +43,7 @@ EPOCHS = 100
 # Learning rate, optimizer and loss
 
 FINAL_LEARNING_RATE = 0.001
-WARMUP_STEPS = 1000
+WARMUP_STEPS = 1000.0
 learning_rate = CustomSchedule(FINAL_LEARNING_RATE, WARMUP_STEPS)
 OPTIMIZER = tf.keras.optimizers.Adam(learning_rate, beta_1=0.8, beta_2=0.999, epsilon=1e-7)
 
@@ -92,6 +92,7 @@ model_encoder_params = {
 def loss_function(y_true, y_pred):
     # y_true = (batch_size, 2, 1) or (batch_size, 2)
     # y_pred = (batch_size, 2, n_words)
+    epsilon = 1e-8
 
     assert y_true.shape[1] == 2
     assert y_pred.shape[1] == 2
@@ -101,14 +102,14 @@ def loss_function(y_true, y_pred):
     y_true_start, y_true_end = tf.split(y_true, num_or_size_splits=2, axis=1)
     y_pred_start, y_pred_end = tf.split(y_pred, num_or_size_splits=2, axis=1)
 
-    p1 = tf.gather(params=y_pred_start, indices=y_true_start, axis=-1, batch_dims=batch_size)
-    p2 = tf.gather(params=y_pred_end, indices=y_true_end, axis=-1, batch_dims=batch_size)
+    p1 = tf.gather(params=y_pred_start, indices=y_true_start, axis=-1, batch_dims=-1)
+    p2 = tf.gather(params=y_pred_end, indices=y_true_end, axis=-1, batch_dims=-1)
 
     p1 = tf.reshape(p1, shape=(batch_size, 1))
     p2 = tf.reshape(p2, shape=(batch_size, 1))
 
-    log_p1 = tf.math.log(p1)
-    log_p2 = tf.math.log(p2)
+    log_p1 = tf.math.log(p1+epsilon)
+    log_p2 = tf.math.log(p2+epsilon)
 
     neg_log_p1 = tf.math.negative(log_p1)
     neg_log_p2 = tf.math.negative(log_p2)
@@ -116,6 +117,10 @@ def loss_function(y_true, y_pred):
     sum = neg_log_p1 + neg_log_p2
 
     mean = tf.reduce_mean(sum)
+
+    # tf.print('\nlog_p1: ', log_p1)
+    # tf.print('\nlog_p2: ', log_p2)
+    # tf.print("\nloss:", mean)
 
     return mean
 
@@ -169,11 +174,12 @@ query_word_mask = w_query != 0
 query_word_mask = tf.convert_to_tensor(query_word_mask)
 c_query = np.random.randint(0, 100, (BATCH_SIZE, MAX_QUERY_WORDS, MAX_CHARS))
 
-labels = tf.random.uniform(shape=(BATCH_SIZE, 2, 2), minval=0, maxval=MAX_CONTEXT_WORDS, dtype=tf.int64)
+labels = tf.random.uniform(shape=(BATCH_SIZE, 2, 1), minval=0, maxval=MAX_CONTEXT_WORDS, dtype=tf.int64)
 
 history = model.fit(x={"context words": w_context, "context characters": c_context, "query words": w_query,
                        "query characters": c_query},
                     y=labels,
                     verbose=1,
-                    batch_size=4)
+                    batch_size=4,
+                    epochs=2)
 
