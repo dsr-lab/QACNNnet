@@ -204,12 +204,12 @@ class EncoderLayer(layers.Layer):
         super(EncoderLayer, self).__init__()
 
         self.encoding_blocks = [EncodingLayer(d_model,
-                                               kernel_size,
-                                               n_conv_layers,
-                                               n_heads,
-                                               survival_prob,
-                                               l2_value,
-                                               i) for i in range(n_blocks)]
+                                              kernel_size,
+                                              n_conv_layers,
+                                              n_heads,
+                                              survival_prob,
+                                              l2_value,
+                                              i) for i in range(n_blocks)]
 
     def call(self, x, training, mask=None):
         """

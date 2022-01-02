@@ -55,6 +55,10 @@ class WordEmbeddingLayer(tf.keras.layers.Layer):
         # Add the matrices to obtain a single embedding result
         embedded_sequences = layers.Add()([embedded_sequences, embedded_special])
 
+        # Debug logs
+        # tf.print(mask, summarize=-1)
+        # tf.print(inputs, summarize=-1)
+
         return embedded_sequences, mask
 
     @staticmethod

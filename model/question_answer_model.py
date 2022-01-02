@@ -19,7 +19,7 @@ class QACNNnet(tf.keras.Model):
         self.conv_1d = layers.SeparableConv1D(**conv_layer_params)
         self.model_output = OutputLayer()
 
-    def call(self, inputs, training=False):
+    def call(self, inputs, training=None):
         assert len(inputs) == 4
 
         words_context = inputs[0]
