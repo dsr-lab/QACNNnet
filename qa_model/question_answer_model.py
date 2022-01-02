@@ -7,10 +7,10 @@ from encoding.encoder import EncoderLayer
 from input_embedding.input_embedding_layer import InputEmbeddingLayer
 from model_output import OutputLayer
 
-class QACNNnet (tf.keras.Model):
+
+class QACNNnet(tf.keras.Model):
 
     def __init__(self, input_embedding_params, embedding_encoder_params, conv_layer_params, model_encoder_params):
-
         super(QACNNnet, self).__init__()
 
         self.embedding = InputEmbeddingLayer(**input_embedding_params)
@@ -21,8 +21,7 @@ class QACNNnet (tf.keras.Model):
         self.model_output = OutputLayer()
 
     def call(self, inputs, training=False):
-
-        assert len(inputs)==4
+        assert len(inputs) == 4
 
         words_context = inputs[0]
         characters_context = inputs[1]
@@ -52,12 +51,11 @@ class QACNNnet (tf.keras.Model):
         return output
 
     def model(self, max_context_words, max_query_words, max_chars):
-
         context_words_input = tf.keras.Input(shape=(max_context_words), name="context words")
-        context_characters_input = tf.keras.Input(shape=(max_context_words,max_chars), name="context characters")
+        context_characters_input = tf.keras.Input(shape=(max_context_words, max_chars), name="context characters")
         query_words_input = tf.keras.Input(shape=(max_query_words), name="query words")
-        query_characters_input = tf.keras.Input(shape=(max_query_words,max_chars), name="query characters")
+        query_characters_input = tf.keras.Input(shape=(max_query_words, max_chars), name="query characters")
 
         inputs = [context_words_input, context_characters_input, query_words_input, query_characters_input]
 
-        return tf.keras.Model(inputs=inputs,outputs=self.call(inputs))
+        return tf.keras.Model(inputs=inputs, outputs=self.call(inputs))

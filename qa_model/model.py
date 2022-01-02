@@ -1,25 +1,28 @@
-# This class is responsible for assembling the final model and defining training and testing info
+# This class is responsible for assembling the final qa_model and defining training and testing info
 
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras import regularizers
 
-from question_answer_model import QACNNnet
-from warmup_learning import CustomSchedule
+# from question_answer_model import QACNNnet
+# from warmup_learning import CustomSchedule
+from qa_model.question_answer_model import QACNNnet
+from qa_model.warmup_learning import CustomSchedule
 
-#CONSTANTS
+# CONSTANTS
+
 
 MAX_CONTEXT_WORDS = 400
 MAX_QUERY_WORDS = 30
 
-L2_VALUE =3e-7
+L2_VALUE = 3e-7
 
 WORD_EMBEDDING_SIZE = 300
-WORD_VOCAB_SIZE = 10000 #TODO: take from preprocessing step
-pretrained_weights = np.random.rand(WORD_VOCAB_SIZE, WORD_EMBEDDING_SIZE) #TODO: take from GloVe
+WORD_VOCAB_SIZE = 10000  # TODO: take from preprocessing step
+pretrained_weights = np.random.rand(WORD_VOCAB_SIZE, WORD_EMBEDDING_SIZE)  # TODO: take from GloVe
 CHARACTER_EMBEDDING_SIZE = 200
-CHARACTER_VOCAB_SIZE = 100 #TODO: take from preprocessing step
+CHARACTER_VOCAB_SIZE = 100  # TODO: take from preprocessing step
 MAX_CHARS = 16
 
 EMBEDDING_KERNEL_SIZE = 5
@@ -37,53 +40,54 @@ N_BLOCKS_MODEL_ENCODING = 7
 BATCH_SIZE = 32
 EPOCHS = 100
 
-#Learning rate, optimizer and loss
+# Learning rate, optimizer and loss
 
 FINAL_LEARNING_RATE = 0.001
 WARMUP_STEPS = 1000
 learning_rate = CustomSchedule(FINAL_LEARNING_RATE, WARMUP_STEPS)
 OPTIMIZER = tf.keras.optimizers.Adam(learning_rate, beta_1=0.8, beta_2=0.999, epsilon=1e-7)
 
-#Layers' variables
+# Layers' variables
 
 input_embedding_params = {
-"w_emb_size": WORD_EMBEDDING_SIZE,
-"w_pretrained_weights": pretrained_weights,
-"w_vocab_size": WORD_VOCAB_SIZE,
-"w_n_special_tokens": 1,
-"c_emb_size": CHARACTER_EMBEDDING_SIZE,
-"c_vocab_size": CHARACTER_VOCAB_SIZE,
-"c_conv_kernel_size": EMBEDDING_KERNEL_SIZE,
-"n_highway_layers": N_HIGHWAY_LAYERS
+    "w_emb_size": WORD_EMBEDDING_SIZE,
+    "w_pretrained_weights": pretrained_weights,
+    "w_vocab_size": WORD_VOCAB_SIZE,
+    "w_n_special_tokens": 1,
+    "c_emb_size": CHARACTER_EMBEDDING_SIZE,
+    "c_vocab_size": CHARACTER_VOCAB_SIZE,
+    "c_conv_kernel_size": EMBEDDING_KERNEL_SIZE,
+    "n_highway_layers": N_HIGHWAY_LAYERS
 }
 
 embedding_encoder_params = {
-"d_model": D_MODEL,
-"kernel_size": ENCODER_KERNEL_SIZE,
-"n_conv_layers": N_CONV_LAYERS_EMBEDDING_ENCODING,
-"n_heads": N_HEADS,
-"survival_prob": STOCHASTIC_SURVIVAL_PROB,
-"l2_value": L2_VALUE,
-"n_blocks": N_BLOCKS_EMBEDDING_ENCODING
+    "d_model": D_MODEL,
+    "kernel_size": ENCODER_KERNEL_SIZE,
+    "n_conv_layers": N_CONV_LAYERS_EMBEDDING_ENCODING,
+    "n_heads": N_HEADS,
+    "survival_prob": STOCHASTIC_SURVIVAL_PROB,
+    "l2_value": L2_VALUE,
+    "n_blocks": N_BLOCKS_EMBEDDING_ENCODING
 }
 
 conv_layer_params = {
-"filters": D_MODEL,
-"kernel_size": ENCODER_KERNEL_SIZE,
-"padding": "same",
-"data_format": "channels_last",
-"kernel_regularizer": regularizers.l2(L2_VALUE)
+    "filters": D_MODEL,
+    "kernel_size": ENCODER_KERNEL_SIZE,
+    "padding": "same",
+    "data_format": "channels_last",
+    "kernel_regularizer": regularizers.l2(L2_VALUE)
 }
 
 model_encoder_params = {
-"d_model": D_MODEL,
-"kernel_size": ENCODER_KERNEL_SIZE,
-"n_conv_layers": N_CONV_LAYERS_MODEL_ENCODING,
-"n_heads": N_HEADS,
-"survival_prob": STOCHASTIC_SURVIVAL_PROB,
-"l2_value": L2_VALUE,
-"n_blocks": N_BLOCKS_MODEL_ENCODING
+    "d_model": D_MODEL,
+    "kernel_size": ENCODER_KERNEL_SIZE,
+    "n_conv_layers": N_CONV_LAYERS_MODEL_ENCODING,
+    "n_heads": N_HEADS,
+    "survival_prob": STOCHASTIC_SURVIVAL_PROB,
+    "l2_value": L2_VALUE,
+    "n_blocks": N_BLOCKS_MODEL_ENCODING
 }
+
 
 def loss_function(y_true, y_pred):
     # y_true = (batch_size, 2, 1) or (batch_size, 2)
@@ -115,9 +119,10 @@ def loss_function(y_true, y_pred):
 
     return mean
 
-#Build model and compile
-def build_model (input_embedding_params, embedding_encoder_params, conv_layer_params, model_encoder_params, max_context_words, max_query_words, max_chars, optimizer, loss):
 
+# Build qa_model and compile
+def build_model(input_embedding_params, embedding_encoder_params, conv_layer_params, model_encoder_params,
+                max_context_words, max_query_words, max_chars, optimizer, loss):
     net = QACNNnet(input_embedding_params, embedding_encoder_params, conv_layer_params, model_encoder_params)
 
     model = net.model(max_context_words, max_query_words, max_chars)
@@ -125,6 +130,7 @@ def build_model (input_embedding_params, embedding_encoder_params, conv_layer_pa
     model.compile(optimizer=optimizer, loss=loss)
 
     return model
+
 
 model = build_model(input_embedding_params,
                     embedding_encoder_params,
@@ -140,7 +146,8 @@ print("Model succesfully built!")
 print(model.summary())
 #tf.keras.utils.plot_model(model, "Architecture.png", show_shapes=True, expand_nested=True)
 
-#Test if trains...
+
+# Test if trains...
 w_context = np.random.randint(1, WORD_VOCAB_SIZE, (BATCH_SIZE, MAX_CONTEXT_WORDS))
 # Force some random padding in the input
 for row in range(w_context.shape[0]):
@@ -162,9 +169,11 @@ query_word_mask = w_query != 0
 query_word_mask = tf.convert_to_tensor(query_word_mask)
 c_query = np.random.randint(0, 100, (BATCH_SIZE, MAX_QUERY_WORDS, MAX_CHARS))
 
-labels = tf.random.uniform(shape=(BATCH_SIZE,2,2),minval=0, maxval=MAX_CONTEXT_WORDS, dtype=tf.int64)
+labels = tf.random.uniform(shape=(BATCH_SIZE, 2, 2), minval=0, maxval=MAX_CONTEXT_WORDS, dtype=tf.int64)
 
-history = model.fit(x={"context words": w_context, "context characters": c_context, "query words":w_query, "query characters":c_query},
+history = model.fit(x={"context words": w_context, "context characters": c_context, "query words": w_query,
+                       "query characters": c_query},
                     y=labels,
                     verbose=1,
-                    batch_size = 4)
+                    batch_size=4)
+
