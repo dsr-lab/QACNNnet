@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 
+from metrics import F1Score
 from context_query_attention import ContextQueryAttentionLayer
 from encoding.encoder import EncoderLayer
 from input_embedding.input_embedding_layer import InputEmbeddingLayer
@@ -49,12 +50,30 @@ class QACNNnet(tf.keras.Model):
 
         return output
 
-    def model(self, max_context_words, max_query_words, max_chars):
-        context_words_input = tf.keras.Input(shape=(max_context_words), name="context words")
-        context_characters_input = tf.keras.Input(shape=(max_context_words, max_chars), name="context characters")
-        query_words_input = tf.keras.Input(shape=(max_query_words), name="query words")
-        query_characters_input = tf.keras.Input(shape=(max_query_words, max_chars), name="query characters")
+    def train_step(self, data):
+        # Unpack the data. Its structure depends on your model and
+        # on what you pass to `fit()`.
+        x, y = data
 
-        inputs = [context_words_input, context_characters_input, query_words_input, query_characters_input]
+        with tf.GradientTape() as tape:
+            y_pred = self(x, training=True)  # Forward pass
+            # Compute the loss value
+            # (the loss function is configured in `compile()`)
+            loss = self.compiled_loss(y, y_pred, regularization_losses=self.losses)
 
-        return tf.keras.Model(inputs=inputs, outputs=self.call(inputs))
+        # Compute gradients
+        trainable_vars = self.trainable_variables
+        gradients = tape.gradient(loss, trainable_vars)
+        # Update weights
+        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+
+        # TODO: pass to the metric all the necessary for properly computing the f1 score
+        for metric in self.metrics:
+            if isinstance(metric, F1Score):
+                metric.set_message('Test From Model ')
+
+        # Update metrics (includes the metric that tracks the loss)
+        self.compiled_metrics.update_state(y, y_pred)
+
+        # Return a dict mapping metric names to current value
+        return {m.name: m.result() for m in self.metrics}

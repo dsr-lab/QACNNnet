@@ -3,10 +3,10 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-class OutputLayer (layers.Layer):
 
-    def __init__ (self):
+class OutputLayer(layers.Layer):
 
+    def __init__(self):
         super(OutputLayer, self).__init__()
 
         self.concatenate_layer = layers.Concatenate(axis=-1)
@@ -17,23 +17,23 @@ class OutputLayer (layers.Layer):
 
         self.softmax_layer = layers.Softmax(axis=-1)
 
-    def compute_probabilities (self, input_1, input_2, start, mask):
+    def compute_probabilities(self, input_1, input_2, start, mask):
+        # input1, input2 shapes = (BATCH_SIZE, N_WORDS, N_DIMS)
 
-        n = input_1.shape[1]
+        n_words = input_1.shape[1]
 
-        concat = self.concatenate_layer([input_1, input_2])
+        concat = self.concatenate_layer([input_1, input_2])  # (BATCH_SIZE, N_WORDS, N_DIMS * 2)
 
-        weighted = self.w1(concat) if start else self.w2(concat)
+        weighted = self.w1(concat) if start else self.w2(concat)  # (BATCH_SIZE, N_WORDS, 1)
 
-        reshaped = layers.Reshape((n,)) (weighted)
+        reshaped = layers.Reshape((n_words,))(weighted)  # (BATCH_SIZE, N_WORDS)
 
-        softmaxed = self.softmax_layer(reshaped, mask=mask)
+        softmaxed = self.softmax_layer(reshaped, mask=mask)  # (BATCH_SIZE, N_WORDS)
 
         return softmaxed
 
-    def call (self, inputs, mask=None):
-
-        assert len(inputs)==3
+    def call(self, inputs, mask=None):
+        assert len(inputs) == 3
 
         m0 = inputs[0]
         m1 = inputs[1]
@@ -43,9 +43,10 @@ class OutputLayer (layers.Layer):
         end_probabilities = self.compute_probabilities(m0, m2, False, mask)
 
         output = self.stack([start_probabilities, end_probabilities])
-        output = layers.Reshape((2,m0.shape[1])) (output)
+        output = layers.Reshape((2, m0.shape[1]))(output)
 
         return output
+
 
 '''
 #Test
