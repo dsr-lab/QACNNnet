@@ -5,6 +5,7 @@ from model.warmup_learning import CustomSchedule
 
 MAX_CONTEXT_WORDS = 400
 MAX_QUERY_WORDS = 30
+MAX_ANSWER_LENGTH = 30
 
 L2_VALUE = 3e-7
 

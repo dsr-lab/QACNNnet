@@ -46,7 +46,7 @@ def get_answer_indices(context_words, answer_words):
             i+=1
             if i==len(answer_words):
                 start = j - len(answer_words) + 1
-                end = j
+                end = j if len(answer_words)<Config.MAX_ANSWER_LENGTH else start+Config.MAX_ANSWER_LENGTH-1 #Truncate answer
                 return [start,end]
         else:
             i=0
@@ -54,6 +54,10 @@ def get_answer_indices(context_words, answer_words):
 def build_dataframe_row(context, question, answer, split):
 
     preprocessed_context = preprocess.preprocess_text(context, **PREPROCESSING_OPTIONS)
+
+    if len(preprocessed_context)>Config.MAX_CONTEXT_WORDS:
+        return None
+
     preprocessed_question = preprocess.preprocess_text(question, **PREPROCESSING_OPTIONS)
     preprocessed_answer = preprocess.preprocess_text(answer, **PREPROCESSING_OPTIONS)
 
@@ -83,9 +87,12 @@ def extract_rows(json_dict):
 
     dataframe_rows = []
 
+    splitted_to_val = False
+
     for element in tqdm(data):
         title = element["title"]
         paragraphs = element["paragraphs"]
+        allow_val_split = True
 
         for paragraph in paragraphs:
             context = paragraph["context"]
@@ -100,9 +107,16 @@ def extract_rows(json_dict):
                     answer_text = answer["text"]
                     answer_start = answer["answer_start"] #Not used
 
-                    split = "train" if len(dataframe_rows) < TRAIN_SAMPLES else "validation"
+                    if not splitted_to_val:
+                        if len(dataframe_rows) < TRAIN_SAMPLES and allow_val_split:
+                            splitted_to_val=True
 
-                    dataframe_rows.append(build_dataframe_row(context, question, answers_text, split))
+                    split = "train" not splitted_to_val else "validation"
+
+                    row = build_dataframe_row(context, question, answers_text, split)
+                    if row!= None:
+                        dataframe_rows.append(row)
+                        allow_val_split=False
 
     print("Data extraction completed!"")
 
