@@ -1,3 +1,5 @@
 tensorflow==2.7.0
 numpy
+pandas
 pydot
+nltk
