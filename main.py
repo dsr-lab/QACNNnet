@@ -6,7 +6,6 @@ from Config import *
 # Build model and compile
 def build_model(input_embedding_params, embedding_encoder_params, conv_layer_params, model_encoder_params,
                 max_context_words, max_query_words, max_chars, optimizer, loss):
-
     # Model input tensors
     context_words_input = tf.keras.Input(shape=(max_context_words), name="context words")
     context_characters_input = tf.keras.Input(shape=(max_context_words, max_chars), name="context characters")
@@ -181,8 +180,13 @@ def main():
     model.summary()
     # tf.keras.utils.plot_model(model, "Architecture.png", show_shapes=True, expand_nested=True)
 
-    train_w_context, train_c_context, train_w_query, train_c_query, train_labels = generate_random_data(32)
-    valid_w_context, valid_c_context, valid_w_query, valid_c_query, valid_labels = generate_random_data(8)
+    train_w_context, \
+    train_c_context, train_w_query, \
+    train_c_query, train_labels = generate_random_data(32)
+
+    valid_w_context, \
+    valid_c_context, valid_w_query, \
+    valid_c_query, valid_labels = generate_random_data(8)
 
     '''
     # TEST CODE (will be removed soon)
@@ -201,11 +205,111 @@ def main():
     history = model.fit(
         x=[train_w_context, train_c_context, train_w_query, train_c_query],
         y=train_labels,
-        validation_data=([valid_w_context, valid_c_context, valid_w_query, valid_c_query], valid_labels),
+        validation_data=(
+            [valid_w_context, valid_c_context, valid_w_query, valid_c_query],
+            valid_labels),
         verbose=1,
         batch_size=4,
         epochs=5)
 
+    print()
+
+
+def get_answers(context, start_indices, end_indices):
+    """
+    Create a new tensor that contains slice of the original context
+    :param context: the original context words passed as input to the network
+    :param start_indices: array that contains the predicted start indices
+    :param end_indices: array that contains the predicted end indices
+    :return: tokens_masked: input token tensor appropriately masked
+    """
+    # Check dimensions
+    assert (context.shape[0] == start_indices.shape[0])
+    assert (context.shape[0] == end_indices.shape[0])
+
+    # Create a tensor that has the same token shape, and
+    # that contains just position indices
+    tensor = tf.range(0, context.shape[1])
+    tensor_tiled = tf.tile(tensor, [context.shape[0]])
+    tensor_tiled_reshaped = tf.reshape(tensor_tiled, [context.shape[0], -1])
+
+    # Create masks to filter out unwanted positions
+    mask1 = tensor_tiled_reshaped >= start_indices
+    mask2 = tensor_tiled_reshaped <= end_indices
+    final_mask = tf.math.logical_and(mask1, mask2)
+    final_mask = tf.cast(final_mask, tf.dtypes.int32)
+
+    # Multiply the original token tensor with the mask
+    # (unwanted positions will be converted to 0)
+    tokens_masked = tf.math.multiply(context, final_mask)
+
+    return tokens_masked
+
+
+from collections import Counter
 
 if __name__ == '__main__':
-    main()
+
+    w_context = tf.constant([
+        [1, 2, 3, 4, 5, 4, 0, 0],
+        [11, 12, 13, 14, 15, 1, 9, 5]
+    ])
+
+    # Create fake start/end indices for labels and predictions
+    true_start_indices = tf.constant([[2], [4]])
+    true_end_indices = tf.constant([[6], [8]])
+
+    pred_start_indices = tf.constant([[1], [2]])
+    pred_end_indices = tf.constant([[5], [6]])
+
+    true_tokens_masked = get_answers(w_context, true_start_indices, true_end_indices)
+    pred_tokens_masked = get_answers(w_context, pred_start_indices, pred_end_indices)
+
+    b_size = 2
+
+    true_tokens_masked = tf.constant([
+        [0, 1, 2, 3, 1],
+        [5, 6, 7, 8, 9]
+    ])
+    pred_tokens_masked = tf.constant([
+        [5, 6, 2, 1, 1],
+        [7, 8, 0, 0, 0]
+
+    ])
+
+    # Count the number of occurences
+
+    special_characters = tf.constant([0, 0, 1, 1, 1, 1, 1, 1, 1, 1])
+    special_characters = tf.tile(special_characters, [b_size])
+    special_characters = tf.reshape(special_characters, [b_size, -1])
+
+    a = tf.math.bincount(true_tokens_masked, minlength=10, maxlength=10, axis=-1)
+    a = tf.math.multiply(a, special_characters)
+
+    b = tf.math.bincount(pred_tokens_masked, minlength=10, maxlength=10, axis=-1)
+    b = tf.math.multiply(b, special_characters)
+
+    mask = tf.cast(tf.math.multiply(a, b) > 0, tf.dtypes.int32)
+
+    sub = tf.math.minimum(tf.math.multiply(a, mask), tf.math.multiply(b, mask))
+
+    common = tf.math.reduce_sum(sub, axis=-1)
+
+    len_true_token = tf.math.reduce_sum(a, axis=-1)
+    len_pred_token = tf.math.reduce_sum(b, axis=-1)
+    # 0, 1, 2   ==> common tokens 1st row
+    # 7, 8      ==> common tokens 2nd row
+
+    # true_tokens_normalized = normalize_answers(true_tokens_masked)
+    # pred_tokens_normalized = normalize_answers(pred_tokens_masked)
+
+
+    prec = common / len_pred_token
+    rec = common / len_true_token
+
+    f1_score = 2 * (prec * rec) / (prec + rec)
+
+    f1_score = tf.reduce_mean(f1_score)  # Check this...
+    print()
+
+    # main()
