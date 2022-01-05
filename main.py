@@ -246,70 +246,70 @@ def get_answers(context, start_indices, end_indices):
     return tokens_masked
 
 
-from collections import Counter
-
 if __name__ == '__main__':
-
     w_context = tf.constant([
-        [1, 2, 3, 4, 5, 4, 0, 0],
-        [11, 12, 13, 14, 15, 1, 9, 5]
+        [1, 2, 3, 1, 5, 4, 5, 0],
+        [11, 5, 13, 3, 5, 1, 9, 5],
+        [2, 3, 4, 1, 2, 3, 6, 7]
     ])
 
-    # Create fake start/end indices for labels and predictions
-    true_start_indices = tf.constant([[2], [4]])
-    true_end_indices = tf.constant([[6], [8]])
-
-    pred_start_indices = tf.constant([[1], [2]])
-    pred_end_indices = tf.constant([[5], [6]])
-
-    true_tokens_masked = get_answers(w_context, true_start_indices, true_end_indices)
-    pred_tokens_masked = get_answers(w_context, pred_start_indices, pred_end_indices)
-
-    b_size = 2
-
-    true_tokens_masked = tf.constant([
-        [0, 1, 2, 3, 1],
-        [5, 6, 7, 8, 9]
-    ])
-    pred_tokens_masked = tf.constant([
-        [5, 6, 2, 1, 1],
-        [7, 8, 0, 0, 0]
-
+    # Example of expected y_true (BATCH_SIZE, 2, 1)
+    y_true = tf.constant([
+        [
+            [2], [6], # 2 = start index for FIRST sentence in the batch
+                      # 6 = end index for the FIRST sentence in the batch
+        ],
+        [
+            [0], [5]  # 0 = start index for SECOND sentence in the batch
+                      # 5 = end index for the SECOND sentence in the batch
+        ],
+        [
+            [3], [5]
+        ]
     ])
 
-    # Count the number of occurences
+    # Extract start/end indices
+    y_true_start = y_true[:, 0]
+    y_true_end = y_true[:, 1]
 
-    special_characters = tf.constant([0, 0, 1, 1, 1, 1, 1, 1, 1, 1])
-    special_characters = tf.tile(special_characters, [b_size])
-    special_characters = tf.reshape(special_characters, [b_size, -1])
+    # This is the result after the softmax on the predictions
+    y_pred_start = tf.constant([[2], [4], [5]])
+    y_pred_end = tf.constant([[5], [7], [4]])
 
-    a = tf.math.bincount(true_tokens_masked, minlength=10, maxlength=10, axis=-1)
-    a = tf.math.multiply(a, special_characters)
+    true_tokens = get_answers(w_context, y_true_start, y_true_end)
+    pred_tokens = get_answers(w_context, y_pred_start, y_pred_end)
 
-    b = tf.math.bincount(pred_tokens_masked, minlength=10, maxlength=10, axis=-1)
-    b = tf.math.multiply(b, special_characters)
+    b_size = w_context.shape[0]
+    vocab_size = 10
 
-    mask = tf.cast(tf.math.multiply(a, b) > 0, tf.dtypes.int32)
+    tokens_to_ignore = tf.constant([[0], [1], [8]])
+    updates = tf.ones(tokens_to_ignore.shape[0])
+    full_vocab_tensor = tf.ones(vocab_size)
 
-    sub = tf.math.minimum(tf.math.multiply(a, mask), tf.math.multiply(b, mask))
+    tokens_to_ignore_mask = tf.tensor_scatter_nd_sub(full_vocab_tensor, tokens_to_ignore, updates)
+    tokens_to_ignore_mask = tf.cast(tokens_to_ignore_mask, tf.dtypes.int32)
+    tokens_to_ignore_mask = tf.tile(tokens_to_ignore_mask, [b_size])
+    tokens_to_ignore_mask = tf.reshape(tokens_to_ignore_mask, [b_size, -1])
 
-    common = tf.math.reduce_sum(sub, axis=-1)
+    true_token_bins = tf.math.bincount(true_tokens, minlength=vocab_size, maxlength=vocab_size, axis=-1)
+    true_token_bins = tf.math.multiply(true_token_bins, tokens_to_ignore_mask)
 
-    len_true_token = tf.math.reduce_sum(a, axis=-1)
-    len_pred_token = tf.math.reduce_sum(b, axis=-1)
-    # 0, 1, 2   ==> common tokens 1st row
-    # 7, 8      ==> common tokens 2nd row
+    pred_token_bins = tf.math.bincount(pred_tokens, minlength=vocab_size, maxlength=vocab_size, axis=-1)
+    pred_token_bins = tf.math.multiply(pred_token_bins, tokens_to_ignore_mask)
 
-    # true_tokens_normalized = normalize_answers(true_tokens_masked)
-    # pred_tokens_normalized = normalize_answers(pred_tokens_masked)
+    common_token_mask = tf.cast(tf.math.multiply(true_token_bins, pred_token_bins) > 0, tf.dtypes.int32)
+    len_common_tokens = tf.math.minimum(tf.math.multiply(true_token_bins, common_token_mask),
+                                        tf.math.multiply(pred_token_bins, common_token_mask))
+    len_common_tokens = tf.math.reduce_sum(len_common_tokens, axis=-1)
 
+    len_true_token = tf.math.reduce_sum(true_token_bins, axis=-1)
+    len_pred_token = tf.math.reduce_sum(pred_token_bins, axis=-1)
 
-    prec = common / len_pred_token
-    rec = common / len_true_token
+    prec = len_common_tokens / len_pred_token
+    rec = len_common_tokens / len_true_token
 
     f1_score = 2 * (prec * rec) / (prec + rec)
-
     f1_score = tf.reduce_mean(f1_score)  # Check this...
     print()
 
-    # main()
+    main()

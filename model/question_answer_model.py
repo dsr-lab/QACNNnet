@@ -75,8 +75,6 @@ class QACNNnet(tf.keras.Model):
             if isinstance(metric, F1Score):
                 metric.set_words_context(x[0])
 
-
-
         # Update metrics (includes the metric that tracks the loss)
         self.compiled_metrics.update_state(y, y_pred)
 
