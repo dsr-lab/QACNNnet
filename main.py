@@ -305,8 +305,14 @@ if __name__ == '__main__':
     len_true_token = tf.math.reduce_sum(true_token_bins, axis=-1)
     len_pred_token = tf.math.reduce_sum(pred_token_bins, axis=-1)
 
-    prec = len_common_tokens / len_pred_token
-    rec = len_common_tokens / len_true_token
+    # Avoid divisions by 0
+    epsilon = 1e-8
+    len_true_token = tf.cast(len_true_token, tf.float32)
+    len_pred_token = tf.cast(len_pred_token, tf.float32)
+    len_common_tokens = tf.cast(len_common_tokens, tf.float32)
+
+    prec = (len_common_tokens / (len_pred_token + epsilon)) + epsilon
+    rec = (len_common_tokens / (len_true_token + epsilon)) + epsilon
 
     f1_score = 2 * (prec * rec) / (prec + rec)
     f1_score = tf.reduce_mean(f1_score)  # Check this...
