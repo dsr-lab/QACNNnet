@@ -40,7 +40,7 @@ def create_folders(paths: List[str]):
       os.makedirs(path)
 
 folders = [DATASET_PATHS["dataframe_folder"]]
-           
+
 create_folders(folders)
 
 def build_dataframe(dataframetrain_path: str, dataframeval_path: str, save = True)->(pd.DataFrame, pd.DataFrame):
@@ -57,7 +57,7 @@ def build_dataframe(dataframetrain_path: str, dataframeval_path: str, save = Tru
 		df_train.to_pickle(dataframetrain_path)
 		df_val.to_pickle(dataframeval_path)
 		print("Dataframe saved successfully")
- 
+
 	return df_train, df_val
 
 def load_dataframe(dataframetrain_path: str, dataframval_path: str, force_rebuild = False)->pd.DataFrame:
@@ -105,7 +105,7 @@ BEGINNING_IDS_RE = re.compile('^\d*\s*')
 # Remove multiple whitespaces, tabs and newlines
 EXTRA_WHITE_SPACE_RE = re.compile('/\s\s+/g')
 
-# The stopwords are a list of words that are very very common but don’t 
+# The stopwords are a list of words that are very very common but don’t
 # provide useful information for most text analysis procedures.
 # Therefore, they will be removed from the dataset
 try:
@@ -116,7 +116,7 @@ except LookupError:
 
 
 nltk.download('punkt') # necessary for being able to tokenize
-nltk.download('wordnet') 
+nltk.download('wordnet')
 nltk.download('averaged_perceptron_tagger')
 
 lemmatizer = WordNetLemmatizer()
@@ -167,7 +167,7 @@ def remove_stopwords(text: str) -> str:
     ----------
     text : str
         The text to process
-    
+
     Returns
     -------
     text : str
@@ -194,7 +194,7 @@ def replace_ids(text: str) -> str:
     ----------
     text : str
         The text to process
-    
+
     Returns
     -------
     text : str
@@ -210,7 +210,7 @@ def lemsent(sentence):
     ----------
     text : str
         The text to process.
-    
+
     Returns
     -------
     text : str
@@ -260,7 +260,7 @@ def preprocess_dataset(df: pd.DataFrame) -> pd.DataFrame:
   df['title'] = df['data.title'].apply(lambda txt: text_prepare(txt))
   df['paragraphs.context'] = df['data.paragraphs.context'].apply(lambda txt: text_prepare(txt))
   df['paragraphs.qas.question'] = df['data.paragraphs.qas.question'].apply(lambda txt: text_prepare(txt))
-  
+
   return df
 
 #df_train = preprocess_dataset(df_train)
@@ -455,7 +455,7 @@ def setup_files():
   '''
   Create the folder if it does not exist.
   Then download the zip file from the web archive if it does not exist.
-  Finally exctract the zip file of the GloVe txt file does not exist in the folder.
+  Finally extract the zip file of the GloVe txt file does not exist in the folder.
   '''
 
   if not os.path.exists(PATHS["glove_path"]):
@@ -477,11 +477,11 @@ def download_glove(url: str):
 
 def extract_glove(zip_file: str,
                   glove_path: str):
-  
+
     '''
     Extract GloVe's zip file.
     '''
-  
+
     with zipfile.ZipFile(PATHS["glove_zip"], 'r') as zip_ref:
       zip_ref.extractall(path=PATHS["glove_path"])
       print("Successful extraction")
@@ -556,7 +556,7 @@ def update_embeddings(glove_embedding: Dict[str, int],
         A dictionary containing the new embeddings
         for the analyzed OOV words.
     '''
-    
+
     #Merge GloVe's embeddings with the new discoveries
     glove_embedding.update(new_embeddings)
 
@@ -612,7 +612,7 @@ def add_unk_embedding(embedding_matrix: np.ndarray)-> np.ndarray
   Add UNK embedding to the embedding matrix
   ------
   Parameters:
-  embedding_matrix: np.ndarray 
+  embedding_matrix: np.ndarray
       The embedding matrix.
   ------
   Returns:

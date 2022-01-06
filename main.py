@@ -1,7 +1,33 @@
 from metrics import qa_loss
 from model.question_answer_model import QACNNnet
 from Config import *
+from preprocessing.dataframe_builder import load_dataframe, build_embedding_matrix
 
+def load_data():
+
+    dataframe, words_tokenizer, chars_tokenizer, glove_dict = load_dataframe()
+    pretrained_embedding_weights = build_embedding_matrix(words_tokenizer, glove_dict)
+
+    #TODO: set pretrained weights from config and also vocab's sizes
+
+    train_set = dataframe.loc[dataframe["Split"] == "train"]
+    validation_set = dataframe.loc[dataframe["Split"] == "validation"]
+
+    input_train = (np.array(train_set["Context words"]),
+    np.array(train_set["Context chars"]),
+    np.array(train_set["Question words"]),
+    np.array(train_set["Question chars"]))
+
+    output_train = np.array(train_set["Labels"])
+
+    input_validation = (np.array(validation_set["Context words"]),
+    np.array(validation_set["Context chars"]),
+    np.array(validation_set["Question words"]),
+    np.array(validation_set["Question chars"]))
+
+    output_validation = np.array(validation_set["Labels"])
+
+    return input_train, input_validation, output_train, output_validation
 
 # Build model and compile
 def build_model(input_embedding_params, embedding_encoder_params, conv_layer_params, model_encoder_params,
