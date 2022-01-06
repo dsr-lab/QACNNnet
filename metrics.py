@@ -8,6 +8,8 @@ class F1Score(tf.keras.metrics.Metric):
 
         self.w_context = None
         self.f1_score = self.add_weight(name='score', initializer='zeros')
+        self.batch_idx = self.add_weight(name='batch_idx', initializer='zeros')
+        self.batch_idx.assign_add(1.0)
         self.vocab_size = vocab_size
         self.ignore_tokens = ignore_tokens
 
@@ -59,8 +61,8 @@ class F1Score(tf.keras.metrics.Metric):
 
         f1_score_values = 2 * (prec * rec) / (prec + rec)
 
-        self.f1_score.assign_add(tf.reduce_mean(f1_score_values))
-
+        self.f1_score.assign_add((self.f1_score + tf.reduce_mean(f1_score_values))/self.batch_idx)
+        self.batch_idx.assign_add(1.0)
         # Reset variables
         self.w_context = None
 
@@ -73,6 +75,7 @@ class F1Score(tf.keras.metrics.Metric):
     def reset_state(self):
         # The state of the metric will be reset at the start of each epoch.
         self.f1_score.assign(0.0)
+        self.batch_idx.assign(1.0)
 
 
 def get_answers(context, start_indices, end_indices):
