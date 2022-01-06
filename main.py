@@ -49,48 +49,9 @@ def build_model(input_embedding_params, embedding_encoder_params, conv_layer_par
         optimizer=optimizer,
         loss=loss,
         run_eagerly=True,
-        metrics=[]
     )
 
     return model
-
-
-def custom_accuracy(y_true, y_pred):
-    """
-
-    :param y_true: expected shape (batch_size, 2, 1)
-    :param y_pred: expected shape (batch_size, 2, 400)
-    :return:
-    """
-
-    assert y_true.shape[1] == 2
-    assert y_pred.shape[1] == 2
-
-    # Number of elements in the current batch
-    batch_size = y_true.shape[0]
-    n_samples = tf.math.multiply(batch_size, 2)
-    n_samples = tf.cast(n_samples, tf.dtypes.int64)
-
-    # Split the data
-    y_true_start, y_true_end = tf.split(y_true, num_or_size_splits=2, axis=1)
-    y_pred_start, y_pred_end = tf.split(y_pred, num_or_size_splits=2, axis=1)
-
-    # Remove unused dimension from labels
-    y_true_start = tf.squeeze(y_true_start, axis=1)
-    y_true_start = tf.cast(y_true_start, tf.dtypes.int64)
-
-    y_true_end = tf.squeeze(y_true_end, axis=1)
-    y_true_end = tf.cast(y_true_end, tf.dtypes.int64)
-
-    # Get the predictions
-    y_pred_start = tf.argmax(y_pred_start, axis=-1, output_type=tf.dtypes.int64)
-    y_pred_end = tf.argmax(y_pred_end, axis=-1, output_type=tf.dtypes.int64)
-
-    # Count the number of elements that are equal
-    n_equal_start = tf.math.count_nonzero(tf.math.equal(y_pred_start, y_true_start))
-    n_equal_end = tf.math.count_nonzero(tf.math.equal(y_pred_end, y_true_end))
-
-    return tf.math.divide(tf.math.add(n_equal_start, n_equal_end), n_samples)
 
 
 def generate_random_data(n_items):
@@ -133,12 +94,12 @@ def main():
     # tf.keras.utils.plot_model(model, "Architecture.png", show_shapes=True, expand_nested=True)
 
     train_w_context, \
-    train_c_context, train_w_query, \
-    train_c_query, train_labels = generate_random_data(32)
+        train_c_context, train_w_query, \
+        train_c_query, train_labels = generate_random_data(32)
 
     valid_w_context, \
-    valid_c_context, valid_w_query, \
-    valid_c_query, valid_labels = generate_random_data(8)
+        valid_c_context, valid_w_query, \
+        valid_c_query, valid_labels = generate_random_data(8)
 
     history = model.fit(
         x=[train_w_context, train_c_context, train_w_query, train_c_query],
@@ -154,5 +115,4 @@ def main():
 
 
 if __name__ == '__main__':
-
     main()
