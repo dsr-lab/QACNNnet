@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 
-from metrics import F1Score
+from metrics import F1Score, EMScore
 from context_query_attention import ContextQueryAttentionLayer
 from encoding.encoder import EncoderLayer
 from input_embedding.input_embedding_layer import InputEmbeddingLayer
@@ -9,6 +9,7 @@ from model_output import OutputLayer
 
 # TODO: pass the correct word vocab size and ingore tokens
 f1_score = F1Score(vocab_size=10000, ignore_tokens=tf.constant([[0], [1], [9], [10]]))
+em_score = EMScore(vocab_size=10000, ignore_tokens=tf.constant([[0], [1], [9], [10]]))
 
 class QACNNnet(tf.keras.Model):
 
@@ -69,13 +70,10 @@ class QACNNnet(tf.keras.Model):
         # Update weights
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
-        # TODO: pass to the metric all the necessary for properly computing the f1 score
-        #if len(self.metrics) > 1:
-        #    metric = self.metrics[1]
-        #    if isinstance(metric, F1Score):
-        #        metric.set_words_context(x[0])
         f1_score.set_words_context(x[0])
         f1_score.update_state(y, y_pred)
+        em_score.set_words_context(x[0])
+        em_score.update_state(y, y_pred)
 
         # Update metrics (includes the metric that tracks the loss)
         self.compiled_metrics.update_state(y, y_pred)
@@ -84,6 +82,7 @@ class QACNNnet(tf.keras.Model):
         # return {m.name: m.result() for m in self.metrics}
         return {
             f1_score.name: f1_score.result(),
+            em_score.name: em_score.result(),
             'loss': loss
         }
 
@@ -97,12 +96,15 @@ class QACNNnet(tf.keras.Model):
         # Update the metrics.
         f1_score.set_words_context(x[0])
         f1_score.update_state(y, y_pred)
+        em_score.set_words_context(x[0])
+        em_score.update_state(y, y_pred)
         self.compiled_metrics.update_state(y, y_pred)
 
         # Return a dict mapping metric names to current value
         #return {m.name: m.result() for m in self.metrics}
         return {
             f1_score.name: f1_score.result(),
+            em_score.name: em_score.result(),
             'loss': loss
         }
 

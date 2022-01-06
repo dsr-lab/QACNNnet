@@ -78,6 +78,54 @@ class F1Score(tf.keras.metrics.Metric):
         self.batch_idx.assign(1.0)
 
 
+class EMScore(tf.keras.metrics.Metric):
+
+    def __init__(self, vocab_size=10, ignore_tokens=tf.constant([[0]]), name='em_score', **kwargs):
+        super(EMScore, self).__init__(name=name, **kwargs)
+
+        self.w_context = None
+        self.em_score = self.add_weight(name='score', initializer='zeros')
+        self.batch_idx = self.add_weight(name='batch_idx', initializer='zeros')
+        self.batch_idx.assign_add(1.0)
+        self.vocab_size = vocab_size
+        self.ignore_tokens = ignore_tokens
+
+    def update_state(self, y_true, y_pred, sample_weight=None):
+
+        b_size = self.w_context.shape[0]
+
+        # Extract start/end indices
+        y_true_start, y_true_end = y_true[:, 0], y_true[:, 1]
+        y_pred_start, y_pred_end = tf.split(y_pred, num_or_size_splits=2, axis=1)
+
+        y_pred_start = tf.argmax(y_pred_start, axis=-1, output_type=tf.dtypes.int64)
+        y_pred_end = tf.argmax(y_pred_end, axis=-1, output_type=tf.dtypes.int64)
+
+        true_tokens = get_answers(self.w_context, y_true_start, y_true_end)
+        pred_tokens = get_answers(self.w_context, y_pred_start, y_pred_end)
+
+        # TODO: fix the computation of the em_score
+        # Count only words different from 0!
+        current_em_score = tf.reduce_sum(tf.cast(tf.math.equal(true_tokens, pred_tokens), tf.dtypes.float32))
+        current_em_score = 100 * current_em_score / (true_tokens.shape[0] * true_tokens.shape[1])
+
+        self.em_score.assign_add((self.em_score + current_em_score)/self.batch_idx)
+        self.batch_idx.assign_add(1.0)
+        # Reset variables
+        self.w_context = None
+
+    def set_words_context(self, words):
+        self.w_context = words
+
+    def result(self):
+        return self.em_score
+
+    def reset_state(self):
+        # The state of the metric will be reset at the start of each epoch.
+        self.em_score.assign(0.0)
+        self.batch_idx.assign(1.0)
+
+
 def get_answers(context, start_indices, end_indices):
     """
     Create a new tensor that contains slice of the original context
