@@ -7,7 +7,7 @@ from preprocessing.dataframe_builder import load_dataframe, build_embedding_matr
 
 def load_data():
 
-    dataframe, words_tokenizer, chars_tokenizer, glove_dict = load_dataframe()
+    dataframe, words_tokenizer, chars_tokenizer, glove_dict = load_dataframe(force_rebuild=False)
     pretrained_embedding_weights = build_embedding_matrix(words_tokenizer, glove_dict)
 
     Config.WORD_VOCAB_SIZE = len(words_tokenizer)
@@ -59,7 +59,7 @@ def build_model(input_embedding_params, embedding_encoder_params, conv_layer_par
 
 
 def generate_random_data(n_items):
-    w_context = np.random.randint(1, WORD_VOCAB_SIZE, (n_items, Config.MAX_CONTEXT_WORDS))
+    w_context = np.random.randint(1, Config.WORD_VOCAB_SIZE, (n_items, Config.MAX_CONTEXT_WORDS))
     # Force some random padding in the input
     for row in range(w_context.shape[0]):
         n_pad = np.random.randint(0, 16)
@@ -100,6 +100,17 @@ def main():
     input_train, input_validation, output_train, output_validation = load_data()
     train_w_context, train_c_context, train_w_query, train_c_query = input_train
     valid_w_context, valid_c_context, valid_w_query, valid_c_query = input_validation
+
+    output_train = np.expand_dims(output_train, -1)
+    output_validation = np.expand_dims(output_validation, -1)
+
+    # train_w_context, \
+    #     train_c_context, train_w_query, \
+    #     train_c_query, output_train = generate_random_data(33)
+    #
+    # valid_w_context, \
+    #     valid_c_context, valid_w_query, \
+    #     valid_c_query, output_validation = generate_random_data(10)
 
     history = model.fit(
         x=[train_w_context, train_c_context, train_w_query, train_c_query],

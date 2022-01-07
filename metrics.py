@@ -14,7 +14,9 @@ class F1Score(tf.keras.metrics.Metric):
         self.ignore_tokens = ignore_tokens
 
     def update_state(self, y_true, y_pred, sample_weight=None):
-        b_size = self.w_context.shape[0]
+
+        b_size = tf.shape(self.w_context)[0]
+
 
         y_true_start, y_true_end, y_pred_start, y_pred_end = _split_start_end_indices(y_true, y_pred)
 
@@ -105,6 +107,7 @@ class EMScore(tf.keras.metrics.Metric):
         self.ignore_tokens = ignore_tokens
 
     def update_state(self, y_true, y_pred, sample_weight=None):
+
         y_true_start, y_true_end, y_pred_start, y_pred_end = _split_start_end_indices(y_true, y_pred)
 
         y_pred_start, y_pred_end = _get_predictions(y_pred_start, y_pred_end)
@@ -160,11 +163,13 @@ def _get_answers(context, start_indices, end_indices):
     assert (context.shape[0] == start_indices.shape[0])
     assert (context.shape[0] == end_indices.shape[0])
 
+    b_size = tf.shape(context)[0]
+
     # Create a tensor that has the same token shape, and
     # that contains just position indices
     tensor = tf.range(0, context.shape[1], dtype=tf.dtypes.int64)
-    tensor_tiled = tf.tile(tensor, [context.shape[0]])
-    tensor_tiled_reshaped = tf.reshape(tensor_tiled, [context.shape[0], -1])
+    tensor_tiled = tf.tile(tensor, [b_size])
+    tensor_tiled_reshaped = tf.reshape(tensor_tiled, [b_size, -1])
 
     # Create masks to filter out unwanted positions
     mask1 = tensor_tiled_reshaped >= start_indices
@@ -190,8 +195,6 @@ def qa_loss(y_true, y_pred):
     assert y_true.shape[1] == 2
     assert y_pred.shape[1] == 2
 
-    batch_size = y_true.shape[0]
-
     y_true_start, y_true_end = tf.split(y_true, num_or_size_splits=2, axis=1)
     y_pred_start, y_pred_end = tf.split(y_pred, num_or_size_splits=2, axis=1)
 
@@ -199,8 +202,13 @@ def qa_loss(y_true, y_pred):
     p1 = tf.gather(params=y_pred_start, indices=y_true_start, axis=-1, batch_dims=-1)
     p2 = tf.gather(params=y_pred_end, indices=y_true_end, axis=-1, batch_dims=-1)
 
-    p1 = tf.reshape(p1, shape=(batch_size, 1))
-    p2 = tf.reshape(p2, shape=(batch_size, 1))
+    a = tf.shape(p1)
+    b = a[0]
+
+    # p1 = tf.reshape(p1, shape=(batch_size, 1))
+    # p2 = tf.reshape(p2, shape=(batch_size, 1))
+    p1 = tf.reshape(p1, shape=(-1, 1))
+    p2 = tf.reshape(p2, shape=(-1, 1))
 
     log_p1 = tf.math.log(p1 + epsilon)
     log_p2 = tf.math.log(p2 + epsilon)

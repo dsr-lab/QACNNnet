@@ -7,3 +7,4 @@ def get_predictions(predictions_start, predictions_end):
     #Create mask
     #Get max from masked matrix
     #Get max's indices
+    pass
