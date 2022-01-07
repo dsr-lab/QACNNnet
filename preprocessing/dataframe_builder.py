@@ -9,8 +9,6 @@ import glove_manager
 import pickle
 import Config
 
-#TODO: Test A LOT (nothing tested yet, surely full of bugs and probably it does not even compile)
-
 DATA_PATH = os.path.join("data", "training_set.json")
 DATAFRAME_PATH = os.path.join("data", "training_dataframe.pkl")
 WORDS_TOKENIZER_PATH = os.path.join("data", "words_tokenizer.pkl")
@@ -19,7 +17,8 @@ CHARS_TOKENIZER_PATH = os.path.join("data", "chars_tokenizer.pkl")
 PREPROCESSING_OPTIONS = {
 "strip":True,
 "lower":True,
-"replace":True,
+"replace":False,
+"remove special":False,
 "stopwords":False,
 "lemmatize":True
 }
@@ -51,28 +50,34 @@ def get_answer_indices(context_words, answer_words):
         else:
             i=0
 
-def build_dataframe_row(context, question, answer, split):
+    return None
 
-    preprocessed_context = preprocess.preprocess_text(context, **PREPROCESSING_OPTIONS)
+def build_dataframe_row(context, question, answer, split, title, id):
+
+    preprocessed_context = preprocess.preprocess_text(context, PREPROCESSING_OPTIONS)
 
     if len(preprocessed_context)>Config.MAX_CONTEXT_WORDS:
         return None
 
-    preprocessed_question = preprocess.preprocess_text(question, **PREPROCESSING_OPTIONS)
-    preprocessed_answer = preprocess.preprocess_text(answer, **PREPROCESSING_OPTIONS)
+    preprocessed_question = preprocess.preprocess_text(question, PREPROCESSING_OPTIONS)
+    preprocessed_answer = preprocess.preprocess_text(answer, PREPROCESSING_OPTIONS)
 
     answer_indices = get_answer_indices(preprocessed_context, preprocessed_answer)
+    if answer_indices==None:
+        return None #Scart if answer is not found in context
 
     preprocessed_context_chars = [preprocess.split_to_chars(word) for word in preprocessed_context]
     preprocessed_question_chars = [preprocess.split_to_chars(word) for word in preprocessed_question]
 
     row = {
+    "Title": title,
+    "Question ID":id,
     "Context words":preprocessed_context,
     "Context chars":preprocessed_context_chars,
     "Question words":preprocessed_question,
     "Question chars":preprocessed_question_chars,
     "Labels":answer_indices,
-    "Split":split
+    "Split":split,
     }
 
     return row
@@ -100,7 +105,7 @@ def extract_rows(json_dict):
 
             for qas in questions_answers:
                 question = qas["question"]
-                id = qas["id"] #Not used
+                id = qas["id"]
                 answers = qas["answers"]
 
                 for answer in answers:
@@ -108,17 +113,17 @@ def extract_rows(json_dict):
                     answer_start = answer["answer_start"] #Not used
 
                     if not splitted_to_val:
-                        if len(dataframe_rows) < TRAIN_SAMPLES and allow_val_split:
+                        if len(dataframe_rows) > TRAIN_SAMPLES and allow_val_split:
                             splitted_to_val=True
 
-                    split = "train" not splitted_to_val else "validation"
+                    split = "train" if not splitted_to_val else "validation"
 
-                    row = build_dataframe_row(context, question, answers_text, split)
+                    row = build_dataframe_row(context, question, answer_text, split, title, id)
                     if row!= None:
                         dataframe_rows.append(row)
                         allow_val_split=False
 
-    print("Data extraction completed!"")
+    print("Data extraction completed!")
 
     return dataframe_rows
 
@@ -142,13 +147,16 @@ def build_dataframe():
     glove_dict = glove_manager.load_glove()
 
     unique_words = tokenizer.get_unique_words(dataframe_rows)
+    print("Word tokenizer built succesfully!")
+
     unique_chars = tokenizer.get_unique_chars(dataframe_rows)
+    print("Char tokenizer built succesfully!")
 
     words_tokenizer = tokenizer.build_words_tokenizer(unique_words, glove_dict)
     chars_tokenizer = tokenizer.build_chars_tokenizer(unique_chars)
 
     dataframe = pd.DataFrame(dataframe_rows)
-	dataframe = dataframe[["Context words", "Context chars", "Question words", "Question chars", "Labels", "Split"]]
+    dataframe = dataframe[["Title", "Question ID" ,"Context words", "Context chars", "Question words", "Question chars", "Labels", "Split"]]
 
     dataframe = tokenize_dataframe(dataframe, words_tokenizer, chars_tokenizer)
 
@@ -174,11 +182,12 @@ def check_savings(paths):
 
     return True
 
-def load_dataframe(force_rebuild=False):
+def load_dataframe(save=True, force_rebuild=False):
 
-    if not check_savings(DATAFRAME_PATH, WORDS_TOKENIZER_PATH, CHARS_TOKENIZER_PATH) or force_rebuild:
-		dataframe, words_tokenizer, chars_tokenizer, glove_dict = build_dataframe()
-        save_dataframe(dataframe)
+    if not check_savings([DATAFRAME_PATH, WORDS_TOKENIZER_PATH, CHARS_TOKENIZER_PATH]) or force_rebuild:
+        dataframe, words_tokenizer, chars_tokenizer, glove_dict = build_dataframe()
+        if save:
+            save_dataframe(dataframe, words_tokenizer, chars_tokenizer)
         return dataframe, words_tokenizer, chars_tokenizer, glove_dict
 
     else:
@@ -199,7 +208,7 @@ def build_embedding_matrix(words_tokenizer, glove_dict):
 
     print("Building embedding matrix started...")
 
-    for word, token in tqdm(words_tokenizers.items()):
+    for word, token in tqdm(words_tokenizer.items()):
         if word in glove_dict:
             embedding_matrix[token-1] = glove_dict[word]
         else:

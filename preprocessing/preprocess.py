@@ -1,10 +1,15 @@
 import nltk
+import re
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet
 from nltk.corpus import stopwords
 
 nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('wordnet')
+nltk.download('omw-1.4')
 
 REPLACE_BY_SPACE_RE = re.compile('[/(){}\[\]\|@,;]')
 
@@ -26,7 +31,7 @@ def replace_with_spaces(text):
 def get_words(text, remove_special_symbols=True):
 
     words = word_tokenize(text)
-    if remove_punctuation:
+    if remove_special_symbols:
         filtered_words = [word for word in words if word.isalnum()] #remove special symbols and punctuation
         return filtered_words
     else:
@@ -51,14 +56,14 @@ def delete_stop_words(words):
     filtered_words = [word for word in words if word not in stop_words]
     return filtered_words
 
-def split_to_chars(text):
+def split_to_chars(word):
 
     return [char for char in word]
 
 def preprocess_text(text, preprocessing_options):
 
     if preprocessing_options["strip"]:
-        text = strip_text()
+        text = strip_text(text)
 
     if preprocessing_options["lower"]:
         text = set_to_lower(text)

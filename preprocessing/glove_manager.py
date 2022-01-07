@@ -1,6 +1,7 @@
 import os
-import requests
+import urllib
 import zipfile
+import numpy as np
 import Config
 
 URL_BASE = "https://nlp.stanford.edu/data" #Location of the pre-trained GloVe's files
@@ -32,26 +33,27 @@ def setup_files():
 
     extract_glove(PATHS["glove_zip"],PATHS["glove_path"])
 
-def download_glove(url: str):
+def download_glove(url):
     '''
     Download GloVe's zip file from the web.
     '''
 
+    print("Downloading GloVe...")
     urllib.request.urlretrieve(url, PATHS['glove_zip'])
     print("Successful download")
 
-def extract_glove(zip_file: str,
-                  glove_path: str):
+def extract_glove(zip_file, glove_path):
 
     '''
     Extract GloVe's zip file.
     '''
 
+    print("Extracting GloVe...")
     with zipfile.ZipFile(PATHS["glove_zip"], 'r') as zip_ref:
       zip_ref.extractall(path=PATHS["glove_path"])
-      print("Successful extraction")
+      print("Successful extraction!")
 
-def load_glove() ->Dict:
+def load_glove():
   '''
   Open GloVe's txt file and store each of its contained words
   into a dictionary along with their correspondent embedding weights.

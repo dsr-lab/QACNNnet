@@ -1,7 +1,5 @@
 import numpy as np
 
-PADDING = 0
-
 def get_unique_words(text_rows):
 
     unique_words = set()
@@ -17,10 +15,14 @@ def get_unique_chars(text_rows): #Inefficient, try with tf.UnicodeCharTokenizer 
 
     unique_chars = set()
     for row in text_rows:
-        context_chars = set(row["Context chars"])
-        question_chars = set(row["Question chars"])
+        context_chars = row["Context chars"]
+        question_chars = row["Question chars"]
 
-        unique_words = unique_chars | context_chars | question_chars
+        chars_lists = context_chars + question_chars
+
+        for char_list in chars_lists:
+            chars = set(char_list)
+            unique_chars = unique_chars | chars
 
     return unique_chars
 
@@ -46,7 +48,7 @@ def build_chars_tokenizer(unique_chars):
 def tokenize_word(word, tokenizer):
 
     if word in tokenizer:
-        return tokenizer[element]
+        return tokenizer[word]
     else:
         return tokenizer["UNK"]
 
@@ -56,16 +58,19 @@ def tokenize_char(char,tokenizer):
 def tokenize_char_sequence(char_sequence, tokenizer):
     return [tokenize_char(char,tokenizer) for char in char_sequence]
 
-def add_padding_or_truncate(tokenized_sequence, max_length):
+def add_padding_or_truncate(tokenized_sequence, max_length, char_mode=False):
 
     length_diff = max_length-len(tokenized_sequence)
 
     if length_diff==0: # Return the same sequence if it has the requested size
         return tokenized_sequence
-      elif length_diff<0: # Return the truncated sequence if it exceeds the requested size
+    elif length_diff<0: # Return the truncated sequence if it exceeds the requested size
         return tokenized_sequence[0:max_length]
-      else: # Return the padded sequence if it has an inferior size than the expected one
-        return np.pad(tokenized_sequence, (PADDING, length_diff), 'constant').tolist()
+    else: # Return the padded sequence if it has an inferior size than the expected one
+        if char_mode:
+            return np.pad(np.array(tokenized_sequence), ((0, length_diff),(0,0)), 'constant').tolist()
+        else:
+            return np.pad(np.array(tokenized_sequence), (0, length_diff), 'constant').tolist()
 
 def pad_truncate_tokenize_words(words, tokenizer, max_words):
 
@@ -80,7 +85,7 @@ def pad_truncate_tokenize_chars(chars, tokenizer, max_chars):
 def pad_truncate_tokenize_chars_sequence(chars_lists, tokenizer, max_words, max_chars):
 
     tokenized_sequence = [pad_truncate_tokenize_chars(char_list, tokenizer, max_chars) for char_list in chars_lists]
-    return add_padding_or_truncate(tokenized_sequence, max_words)
+    return add_padding_or_truncate(tokenized_sequence, max_words, char_mode=True)
 
 def detokenize(token,tokenizer):
 
