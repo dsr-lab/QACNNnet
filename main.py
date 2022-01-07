@@ -1,7 +1,7 @@
 from metrics import qa_loss
 from model.question_answer_model import QACNNnet
 from Config import *
-#from preprocessing.dataframe_builder import load_dataframe, build_embedding_matrix
+from preprocessing.dataframe_builder import load_dataframe, build_embedding_matrix
 
 def load_data():
 

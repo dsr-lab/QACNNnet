@@ -3,9 +3,9 @@ import os
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-import preprocess
-import tokenizer
-import glove_manager
+import preprocessing.preprocess as preprocess
+import preprocessing.tokenizer as tokenizer
+import preprocessing.glove_manager as glove_manager
 import pickle
 import Config
 
@@ -17,8 +17,8 @@ CHARS_TOKENIZER_PATH = os.path.join("data", "chars_tokenizer.pkl")
 PREPROCESSING_OPTIONS = {
 "strip":True,
 "lower":True,
-"replace":False,
-"remove special":False,
+"replace":True,
+"remove special":True,
 "stopwords":False,
 "lemmatize":True
 }
