@@ -115,4 +115,4 @@ class QACNNnet(tf.keras.Model):
         # or at the start of `evaluate()`.
         # If you don't implement this property, you have to call
         # `reset_states()` yourself at the time of your choosing.
-        return [f1_score]
+        return [f1_score, em_score]

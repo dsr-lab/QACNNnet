@@ -14,54 +14,26 @@ class F1Score(tf.keras.metrics.Metric):
         self.ignore_tokens = ignore_tokens
 
     def update_state(self, y_true, y_pred, sample_weight=None):
-
         b_size = self.w_context.shape[0]
 
-        # Extract start/end indices
-        y_true_start, y_true_end = y_true[:, 0], y_true[:, 1]
-        y_pred_start, y_pred_end = tf.split(y_pred, num_or_size_splits=2, axis=1)
+        y_true_start, y_true_end, y_pred_start, y_pred_end = _split_start_end_indices(y_true, y_pred)
 
-        y_pred_start = tf.argmax(y_pred_start, axis=-1, output_type=tf.dtypes.int64)
-        y_pred_end = tf.argmax(y_pred_end, axis=-1, output_type=tf.dtypes.int64)
+        y_pred_start, y_pred_end = _get_predictions(y_pred_start, y_pred_end)
 
-        true_tokens = get_answers(self.w_context, y_true_start, y_true_end)
-        pred_tokens = get_answers(self.w_context, y_pred_start, y_pred_end)
+        true_tokens = _get_answers(self.w_context, y_true_start, y_true_end)
+        pred_tokens = _get_answers(self.w_context, y_pred_start, y_pred_end)
 
-        # tokens_to_ignore = tf.constant([[0], [1], [8]])
-        updates = tf.ones(self.ignore_tokens.shape[0], dtype=tf.dtypes.int64)
-        full_vocab_tensor = tf.ones(self.vocab_size, dtype=tf.dtypes.int64)
+        tokens_to_ignore_mask = self._get_ignore_tokens_mask(self.ignore_tokens, self.vocab_size, b_size)
 
-        tokens_to_ignore_mask = tf.tensor_scatter_nd_sub(full_vocab_tensor, self.ignore_tokens, updates)
-        tokens_to_ignore_mask = tf.cast(tokens_to_ignore_mask, tf.dtypes.int64)
-        tokens_to_ignore_mask = tf.tile(tokens_to_ignore_mask, [b_size])
-        tokens_to_ignore_mask = tf.reshape(tokens_to_ignore_mask, [b_size, -1])
+        true_token_bins = self._bin_count(true_tokens, tokens_to_ignore_mask, self.vocab_size)
+        pred_token_bins = self._bin_count(pred_tokens, tokens_to_ignore_mask, self.vocab_size)
 
-        true_token_bins = tf.math.bincount(true_tokens, minlength=self.vocab_size, maxlength=self.vocab_size, axis=-1, dtype=tf.dtypes.int64)
-        true_token_bins = tf.math.multiply(true_token_bins, tokens_to_ignore_mask)
+        len_common_tokens = self._count_common_tokens(true_token_bins, pred_token_bins)
+        len_true_token = self._count_tokens(true_token_bins)
+        len_pred_token = self._count_tokens(pred_token_bins)
 
-        pred_token_bins = tf.math.bincount(pred_tokens, minlength=self.vocab_size, maxlength=self.vocab_size, axis=-1, dtype=tf.dtypes.int64)
-        pred_token_bins = tf.math.multiply(pred_token_bins, tokens_to_ignore_mask)
-
-        common_token_mask = tf.cast(tf.math.multiply(true_token_bins, pred_token_bins) > 0, tf.dtypes.int64)
-        len_common_tokens = tf.math.minimum(tf.math.multiply(true_token_bins, common_token_mask),
-                                            tf.math.multiply(pred_token_bins, common_token_mask))
-        len_common_tokens = tf.math.reduce_sum(len_common_tokens, axis=-1)
-
-        len_true_token = tf.math.reduce_sum(true_token_bins, axis=-1)
-        len_pred_token = tf.math.reduce_sum(pred_token_bins, axis=-1)
-
-        # Avoid divisions by 0
-        epsilon = 1e-8
-        len_true_token = tf.cast(len_true_token, tf.float32)
-        len_pred_token = tf.cast(len_pred_token, tf.float32)
-        len_common_tokens = tf.cast(len_common_tokens, tf.float32)
-
-        prec = (len_common_tokens / (len_pred_token + epsilon)) + epsilon
-        rec = (len_common_tokens / (len_true_token + epsilon)) + epsilon
-
-        f1_score_values = 2 * (prec * rec) / (prec + rec)
-
-        self.f1_score.assign_add((self.f1_score + tf.reduce_mean(f1_score_values))/self.batch_idx)
+        current_f1_score = self._compute_f1_score(len_true_token, len_pred_token, len_common_tokens)
+        self.f1_score.assign(((self.f1_score * (self.batch_idx - 1)) + current_f1_score)/self.batch_idx)
         self.batch_idx.assign_add(1.0)
         # Reset variables
         self.w_context = None
@@ -77,6 +49,48 @@ class F1Score(tf.keras.metrics.Metric):
         self.f1_score.assign(0.0)
         self.batch_idx.assign(1.0)
 
+    def _get_ignore_tokens_mask(self, ignore_tokens, vocab_size, b_size):
+        updates = tf.ones(ignore_tokens.shape[0], dtype=tf.dtypes.int64)
+        full_vocab_tensor = tf.ones(vocab_size, dtype=tf.dtypes.int64)
+
+        tokens_to_ignore_mask = tf.tensor_scatter_nd_sub(full_vocab_tensor, ignore_tokens, updates)
+        tokens_to_ignore_mask = tf.cast(tokens_to_ignore_mask, tf.dtypes.int64)
+        tokens_to_ignore_mask = tf.tile(tokens_to_ignore_mask, [b_size])
+        tokens_to_ignore_mask = tf.reshape(tokens_to_ignore_mask, [b_size, -1])
+
+        return tokens_to_ignore_mask
+
+    def _bin_count(self, tokens, tokens_to_ignore_mask, vocab_size):
+        token_bins = tf.math.bincount(tokens, minlength=vocab_size, maxlength=vocab_size, axis=-1,
+                                      dtype=tf.dtypes.int64)
+        token_bins = tf.math.multiply(token_bins, tokens_to_ignore_mask)
+
+        return token_bins
+
+    def _count_common_tokens(self, true_token_bins, pred_token_bins):
+        common_token_mask = tf.cast(tf.math.multiply(true_token_bins, pred_token_bins) > 0, tf.dtypes.int64)
+        len_common_tokens = tf.math.minimum(tf.math.multiply(true_token_bins, common_token_mask),
+                                            tf.math.multiply(pred_token_bins, common_token_mask))
+        len_common_tokens = tf.math.reduce_sum(len_common_tokens, axis=-1)
+        return len_common_tokens
+
+    def _count_tokens(self, token_bins):
+        len_token = tf.math.reduce_sum(token_bins, axis=-1)
+        return len_token
+
+    def _compute_f1_score(self, len_true_token, len_pred_token, len_common_tokens):
+        epsilon = 1e-8
+        len_true_token = tf.cast(len_true_token, tf.float32)
+        len_pred_token = tf.cast(len_pred_token, tf.float32)
+        len_common_tokens = tf.cast(len_common_tokens, tf.float32)
+
+        prec = (len_common_tokens / (len_pred_token + epsilon)) + epsilon
+        rec = (len_common_tokens / (len_true_token + epsilon)) + epsilon
+
+        f1_score_values = 2 * (prec * rec) / (prec + rec)
+
+        return tf.reduce_mean(f1_score_values)
+
 
 class EMScore(tf.keras.metrics.Metric):
 
@@ -91,25 +105,34 @@ class EMScore(tf.keras.metrics.Metric):
         self.ignore_tokens = ignore_tokens
 
     def update_state(self, y_true, y_pred, sample_weight=None):
+        y_true_start, y_true_end, y_pred_start, y_pred_end = _split_start_end_indices(y_true, y_pred)
 
-        b_size = self.w_context.shape[0]
+        y_pred_start, y_pred_end = _get_predictions(y_pred_start, y_pred_end)
 
-        # Extract start/end indices
-        y_true_start, y_true_end = y_true[:, 0], y_true[:, 1]
-        y_pred_start, y_pred_end = tf.split(y_pred, num_or_size_splits=2, axis=1)
+        true_tokens = _get_answers(self.w_context, y_true_start, y_true_end)
+        pred_tokens = _get_answers(self.w_context, y_pred_start, y_pred_end)
 
-        y_pred_start = tf.argmax(y_pred_start, axis=-1, output_type=tf.dtypes.int64)
-        y_pred_end = tf.argmax(y_pred_end, axis=-1, output_type=tf.dtypes.int64)
+        # Get a mask for discarding 0-valued true tokens
+        true_tokens_mask = tf.math.not_equal(true_tokens, 0)
 
-        true_tokens = get_answers(self.w_context, y_true_start, y_true_end)
-        pred_tokens = get_answers(self.w_context, y_pred_start, y_pred_end)
+        # Count the number of common tokens
+        common_tokens = tf.math.logical_and(
+            tf.math.equal(true_tokens, pred_tokens),
+            true_tokens_mask
+        )
+        common_tokens = tf.cast(common_tokens, tf.dtypes.float32)
+        common_tokens = tf.reduce_sum(common_tokens)
 
-        # TODO: fix the computation of the em_score
-        # Count only words different from 0!
-        current_em_score = tf.reduce_sum(tf.cast(tf.math.equal(true_tokens, pred_tokens), tf.dtypes.float32))
-        current_em_score = 100 * current_em_score / (true_tokens.shape[0] * true_tokens.shape[1])
+        # Count the number of total true tokens
+        true_tokens = tf.reduce_sum(tf.cast(true_tokens_mask, tf.dtypes.float32))
 
-        self.em_score.assign_add((self.em_score + current_em_score)/self.batch_idx)
+        # Compute the em_score
+        current_em_score = 100 * common_tokens / true_tokens
+        tf.print('current score: ', current_em_score)
+        tf.print('current em_score: ', self.em_score)
+        tf.print('batch_idx:', self.batch_idx)
+
+        self.em_score.assign(((self.em_score * (self.batch_idx - 1)) + current_em_score) / self.batch_idx)
         self.batch_idx.assign_add(1.0)
         # Reset variables
         self.w_context = None
@@ -126,7 +149,7 @@ class EMScore(tf.keras.metrics.Metric):
         self.batch_idx.assign(1.0)
 
 
-def get_answers(context, start_indices, end_indices):
+def _get_answers(context, start_indices, end_indices):
     """
     Create a new tensor that contains slice of the original context
     :param context: the original context words passed as input to the network
@@ -230,3 +253,15 @@ def qa_loss(y_true, y_pred):
     '''
 
     return loss
+
+
+def _split_start_end_indices(y_true, y_pred):
+    y_true_start, y_true_end = y_true[:, 0], y_true[:, 1]
+    y_pred_start, y_pred_end = tf.split(y_pred, num_or_size_splits=2, axis=1)
+    return y_true_start, y_true_end, y_pred_start, y_pred_end
+
+
+def _get_predictions(y_pred_start, y_pred_end):
+    y_pred_start = tf.argmax(y_pred_start, axis=-1, output_type=tf.dtypes.int64)
+    y_pred_end = tf.argmax(y_pred_end, axis=-1, output_type=tf.dtypes.int64)
+    return y_pred_start, y_pred_end
