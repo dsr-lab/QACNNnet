@@ -23,8 +23,8 @@ PREPROCESSING_OPTIONS = {
 "lemmatize":True
 }
 
-#TRAIN_SAMPLES = 90000
-TRAIN_SAMPLES = 5
+TRAIN_SAMPLES = 90000
+# TRAIN_SAMPLES = 5
 
 np.random.seed(seed=100) #Define a seed for randomization, avoiding to get different placeholder or random embeddings each time
 UNK_PLACEHOLDER = np.random.uniform(low=-0.05, high=0.05, size=glove_manager.EMBEDDING_SIZE)
@@ -41,6 +41,10 @@ def get_data(path):
 def get_answer_indices(context_words, answer_words):
 
     i = 0
+    if len(answer_words) == 0:
+        print(f"WARNING: answer_words is empty for with context_words {context_words} ")
+        return None
+
     for j, context_word in enumerate(context_words):
         if context_word == answer_words[i]:
             i+=1
@@ -65,7 +69,15 @@ def build_dataframe_row(context, question, answer, split, title, id):
 
     answer_indices = get_answer_indices(preprocessed_context, preprocessed_answer)
     if answer_indices is None:
-        return None #Scart if answer is not found in context
+        print(f'answer_indices is NONE')
+        print(f'context: {context}')
+        print(f'preprocessed_context: {preprocessed_context}')
+        print(f'question: {question}')
+        print(f'preprocessed_question: {preprocessed_question}')
+        print(f'answer: {answer}')
+        print(f'preprocessed_answer: {preprocessed_answer}')
+
+        return None  # Discard if answer is not found in context
 
     preprocessed_context_chars = [preprocess.split_to_chars(word) for word in preprocessed_context]
     preprocessed_question_chars = [preprocess.split_to_chars(word) for word in preprocessed_question]
@@ -95,8 +107,8 @@ def extract_rows(json_dict):
 
     splitted_to_val = False
 
-    # for element in tqdm(data):
-    for element in tqdm(data[0:2]):
+    # for element in tqdm(data[0:2]):
+    for element in tqdm(data):
         title = element["title"]
         paragraphs = element["paragraphs"]
         allow_val_split = True
