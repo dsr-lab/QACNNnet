@@ -8,7 +8,9 @@ def load_data():
     dataframe, words_tokenizer, chars_tokenizer, glove_dict = load_dataframe()
     pretrained_embedding_weights = build_embedding_matrix(words_tokenizer, glove_dict)
 
-    #TODO: set pretrained weights from config and also vocab's sizes
+    Config.WORD_VOCAB_SIZE = len(words_tokenizer)
+    Config.pretrained_weights = pretrained_embedding_weights
+    Config.CHARACTER_VOCAB_SIZE = len(chars_tokenizer)
 
     train_set = dataframe.loc[dataframe["Split"] == "train"]
     validation_set = dataframe.loc[dataframe["Split"] == "validation"]
@@ -73,7 +75,7 @@ def generate_random_data(n_items):
 
     c_query = np.random.randint(0, 100, (n_items, MAX_QUERY_WORDS, MAX_CHARS))
 
-    labels = tf.random.uniform(shape=(n_items, 2, 1), minval=0, maxval=MAX_CONTEXT_WORDS, dtype=tf.int64)
+    labels = tf.random.uniform(shape=(n_items, 2, 1), minval=0, maxval=MAX_CONTEXT_WORDS, dtype=tf.dtypes.int64)
 
     return w_context, c_context, w_query, c_query, labels
 
@@ -93,21 +95,16 @@ def main():
     model.summary()
     # tf.keras.utils.plot_model(model, "Architecture.png", show_shapes=True, expand_nested=True)
 
-    tf.random.set_seed(2014)
-    train_w_context, \
-        train_c_context, train_w_query, \
-        train_c_query, train_labels = generate_random_data(32)
-
-    valid_w_context, \
-        valid_c_context, valid_w_query, \
-        valid_c_query, valid_labels = generate_random_data(8)
+    input_train, input_validation, output_train, output_validation = load_data()
+    train_w_context, train_c_context, train_w_query, train_c_query = input_train
+    valid_w_context, valid_c_context, valid_w_query, valid_c_query = input_validation
 
     history = model.fit(
         x=[train_w_context, train_c_context, train_w_query, train_c_query],
-        y=train_labels,
+        y=output_train,
         validation_data=(
             [valid_w_context, valid_c_context, valid_w_query, valid_c_query],
-            valid_labels),
+            output_validation),
         verbose=1,
         batch_size=4,
         epochs=5)

@@ -94,7 +94,7 @@ def extract_rows(json_dict):
 
     splitted_to_val = False
 
-    for element in tqdm(data):
+    for element in tqdm(data[0:10]):
         title = element["title"]
         paragraphs = element["paragraphs"]
         allow_val_split = True

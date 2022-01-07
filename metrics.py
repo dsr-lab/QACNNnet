@@ -171,6 +171,8 @@ def _get_answers(context, start_indices, end_indices):
     mask2 = tensor_tiled_reshaped <= end_indices
     final_mask = tf.math.logical_and(mask1, mask2)
     final_mask = tf.cast(final_mask, tf.dtypes.int64)
+    
+    context = tf.cast(context, tf.dtypes.int64)
 
     # Multiply the original token tensor with the mask
     # (unwanted positions will be converted to 0)
@@ -244,7 +246,7 @@ def qa_loss(y_true, y_pred):
     a2 = loss2(y_true_start_one_hot, y_pred_start)
     b2 = loss2(y_true_end_one_hot, y_pred_end)
     _res2 = tf.reduce_mean(a2 + b2)
-    
+
     tf.print('Manual: ', _res0)
     tf.print('SparseCategoricalCE: ', _res1)
     tf.print('CategoricalCE:', _res2)
