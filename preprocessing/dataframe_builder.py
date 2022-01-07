@@ -43,7 +43,7 @@ def get_answer_indices(context_words, answer_words):
     i = 0
     if len(answer_words) == 0:
         print(f"WARNING: answer_words is empty for with context_words {context_words} ")
-        return -1
+        return np.array([])
 
     for j, context_word in enumerate(context_words):
         if context_word == answer_words[i]:
@@ -71,7 +71,7 @@ def build_dataframe_row(context, question, answer, split, title, id):
     if answer_indices is None:
         return None  # Discard if answer is not found in context
 
-    if answer_indices == -1:
+    if answer_indices.shape[0] == 0:
         print(f'answer_indices is NONE')
         print(f'context: {context}')
         print(f'preprocessed_context: {preprocessed_context}')
