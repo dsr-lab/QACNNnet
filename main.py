@@ -1,7 +1,7 @@
 from metrics import qa_loss
 from model.question_answer_model import QACNNnet
 from Config import *
-from preprocessing.dataframe_builder import load_dataframe, build_embedding_matrix
+#from preprocessing.dataframe_builder import load_dataframe, build_embedding_matrix
 
 def load_data():
 
@@ -93,6 +93,7 @@ def main():
     model.summary()
     # tf.keras.utils.plot_model(model, "Architecture.png", show_shapes=True, expand_nested=True)
 
+    tf.random.set_seed(2014)
     train_w_context, \
         train_c_context, train_w_query, \
         train_c_query, train_labels = generate_random_data(32)
