@@ -18,7 +18,7 @@ PREPROCESSING_OPTIONS = {
 "strip":True,
 "lower":True,
 "replace":True,
-"remove special":True,
+"remove special":False,
 "stopwords":False,
 "lemmatize":True
 }
@@ -46,7 +46,7 @@ def get_answer_indices(context_words, answer_words):
             if i==len(answer_words):
                 start = j - len(answer_words) + 1
                 end = j if len(answer_words)<Config.MAX_ANSWER_LENGTH else start+Config.MAX_ANSWER_LENGTH-1 #Truncate answer
-                return [start,end]
+                return np.array([start,end],dtype=np.int64)
         else:
             i=0
 
@@ -63,7 +63,7 @@ def build_dataframe_row(context, question, answer, split, title, id):
     preprocessed_answer = preprocess.preprocess_text(answer, PREPROCESSING_OPTIONS)
 
     answer_indices = get_answer_indices(preprocessed_context, preprocessed_answer)
-    if answer_indices==None:
+    if answer_indices is None:
         return None #Scart if answer is not found in context
 
     preprocessed_context_chars = [preprocess.split_to_chars(word) for word in preprocessed_context]
@@ -94,7 +94,7 @@ def extract_rows(json_dict):
 
     splitted_to_val = False
 
-    for element in tqdm(data[0:10]):
+    for element in tqdm(data):
         title = element["title"]
         paragraphs = element["paragraphs"]
         allow_val_split = True

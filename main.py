@@ -1,6 +1,8 @@
 from metrics import qa_loss
 from model.question_answer_model import QACNNnet
-from Config import *
+import Config
+import tensorflow as tf
+import numpy as np
 from preprocessing.dataframe_builder import load_dataframe, build_embedding_matrix
 
 def load_data():
@@ -15,19 +17,19 @@ def load_data():
     train_set = dataframe.loc[dataframe["Split"] == "train"]
     validation_set = dataframe.loc[dataframe["Split"] == "validation"]
 
-    input_train = (np.array(train_set["Context words"]),
-    np.array(train_set["Context chars"]),
-    np.array(train_set["Question words"]),
-    np.array(train_set["Question chars"]))
+    input_train = (np.stack(train_set["Context words"],axis=0),
+    np.stack(train_set["Context chars"],axis=0),
+    np.stack(train_set["Question words"],axis=0),
+    np.stack(train_set["Question chars"],axis=0))
 
-    output_train = np.array(train_set["Labels"])
+    output_train = np.stack(train_set["Labels"],axis=0)
 
-    input_validation = (np.array(validation_set["Context words"]),
-    np.array(validation_set["Context chars"]),
-    np.array(validation_set["Question words"]),
-    np.array(validation_set["Question chars"]))
+    input_validation = (np.stack(validation_set["Context words"],axis=0),
+    np.stack(validation_set["Context chars"],axis=0),
+    np.stack(validation_set["Question words"],axis=0),
+    np.stack(validation_set["Question chars"],axis=0))
 
-    output_validation = np.array(validation_set["Labels"])
+    output_validation = np.stack(validation_set["Labels"],axis=0)
 
     return input_train, input_validation, output_train, output_validation
 
@@ -57,38 +59,38 @@ def build_model(input_embedding_params, embedding_encoder_params, conv_layer_par
 
 
 def generate_random_data(n_items):
-    w_context = np.random.randint(1, WORD_VOCAB_SIZE, (n_items, MAX_CONTEXT_WORDS))
+    w_context = np.random.randint(1, WORD_VOCAB_SIZE, (n_items, Config.MAX_CONTEXT_WORDS))
     # Force some random padding in the input
     for row in range(w_context.shape[0]):
         n_pad = np.random.randint(0, 16)
         if n_pad > 0:
             w_context[row][-n_pad:] = 0
 
-    c_context = np.random.randint(0, 100, (n_items, MAX_CONTEXT_WORDS, MAX_CHARS))
+    c_context = np.random.randint(0, 100, (n_items, Config.MAX_CONTEXT_WORDS, Config.MAX_CHARS))
 
-    w_query = np.random.randint(1, WORD_VOCAB_SIZE, (n_items, MAX_QUERY_WORDS))
+    w_query = np.random.randint(1, Config.WORD_VOCAB_SIZE, (n_items, Config.MAX_QUERY_WORDS))
     # Force some random padding in the input
     for row in range(w_query.shape[0]):
         n_pad = np.random.randint(0, 5)
         if n_pad > 0:
             w_query[row][-n_pad:] = 0
 
-    c_query = np.random.randint(0, 100, (n_items, MAX_QUERY_WORDS, MAX_CHARS))
+    c_query = np.random.randint(0, 100, (n_items, Config.MAX_QUERY_WORDS, Config.MAX_CHARS))
 
-    labels = tf.random.uniform(shape=(n_items, 2, 1), minval=0, maxval=MAX_CONTEXT_WORDS, dtype=tf.dtypes.int64)
+    labels = tf.random.uniform(shape=(n_items, 2, 1), minval=0, maxval=Config.MAX_CONTEXT_WORDS, dtype=tf.dtypes.int64)
 
     return w_context, c_context, w_query, c_query, labels
 
 
 def main():
-    model = build_model(input_embedding_params,
-                        embedding_encoder_params,
-                        conv_layer_params,
-                        model_encoder_params,
-                        MAX_CONTEXT_WORDS,
-                        MAX_QUERY_WORDS,
-                        MAX_CHARS,
-                        OPTIMIZER,
+    model = build_model(Config.input_embedding_params,
+                        Config.embedding_encoder_params,
+                        Config.conv_layer_params,
+                        Config.model_encoder_params,
+                        Config.MAX_CONTEXT_WORDS,
+                        Config.MAX_QUERY_WORDS,
+                        Config.MAX_CHARS,
+                        Config.OPTIMIZER,
                         qa_loss)
 
     print("Model succesfully built!")
@@ -106,7 +108,7 @@ def main():
             [valid_w_context, valid_c_context, valid_w_query, valid_c_query],
             output_validation),
         verbose=1,
-        batch_size=4,
+        batch_size=Config.BATCH_SIZE,
         epochs=5)
 
     print()

@@ -171,7 +171,7 @@ def _get_answers(context, start_indices, end_indices):
     mask2 = tensor_tiled_reshaped <= end_indices
     final_mask = tf.math.logical_and(mask1, mask2)
     final_mask = tf.cast(final_mask, tf.dtypes.int64)
-    
+
     context = tf.cast(context, tf.dtypes.int64)
 
     # Multiply the original token tensor with the mask
@@ -184,6 +184,7 @@ def _get_answers(context, start_indices, end_indices):
 def qa_loss(y_true, y_pred):
     # y_true = (batch_size, 2, 1) or (batch_size, 2)
     # y_pred = (batch_size, 2, n_words)
+
     epsilon = 1e-8
 
     assert y_true.shape[1] == 2

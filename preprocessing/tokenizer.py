@@ -43,6 +43,8 @@ def build_chars_tokenizer(unique_chars):
     for char in unique_chars:
         vocab[char]=len(vocab)+1
 
+    vocab["unk"] = len(vocab)+1
+
     return vocab
 
 def tokenize_word(word, tokenizer):
@@ -53,7 +55,11 @@ def tokenize_word(word, tokenizer):
         return tokenizer["UNK"]
 
 def tokenize_char(char,tokenizer):
-    return tokenizer[char]
+
+    if char in tokenizer:
+        return tokenizer[char]
+    else:
+        return tokenizer["unk"]
 
 def tokenize_char_sequence(char_sequence, tokenizer):
     return [tokenize_char(char,tokenizer) for char in char_sequence]
@@ -68,9 +74,9 @@ def add_padding_or_truncate(tokenized_sequence, max_length, char_mode=False):
         return tokenized_sequence[0:max_length]
     else: # Return the padded sequence if it has an inferior size than the expected one
         if char_mode:
-            return np.pad(np.array(tokenized_sequence), ((0, length_diff),(0,0)), 'constant').tolist()
+            return np.pad(tokenized_sequence, ((0, length_diff),(0,0)), 'constant')
         else:
-            return np.pad(np.array(tokenized_sequence), (0, length_diff), 'constant').tolist()
+            return np.pad(tokenized_sequence, (0, length_diff), 'constant')
 
 def pad_truncate_tokenize_words(words, tokenizer, max_words):
 
