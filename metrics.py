@@ -124,10 +124,12 @@ class EMScore(tf.keras.metrics.Metric):
         common_tokens = tf.reduce_sum(common_tokens)
 
         # Count the number of total true tokens
+        epsilon = 1e-8
         true_tokens = tf.reduce_sum(tf.cast(true_tokens_mask, tf.dtypes.float32))
 
         # Compute the em_score
-        current_em_score = 100 * common_tokens / true_tokens
+        # current_em_score = 100 * common_tokens / true_tokens
+        current_em_score = common_tokens / (true_tokens + epsilon)
         tf.print('current score: ', current_em_score)
         tf.print('current em_score: ', self.em_score)
         tf.print('batch_idx:', self.batch_idx)
