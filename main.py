@@ -7,7 +7,7 @@ from preprocessing.dataframe_builder import load_dataframe, build_embedding_matr
 
 def load_data():
 
-    dataframe, words_tokenizer, chars_tokenizer, glove_dict = load_dataframe(force_rebuild=False)
+    dataframe, words_tokenizer, chars_tokenizer, glove_dict = load_dataframe(force_rebuild=True)
     pretrained_embedding_weights = build_embedding_matrix(words_tokenizer, glove_dict)
 
     Config.WORD_VOCAB_SIZE = len(words_tokenizer)
@@ -106,7 +106,7 @@ def main():
 
     # train_w_context, \
     #     train_c_context, train_w_query, \
-    #     train_c_query, output_train = generate_random_data(33)
+    #     train_c_query, output_train = generate_random_data(100)
     #
     # valid_w_context, \
     #     valid_c_context, valid_w_query, \
