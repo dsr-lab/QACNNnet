@@ -96,8 +96,10 @@ class QACNNnet(tf.keras.Model):
         # Update the metrics.
         f1_score.set_words_context(x[0])
         f1_score.update_state(y, y_pred)
+
         em_score.set_words_context(x[0])
         em_score.update_state(y, y_pred)
+
         self.compiled_metrics.update_state(y, y_pred)
 
         # Return a dict mapping metric names to current value

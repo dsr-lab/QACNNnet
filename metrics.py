@@ -130,9 +130,6 @@ class EMScore(tf.keras.metrics.Metric):
         # Compute the em_score
         # current_em_score = 100 * common_tokens / true_tokens
         current_em_score = common_tokens / (true_tokens + epsilon)
-        tf.print('current score: ', current_em_score)
-        tf.print('current em_score: ', self.em_score)
-        tf.print('batch_idx:', self.batch_idx)
 
         self.em_score.assign(((self.em_score * (self.batch_idx - 1)) + current_em_score) / self.batch_idx)
         self.batch_idx.assign_add(1.0)
