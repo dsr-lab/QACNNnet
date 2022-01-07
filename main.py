@@ -48,7 +48,7 @@ def build_model(input_embedding_params, embedding_encoder_params, conv_layer_par
     model.compile(
         optimizer=optimizer,
         loss=loss,
-        run_eagerly=True,
+        run_eagerly=False,
     )
 
     return model
