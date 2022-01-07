@@ -11,7 +11,7 @@ nltk.download('averaged_perceptron_tagger')
 nltk.download('wordnet')
 nltk.download('omw-1.4')
 
-REPLACE_BY_SPACE_RE = re.compile('[/(){}\[\]\|@,;.!?]')
+REPLACE_BY_SPACE_RE = re.compile('[/(){}\[\]\|@,;.!?\-]')
 
 lemmatizer = WordNetLemmatizer()
 stop_words = set(stopwords.words("english"))
