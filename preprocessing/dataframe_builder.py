@@ -23,7 +23,8 @@ PREPROCESSING_OPTIONS = {
 "lemmatize":True
 }
 
-TRAIN_SAMPLES = 90000
+#TRAIN_SAMPLES = 90000
+TRAIN_SAMPLES = 5
 
 np.random.seed(seed=100) #Define a seed for randomization, avoiding to get different placeholder or random embeddings each time
 UNK_PLACEHOLDER = np.random.uniform(low=-0.05, high=0.05, size=glove_manager.EMBEDDING_SIZE)
@@ -94,7 +95,8 @@ def extract_rows(json_dict):
 
     splitted_to_val = False
 
-    for element in tqdm(data):
+    # for element in tqdm(data):
+    for element in tqdm(data[0:2]):
         title = element["title"]
         paragraphs = element["paragraphs"]
         allow_val_split = True
