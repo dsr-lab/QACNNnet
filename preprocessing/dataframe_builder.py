@@ -43,7 +43,7 @@ def get_answer_indices(context_words, answer_words):
     i = 0
     if len(answer_words) == 0:
         print(f"WARNING: answer_words is empty for with context_words {context_words} ")
-        return None
+        return -1
 
     for j, context_word in enumerate(context_words):
         if context_word == answer_words[i]:
@@ -69,6 +69,9 @@ def build_dataframe_row(context, question, answer, split, title, id):
 
     answer_indices = get_answer_indices(preprocessed_context, preprocessed_answer)
     if answer_indices is None:
+        return None  # Discard if answer is not found in context
+
+    if answer_indices == -1:
         print(f'answer_indices is NONE')
         print(f'context: {context}')
         print(f'preprocessed_context: {preprocessed_context}')
@@ -77,7 +80,7 @@ def build_dataframe_row(context, question, answer, split, title, id):
         print(f'answer: {answer}')
         print(f'preprocessed_answer: {preprocessed_answer}')
 
-        return None  # Discard if answer is not found in context
+        return None
 
     preprocessed_context_chars = [preprocess.split_to_chars(word) for word in preprocessed_context]
     preprocessed_question_chars = [preprocess.split_to_chars(word) for word in preprocessed_question]
