@@ -23,7 +23,7 @@ PREPROCESSING_OPTIONS = {
 "lemmatize":True
 }
 
-TRAIN_SAMPLES = 85000
+TRAIN_SAMPLES = 78000
 # TRAIN_SAMPLES = 5
 
 np.random.seed(seed=100) #Define a seed for randomization, avoiding to get different placeholder or random embeddings each time
