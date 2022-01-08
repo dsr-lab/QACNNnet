@@ -115,19 +115,19 @@ def main():
     train_w_context, train_c_context, train_w_query, train_c_query = input_train
     valid_w_context, valid_c_context, valid_w_query, valid_c_query = input_validation
 
-    # n_train = 500
-    # n_val = 100
-    # train_w_context = train_w_context[:n_train]
-    # train_c_context = train_c_context[:n_train]
-    # train_w_query = train_w_query[:n_train]
-    # train_c_query = train_c_query[:n_train]
-    # output_train = output_train[:n_train]
-    #
-    # valid_w_context = valid_w_context[:n_val]
-    # valid_c_context = valid_c_context[:n_val]
-    # valid_w_query = valid_w_query[:n_val]
-    # valid_c_query = valid_c_query[:n_val]
-    # output_validation = output_validation[:n_val]
+    n_train = 500
+    n_val = 100
+    train_w_context = train_w_context[:n_train]
+    train_c_context = train_c_context[:n_train]
+    train_w_query = train_w_query[:n_train]
+    train_c_query = train_c_query[:n_train]
+    output_train = output_train[:n_train]
+
+    valid_w_context = valid_w_context[:n_val]
+    valid_c_context = valid_c_context[:n_val]
+    valid_w_query = valid_w_query[:n_val]
+    valid_c_query = valid_c_query[:n_val]
+    output_validation = output_validation[:n_val]
 
     output_train = np.expand_dims(output_train, -1)
     output_validation = np.expand_dims(output_validation, -1)
