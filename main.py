@@ -112,6 +112,16 @@ def main():
     #     valid_c_context, valid_w_query, \
     #     valid_c_query, output_validation = generate_random_data(10)
 
+    train_w_context = train_w_context[:500]
+    train_c_context = train_c_context[:500]
+    train_w_query = train_w_query[:500]
+    train_c_query = train_c_query[:500]
+    valid_w_context = valid_w_context[:100]
+    valid_c_context = valid_c_context[:100]
+    valid_w_query = valid_w_query[:100]
+    valid_c_query = valid_c_query[:100]
+
+
     history = model.fit(
         x=[train_w_context, train_c_context, train_w_query, train_c_query],
         y=output_train,
@@ -120,7 +130,7 @@ def main():
             output_validation),
         verbose=1,
         batch_size=Config.BATCH_SIZE,
-        epochs=5)
+        epochs=Config.EPOCHS)
 
     print()
 
