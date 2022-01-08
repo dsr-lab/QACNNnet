@@ -116,8 +116,8 @@ def main():
     train_w_context, train_c_context, train_w_query, train_c_query = input_train
     valid_w_context, valid_c_context, valid_w_query, valid_c_query = input_validation
 
-    # n_train = 500
-    # n_val = 100
+    # n_train = 5
+    # n_val = 1
     # train_w_context = train_w_context[:n_train]
     # train_c_context = train_c_context[:n_train]
     # train_w_query = train_w_query[:n_train]

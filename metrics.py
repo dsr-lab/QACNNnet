@@ -203,6 +203,7 @@ def qa_loss(y_true, y_pred):
     y_true_start, y_true_end = tf.split(y_true, num_or_size_splits=2, axis=1)
     y_pred_start, y_pred_end = tf.split(y_pred, num_or_size_splits=2, axis=1)
 
+    '''
     # Get the probabilities of the corresponding ground truth
     p1 = tf.gather(params=y_pred_start, indices=y_true_start, axis=-1, batch_dims=-1)
     p2 = tf.gather(params=y_pred_end, indices=y_true_end, axis=-1, batch_dims=-1)
@@ -224,6 +225,9 @@ def qa_loss(y_true, y_pred):
     neg_log_sum = neg_log_p1 + neg_log_p2
 
     loss = tf.reduce_mean(neg_log_sum)
+    '''
+
+
 
     '''
     # Remove unused dimension from labels
@@ -267,7 +271,24 @@ def qa_loss(y_true, y_pred):
     tf.print('Paper: ', _res3)
     '''
 
-    return loss
+    # EXAMPLE WITH SPARSE CATEGORICAL CROSS ENTROPY
+
+    y_true_start = tf.squeeze(y_true_start, axis=1)
+    y_true_start = tf.cast(y_true_start, tf.dtypes.int64)
+
+    y_true_end = tf.squeeze(y_true_end, axis=1)
+    y_true_end = tf.cast(y_true_end, tf.dtypes.int64)
+
+    # Remove unused dimension from predictions
+    y_pred_start = tf.squeeze(y_pred_start, axis=1)
+    y_pred_end = tf.squeeze(y_pred_end, axis=1)
+
+    loss1 = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)
+    a = loss1(y_true_start, y_pred_start)
+    b = loss1(y_true_end, y_pred_end)
+    _res1 = tf.reduce_mean(a + b)
+
+    return _res1
 
 
 def _split_start_end_indices(y_true, y_pred):
