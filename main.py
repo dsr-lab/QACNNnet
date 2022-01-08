@@ -111,7 +111,7 @@ def main():
     valid_c_context = valid_c_context[:100]
     valid_w_query = valid_w_query[:100]
     valid_c_query = valid_c_query[:100]
-    output_validation[:100]
+    output_validation = output_validation[:100]
 
     output_train = np.expand_dims(output_train, -1)
     output_validation = np.expand_dims(output_validation, -1)
