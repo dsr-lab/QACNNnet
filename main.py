@@ -116,10 +116,13 @@ def main():
     train_c_context = train_c_context[:500]
     train_w_query = train_w_query[:500]
     train_c_query = train_c_query[:500]
+    output_train = output_train[:500]
+
     valid_w_context = valid_w_context[:100]
     valid_c_context = valid_c_context[:100]
     valid_w_query = valid_w_query[:100]
     valid_c_query = valid_c_query[:100]
+    output_validation[:100]
 
 
     history = model.fit(
