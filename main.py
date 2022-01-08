@@ -101,17 +101,6 @@ def main():
     train_w_context, train_c_context, train_w_query, train_c_query = input_train
     valid_w_context, valid_c_context, valid_w_query, valid_c_query = input_validation
 
-    output_train = np.expand_dims(output_train, -1)
-    output_validation = np.expand_dims(output_validation, -1)
-
-    # train_w_context, \
-    #     train_c_context, train_w_query, \
-    #     train_c_query, output_train = generate_random_data(100)
-    #
-    # valid_w_context, \
-    #     valid_c_context, valid_w_query, \
-    #     valid_c_query, output_validation = generate_random_data(10)
-
     train_w_context = train_w_context[:500]
     train_c_context = train_c_context[:500]
     train_w_query = train_w_query[:500]
@@ -123,6 +112,19 @@ def main():
     valid_w_query = valid_w_query[:100]
     valid_c_query = valid_c_query[:100]
     output_validation[:100]
+
+    output_train = np.expand_dims(output_train, -1)
+    output_validation = np.expand_dims(output_validation, -1)
+
+    # train_w_context, \
+    #     train_c_context, train_w_query, \
+    #     train_c_query, output_train = generate_random_data(100)
+    #
+    # valid_w_context, \
+    #     valid_c_context, valid_w_query, \
+    #     valid_c_query, output_validation = generate_random_data(10)
+
+
 
 
     history = model.fit(
