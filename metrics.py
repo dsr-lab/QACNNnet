@@ -88,9 +88,11 @@ class F1Score(tf.keras.metrics.Metric):
         prec = (len_common_tokens / (len_pred_token + epsilon)) + epsilon
         rec = (len_common_tokens / (len_true_token + epsilon)) + epsilon
 
+        '''
         tf.print('len_common_tokens: ', len_common_tokens)
         tf.print('len_pred_token: ', len_pred_token)
         tf.print('len_true_token: ', len_true_token)
+        '''
 
         f1_score_values = 2 * (prec * rec) / (prec + rec)
 
