@@ -78,7 +78,7 @@ def build_model(input_embedding_params, embedding_encoder_params, conv_layer_par
     model.compile(
         optimizer=optimizer,
         loss=loss,
-        run_eagerly=True,
+        run_eagerly=False,
     )
 
     return model
@@ -106,6 +106,7 @@ def generate_random_data(n_items):
     labels = tf.random.uniform(shape=(n_items, 2, 1), minval=0, maxval=Config.MAX_CONTEXT_WORDS, dtype=tf.dtypes.int64)
 
     return w_context, c_context, w_query, c_query, labels
+
 
 def main():
 
