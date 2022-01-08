@@ -9,6 +9,8 @@ MAX_ANSWER_LENGTH = 30
 
 L2_VALUE = 3e-7
 
+IGNORE_TOKENS = tf.constant([[0], [1], [9], [10]])
+
 WORD_EMBEDDING_SIZE = 300
 WORD_VOCAB_SIZE = 10000  # TODO: take from preprocessing step
 pretrained_weights = np.random.rand(WORD_VOCAB_SIZE, WORD_EMBEDDING_SIZE)  # TODO: take from GloVe

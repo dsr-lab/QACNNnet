@@ -1,9 +1,11 @@
 from metrics import qa_loss
+from model import question_answer_model
 from model.question_answer_model import QACNNnet
 import Config
 import tensorflow as tf
 import numpy as np
 from preprocessing.dataframe_builder import load_dataframe, build_embedding_matrix
+import string
 
 def load_data():
 
@@ -13,6 +15,14 @@ def load_data():
     Config.WORD_VOCAB_SIZE = len(words_tokenizer)
     Config.pretrained_weights = pretrained_embedding_weights
     Config.CHARACTER_VOCAB_SIZE = len(chars_tokenizer)
+
+    words_to_remove = ['a', 'an', 'the'] + list(string.punctuation)
+    tokens_to_remove = []
+    for w in words_to_remove:
+        if w in words_tokenizer:
+            tokens_to_remove.append(words_tokenizer[w])
+
+    Config.IGNORE_TOKENS = tf.constant(tokens_to_remove)
 
     train_set = dataframe.loc[dataframe["Split"] == "train"]
     validation_set = dataframe.loc[dataframe["Split"] == "validation"]
@@ -124,7 +134,11 @@ def main():
     #     valid_c_context, valid_w_query, \
     #     valid_c_query, output_validation = generate_random_data(10)
 
-
+    # TODO: refactoring required
+    question_answer_model.f1_score.vocab_size = Config.WORD_VOCAB_SIZE
+    question_answer_model.em_score.vocab_size = Config.WORD_VOCAB_SIZE
+    question_answer_model.f1_score.ignore_tokens = Config.IGNORE_TOKENS
+    question_answer_model.em_score.ignore_tokens = Config.IGNORE_TOKENS
 
 
     history = model.fit(
