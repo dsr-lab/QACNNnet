@@ -6,10 +6,12 @@ from context_query_attention import ContextQueryAttentionLayer
 from encoding.encoder import EncoderLayer
 from input_embedding.input_embedding_layer import InputEmbeddingLayer
 from model_output import OutputLayer
+import Config
 
 # TODO: pass the correct word vocab size and ingore tokens
-f1_score = F1Score(vocab_size=10000, ignore_tokens=tf.constant([[0], [1], [9], [10]]))
-em_score = EMScore(vocab_size=10000, ignore_tokens=tf.constant([[0], [1], [9], [10]]))
+f1_score = F1Score(vocab_size=Config.WORD_VOCAB_SIZE, ignore_tokens=tf.constant([[0], [1], [9], [10]]))
+em_score = EMScore(vocab_size=Config.WORD_VOCAB_SIZE, ignore_tokens=tf.constant([[0], [1], [9], [10]]))
+
 
 class QACNNnet(tf.keras.Model):
 
