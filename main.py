@@ -18,13 +18,12 @@ def load_data():
     Config.pretrained_weights = pretrained_embedding_weights
     Config.CHARACTER_VOCAB_SIZE = len(chars_tokenizer)
     '''
-
-
     words_to_remove = ['a', 'an', 'the'] + list(string.punctuation)
     tokens_to_remove = []
     for w in words_to_remove:
         if w in words_tokenizer:
             tokens_to_remove.append(words_tokenizer[w])
+    tokens_to_remove.append(0)  # Padding
 
     tokens_to_remove = tf.constant(tokens_to_remove)
     tokens_to_remove = tf.expand_dims(tokens_to_remove, -1)
@@ -116,17 +115,19 @@ def main():
     train_w_context, train_c_context, train_w_query, train_c_query = input_train
     valid_w_context, valid_c_context, valid_w_query, valid_c_query = input_validation
 
-    # train_w_context = train_w_context[:10]
-    # train_c_context = train_c_context[:10]
-    # train_w_query = train_w_query[:10]
-    # train_c_query = train_c_query[:10]
-    # output_train = output_train[:10]
+    # n_train = 500
+    # n_val = 100
+    # train_w_context = train_w_context[:n_train]
+    # train_c_context = train_c_context[:n_train]
+    # train_w_query = train_w_query[:n_train]
+    # train_c_query = train_c_query[:n_train]
+    # output_train = output_train[:n_train]
     #
-    # valid_w_context = valid_w_context[:5]
-    # valid_c_context = valid_c_context[:5]
-    # valid_w_query = valid_w_query[:5]
-    # valid_c_query = valid_c_query[:5]
-    # output_validation = output_validation[:5]
+    # valid_w_context = valid_w_context[:n_val]
+    # valid_c_context = valid_c_context[:n_val]
+    # valid_w_query = valid_w_query[:n_val]
+    # valid_c_query = valid_c_query[:n_val]
+    # output_validation = output_validation[:n_val]
 
     output_train = np.expand_dims(output_train, -1)
     output_validation = np.expand_dims(output_validation, -1)
