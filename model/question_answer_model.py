@@ -9,13 +9,19 @@ from model_output import OutputLayer
 import Config
 
 # TODO: pass the correct word vocab size and ingore tokens
-f1_score = F1Score(vocab_size=Config.WORD_VOCAB_SIZE+1, ignore_tokens=tf.constant([[0], [1], [9], [10]]))
-em_score = EMScore(vocab_size=Config.WORD_VOCAB_SIZE+1, ignore_tokens=tf.constant([[0], [1], [9], [10]]))
+# f1_score = F1Score(vocab_size=Config.WORD_VOCAB_SIZE+1, ignore_tokens=tf.constant([[0], [1], [9], [10]]))
+# em_score = EMScore(vocab_size=Config.WORD_VOCAB_SIZE+1, ignore_tokens=tf.constant([[0], [1], [9], [10]]))
 
 
 class QACNNnet(tf.keras.Model):
 
-    def __init__(self, input_embedding_params, embedding_encoder_params, conv_layer_params, model_encoder_params):
+    def __init__(self,
+                 input_embedding_params,
+                 embedding_encoder_params,
+                 conv_layer_params,
+                 model_encoder_params,
+                 vocab_size,
+                 ignore_tokens):
         super(QACNNnet, self).__init__()
 
         self.embedding = InputEmbeddingLayer(**input_embedding_params)
@@ -24,6 +30,8 @@ class QACNNnet(tf.keras.Model):
         self.model_encoder = EncoderLayer(**model_encoder_params)
         self.conv_1d = layers.SeparableConv1D(**conv_layer_params)
         self.model_output = OutputLayer()
+        self.f1_score = F1Score(vocab_size=vocab_size, ignore_tokens=ignore_tokens)
+        self.em_score = EMScore(vocab_size=vocab_size, ignore_tokens=ignore_tokens)
 
     def call(self, inputs, training=None):
         assert len(inputs) == 4
@@ -72,10 +80,10 @@ class QACNNnet(tf.keras.Model):
         # Update weights
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
-        f1_score.set_words_context(x[0])
-        f1_score.update_state(y, y_pred)
-        em_score.set_words_context(x[0])
-        em_score.update_state(y, y_pred)
+        self.f1_score.set_words_context(x[0])
+        self.f1_score.update_state(y, y_pred)
+        self.em_score.set_words_context(x[0])
+        self.em_score.update_state(y, y_pred)
 
         # Update metrics (includes the metric that tracks the loss)
         self.compiled_metrics.update_state(y, y_pred)
@@ -83,8 +91,8 @@ class QACNNnet(tf.keras.Model):
         # Return a dict mapping metric names to current value
         # return {m.name: m.result() for m in self.metrics}
         return {
-            f1_score.name: f1_score.result(),
-            em_score.name: em_score.result(),
+            self.f1_score.name: self.f1_score.result(),
+            self.em_score.name: self.em_score.result(),
             'loss': loss
         }
 
@@ -96,19 +104,19 @@ class QACNNnet(tf.keras.Model):
         # Updates the metrics tracking the loss
         loss = self.compiled_loss(y, y_pred, regularization_losses=self.losses)
         # Update the metrics.
-        f1_score.set_words_context(x[0])
-        f1_score.update_state(y, y_pred)
+        self.f1_score.set_words_context(x[0])
+        self.f1_score.update_state(y, y_pred)
 
-        em_score.set_words_context(x[0])
-        em_score.update_state(y, y_pred)
+        self.em_score.set_words_context(x[0])
+        self.em_score.update_state(y, y_pred)
 
         self.compiled_metrics.update_state(y, y_pred)
 
         # Return a dict mapping metric names to current value
         #return {m.name: m.result() for m in self.metrics}
         return {
-            f1_score.name: f1_score.result(),
-            em_score.name: em_score.result(),
+            self.f1_score.name: self.f1_score.result(),
+            self.em_score.name: self.em_score.result(),
             'loss': loss
         }
 
@@ -119,4 +127,4 @@ class QACNNnet(tf.keras.Model):
         # or at the start of `evaluate()`.
         # If you don't implement this property, you have to call
         # `reset_states()` yourself at the time of your choosing.
-        return [f1_score, em_score]
+        return [self.f1_score, self.em_score]
