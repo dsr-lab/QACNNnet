@@ -137,8 +137,8 @@ def main():
         batch_size=Config.BATCH_SIZE,
         epochs=Config.EPOCHS)
 
-    print()
+    return history
 
 
 if __name__ == '__main__':
-    main()
+    history = main()
