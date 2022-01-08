@@ -135,8 +135,8 @@ def main():
     #     valid_c_query, output_validation = generate_random_data(10)
 
     # TODO: refactoring required
-    question_answer_model.f1_score.vocab_size = Config.WORD_VOCAB_SIZE
-    question_answer_model.em_score.vocab_size = Config.WORD_VOCAB_SIZE
+    question_answer_model.f1_score.vocab_size = Config.WORD_VOCAB_SIZE + 1
+    question_answer_model.em_score.vocab_size = Config.WORD_VOCAB_SIZE + 1
     question_answer_model.f1_score.ignore_tokens = Config.IGNORE_TOKENS
     question_answer_model.em_score.ignore_tokens = Config.IGNORE_TOKENS
 
