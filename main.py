@@ -22,7 +22,9 @@ def load_data():
         if w in words_tokenizer:
             tokens_to_remove.append(words_tokenizer[w])
 
-    Config.IGNORE_TOKENS = tf.constant(tokens_to_remove)
+    tokens_to_remove = tf.constant(tokens_to_remove)
+    tokens_to_remove = tf.expand_dims(tokens_to_remove, -1)
+    Config.IGNORE_TOKENS = tokens_to_remove
 
     train_set = dataframe.loc[dataframe["Split"] == "train"]
     validation_set = dataframe.loc[dataframe["Split"] == "validation"]
@@ -139,7 +141,6 @@ def main():
     question_answer_model.em_score.vocab_size = Config.WORD_VOCAB_SIZE + 1
     question_answer_model.f1_score.ignore_tokens = Config.IGNORE_TOKENS
     question_answer_model.em_score.ignore_tokens = Config.IGNORE_TOKENS
-
 
     history = model.fit(
         x=[train_w_context, train_c_context, train_w_query, train_c_query],
