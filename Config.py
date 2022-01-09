@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow.keras import regularizers
 from model.warmup_learning import CustomSchedule
 
-DEBUG = True
+DEBUG = False
 EAGER_MODE = False
 
 MAX_CONTEXT_WORDS = 400
