@@ -57,7 +57,8 @@ class EncodingLayer(layers.Layer):
 
         feed_forward_layer_params = {
             "units": d_model,
-            "activation": "tanh",  # or Relu?
+            # "activation": "tanh",  # or Relu?
+            "activation": "relu",  # or Relu?
             "kernel_regularizer": self.l2_decay
         }
 

@@ -13,11 +13,6 @@ def load_data():
     dataframe, words_tokenizer, chars_tokenizer, glove_dict = load_dataframe(force_rebuild=False)
     pretrained_embedding_weights = build_embedding_matrix(words_tokenizer, glove_dict)
 
-    '''
-    Config.WORD_VOCAB_SIZE = len(words_tokenizer)
-    Config.pretrained_weights = pretrained_embedding_weights
-    Config.CHARACTER_VOCAB_SIZE = len(chars_tokenizer)
-    '''
     words_to_remove = ['a', 'an', 'the'] + list(string.punctuation)
     tokens_to_remove = []
     for w in words_to_remove:
@@ -27,7 +22,6 @@ def load_data():
 
     tokens_to_remove = tf.constant(tokens_to_remove)
     tokens_to_remove = tf.expand_dims(tokens_to_remove, -1)
-    # Config.IGNORE_TOKENS = tokens_to_remove
 
     train_set = dataframe.loc[dataframe["Split"] == "train"]
     validation_set = dataframe.loc[dataframe["Split"] == "validation"]
@@ -117,8 +111,8 @@ def main():
     valid_w_context, valid_c_context, valid_w_query, valid_c_query = input_validation
 
     if Config.DEBUG:
-        n_train = 5
-        n_val = 1
+        n_train = 500
+        n_val = 100
         train_w_context = train_w_context[:n_train]
         train_c_context = train_c_context[:n_train]
         train_w_query = train_w_query[:n_train]
