@@ -4,6 +4,9 @@ import tensorflow as tf
 from tensorflow.keras import regularizers
 from model.warmup_learning import CustomSchedule
 
+DEBUG = True
+EAGER_MODE = False
+
 MAX_CONTEXT_WORDS = 400
 MAX_QUERY_WORDS = 30
 MAX_ANSWER_LENGTH = 30
@@ -15,7 +18,7 @@ IGNORE_TOKENS = tf.constant([[0], [1], [9], [10]])
 WORD_EMBEDDING_SIZE = 300
 WORD_VOCAB_SIZE = 10000  # TODO: take from preprocessing step
 pretrained_weights = np.random.rand(WORD_VOCAB_SIZE, WORD_EMBEDDING_SIZE)  # TODO: take from GloVe
-CHARACTER_EMBEDDING_SIZE = 200
+CHARACTER_EMBEDDING_SIZE = 96
 CHARACTER_VOCAB_SIZE = 100  # TODO: take from preprocessing step
 MAX_CHARS = 16
 

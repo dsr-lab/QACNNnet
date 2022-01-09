@@ -116,7 +116,7 @@ class EncodingLayer(layers.Layer):
         keep = stochastic_dropout.keep_layer(self.n_layers, layer_num, self.survival_prob) if training else True
         if keep:
 
-            can_apply_residual_block = x.shape[-1] != self.d_model
+            can_apply_residual_block = x.shape[-1] == self.d_model
 
             norm_x = self.norm_layers[layer_num](x)
             f_x = layer(norm_x) if type(layer) != layers.MultiHeadAttention else layer(norm_x, norm_x,
@@ -124,7 +124,7 @@ class EncodingLayer(layers.Layer):
 
             # Residual link can't work for the very first encoder block
             # if int(tf.shape(f_x)[-1]) == int(tf.shape(x)[-1]):
-            if not can_apply_residual_block:
+            if can_apply_residual_block:
                 return f_x + x
             else:
                 return f_x
@@ -218,27 +218,6 @@ class EncoderLayer(layers.Layer):
         """
 
         for encoding_block in self.encoding_blocks:
-            '''
-            if reuse:
-                # Norm layers
-                norm_layer = layers.LayerNormalization()
-                #norm_layer.set_weights(encoding_block.norm_layers[0].get_weights())
-                encoding_block.norm_layers[0] = norm_layer
-
-                # Conv layers
-                conv_init_bias = encoding_block.conv_layers[0].bias
-                bias_initializer = tf.keras.initializers.constant(conv_init_bias)
-
-                input = tf.keras.Input(shape=(x.shape[1], x.shape[2]))
-                conv_layer = layers.SeparableConv1D(**encoding_block.conv_layer_params)
-                conv_layer(input)
-
-                #conv_layer.set_weights(encoding_block.conv_layers[0].get_weights())
-                conv_layer.set_weights(encoding_block.conv_layers[0].get_weights())
-                print("DONE")
-                encoding_block.conv_layers[0] = conv_layer
-            '''
-
             x = encoding_block(x, training=training, mask=mask)
 
         return x

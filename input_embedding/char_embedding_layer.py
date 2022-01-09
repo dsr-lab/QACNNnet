@@ -33,7 +33,6 @@ class CharEmbeddingLayer(tf.keras.layers.Layer):
 
         return y
 
-    @staticmethod
-    def _maxpool(x):
+    def _maxpool(self, x):
         y = tf.math.reduce_max(x, axis=2)
         return y
