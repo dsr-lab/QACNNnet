@@ -197,6 +197,9 @@ def qa_loss(y_true, y_pred):
 
     epsilon = 1e-8
 
+    # Clip values for numerical stability
+    scores = tf.clip_by_value(y_pred, 1e-8, 1. - 1e-8)
+
     assert y_true.shape[1] == 2
     assert y_pred.shape[1] == 2
 
