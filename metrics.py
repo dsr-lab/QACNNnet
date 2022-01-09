@@ -210,9 +210,6 @@ def qa_loss(y_true, y_pred):
     p1 = tf.gather(params=y_pred_start, indices=y_true_start, axis=-1, batch_dims=-1)
     p2 = tf.gather(params=y_pred_end, indices=y_true_end, axis=-1, batch_dims=-1)
 
-    a = tf.shape(p1)
-    b = a[0]
-
     # p1 = tf.reshape(p1, shape=(batch_size, 1))
     # p2 = tf.reshape(p2, shape=(batch_size, 1))
     p1 = tf.reshape(p1, shape=(-1, 1))
