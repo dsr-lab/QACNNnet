@@ -70,7 +70,7 @@ class EncodingLayer(layers.Layer):
 
         # self.feed_forward_layer = layers.Dense(**feed_forward_layer_params)  # Is one layer enough?
 
-        #self.ff1 = layers.Conv1D(d_model, 1, activation='relu')
+        # self.ff1 = layers.Conv1D(d_model, 1, activation='relu')
         self.ff1 = layers.Conv1D(d_model, 1, activation='tanh')
         self.ff2 = layers.Conv1D(d_model, 1, activation=None)
 
