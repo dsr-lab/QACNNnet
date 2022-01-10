@@ -15,6 +15,6 @@ class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
         # scaled_normalized_log_function = normalized_log_function * self.final_learning_rate
 
         return tf.math.minimum(self.final_learning_rate,
-                               0.001 / tf.log(999.) * tf.log(tf.cast(step, tf.float32) + 1))
+                               0.001 / tf.math.log(999.) * tf.math.log(tf.cast(step, tf.dtypes.float32) + 1))
 
         # return tf.math.minimum(self.final_learning_rate, scaled_normalized_log_function)
