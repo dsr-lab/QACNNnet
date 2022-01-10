@@ -62,8 +62,6 @@ class QACNNnet(tf.keras.Model):
         # 5. Output block
         output = self.model_output([m0, m1, m2], mask=context_mask)
 
-        tf.print('LR: ', Config.OPTIMIZER._decayed_lr(tf.float32))
-
         return output
 
     def train_step(self, data):
