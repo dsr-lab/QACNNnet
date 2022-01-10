@@ -10,8 +10,11 @@ class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
         self.warmup_steps = warmup_steps
 
     def __call__(self, step):
-        log_function = tf.math.log(tf.cast(step, tf.float32) + 1)
-        normalized_log_function = log_function / tf.math.log(self.warmup_steps)
-        scaled_normalized_log_function = normalized_log_function * self.final_learning_rate
+        # log_function = tf.math.log(tf.cast(step, tf.float32) + 1)
+        # normalized_log_function = log_function / tf.math.log(self.warmup_steps)
+        # scaled_normalized_log_function = normalized_log_function * self.final_learning_rate
 
-        return tf.math.minimum(self.final_learning_rate, scaled_normalized_log_function)
+        return tf.math.minimum(self.final_learning_rate,
+                               0.001 / tf.log(999.) * tf.log(tf.cast(step, tf.float32) + 1))
+
+        # return tf.math.minimum(self.final_learning_rate, scaled_normalized_log_function)
