@@ -111,8 +111,8 @@ def main():
     valid_w_context, valid_c_context, valid_w_query, valid_c_query = input_validation
 
     if Config.DEBUG:
-        n_train = 500
-        n_val = 100
+        n_train = 50
+        n_val = 10
         train_w_context = train_w_context[:n_train]
         train_c_context = train_c_context[:n_train]
         train_w_query = train_w_query[:n_train]

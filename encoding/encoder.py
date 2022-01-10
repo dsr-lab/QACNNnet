@@ -68,7 +68,10 @@ class EncodingLayer(layers.Layer):
 
         self.self_attention_layer = layers.MultiHeadAttention(**self_attention_layer_params)
 
-        self.feed_forward_layer = layers.Dense(**feed_forward_layer_params)  # Is one layer enough?
+        # self.feed_forward_layer = layers.Dense(**feed_forward_layer_params)  # Is one layer enough?
+
+        self.ff1 = layers.Conv1D(d_model, 1, activation='tanh')
+        self.ff2 = layers.Conv1D(d_model, 1, activation=None)
 
     def compute_attention_mask(self, mask):
 
@@ -88,7 +91,8 @@ class EncodingLayer(layers.Layer):
                     layer_num: int,
                     layer: layers.Layer,
                     training: bool,
-                    attention_mask=None) -> tf.Tensor:
+                    attention_mask=None,
+                    feed_forward=False) -> tf.Tensor:
 
         '''
         Check whether a layer should be used or not (stochastic dropout), then:
@@ -120,11 +124,13 @@ class EncodingLayer(layers.Layer):
             can_apply_residual_block = x.shape[-1] == self.d_model
 
             norm_x = self.norm_layers[layer_num](x)
-            f_x = layer(norm_x) if type(layer) != layers.MultiHeadAttention else layer(norm_x, norm_x,
+            if feed_forward:
+                f_x = self.ff1(norm_x)
+                f_x = self.ff2(f_x)
+            else:
+                f_x = layer(norm_x) if type(layer) != layers.MultiHeadAttention else layer(norm_x, norm_x,
                                                                                        attention_mask=attention_mask)
 
-            # Residual link can't work for the very first encoder block
-            # if int(tf.shape(f_x)[-1]) == int(tf.shape(x)[-1]):
             if can_apply_residual_block:
                 return f_x + x
             else:
@@ -169,7 +175,9 @@ class EncodingLayer(layers.Layer):
         current_layer_num += 1
 
         # 4. Feed-forward block
-        x = self.apply_layer(x, current_layer_num, self.feed_forward_layer, training)
+        # x = self.apply_layer(x, current_layer_num, self.feed_forward_layer, training)
+        x = self.apply_layer(x, current_layer_num, None, training, feed_forward=True)
+
 
         return x
 
