@@ -71,7 +71,7 @@ def build_model(input_embedding_params, embedding_encoder_params, conv_layer_par
     # Compile the model
     model.compile(
         optimizer=optimizer,
-        loss=loss,
+        #loss=loss,
         run_eagerly=Config.EAGER_MODE,
     )
 

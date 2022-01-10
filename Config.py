@@ -35,7 +35,7 @@ N_BLOCKS_EMBEDDING_ENCODING = 1
 N_BLOCKS_MODEL_ENCODING = 7
 
 BATCH_SIZE = 32
-EPOCHS = 100
+EPOCHS = 20
 
 # Learning rate, optimizer and loss
 
