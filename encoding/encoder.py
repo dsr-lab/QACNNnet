@@ -57,8 +57,8 @@ class EncodingLayer(layers.Layer):
 
         feed_forward_layer_params = {
             "units": d_model,
-            "activation": "tanh",  # or Relu?
-            #"activation": "relu",  # or Relu?
+            #"activation": "tanh",  # or Relu?
+            "activation": "relu",
             "kernel_regularizer": self.l2_decay
         }
 
@@ -70,7 +70,7 @@ class EncodingLayer(layers.Layer):
 
         # self.feed_forward_layer = layers.Dense(**feed_forward_layer_params)  # Is one layer enough?
 
-        self.ff1 = layers.Conv1D(d_model, 1, activation='tanh')
+        self.ff1 = layers.Conv1D(d_model, 1, activation='relu')
         self.ff2 = layers.Conv1D(d_model, 1, activation=None)
 
     def compute_attention_mask(self, mask):
