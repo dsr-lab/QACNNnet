@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 
-from metrics import F1Score, EMScore
+from metrics import F1Score, EMScore, qa_loss
 from context_query_attention import ContextQueryAttentionLayer
 from encoding.encoder import EncoderLayer
 from input_embedding.input_embedding_layer import InputEmbeddingLayer
@@ -32,6 +32,7 @@ class QACNNnet(tf.keras.Model):
         self.model_output = OutputLayer()
         self.f1_score = F1Score(vocab_size=vocab_size, ignore_tokens=ignore_tokens)
         self.em_score = EMScore(vocab_size=vocab_size, ignore_tokens=ignore_tokens)
+        self.loss_tracker = tf.keras.metrics.Mean(name="loss")
 
     def call(self, inputs, training=None):
         assert len(inputs) == 4
@@ -71,8 +72,8 @@ class QACNNnet(tf.keras.Model):
         with tf.GradientTape() as tape:
             y_pred = self(x, training=True)  # Forward pass
             # Compute the loss value
-            # (the loss function is configured in `compile()`)
-            loss = self.compiled_loss(y, y_pred, regularization_losses=self.losses)
+            # self.compiled_loss(y, y_pred, regularization_losses=self.losses)
+            loss = qa_loss(y, y_pred)
 
         # Compute gradients
         trainable_vars = self.trainable_variables
@@ -80,51 +81,45 @@ class QACNNnet(tf.keras.Model):
         # Update weights
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
+        # Update the metrics
+        self.loss_tracker.update_state(loss)
+
         self.f1_score.set_words_context(x[0])
         self.f1_score.update_state(y, y_pred)
+
         self.em_score.set_words_context(x[0])
         self.em_score.update_state(y, y_pred)
 
-        # Update metrics (includes the metric that tracks the loss)
-        self.compiled_metrics.update_state(y, y_pred)
+        # self.compiled_metrics.update_state(y, y_pred)
 
         # Return a dict mapping metric names to current value
-        # return {m.name: m.result() for m in self.metrics}
-        return {
-            self.f1_score.name: self.f1_score.result(),
-            self.em_score.name: self.em_score.result(),
-            'loss': loss
-        }
+        return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, data):
         # Unpack the data
         x, y = data
         # Compute predictions
         y_pred = self(x, training=False)
-        # Updates the metrics tracking the loss
-        loss = self.compiled_loss(y, y_pred, regularization_losses=self.losses)
+        loss = qa_loss(y, y_pred)
+        #loss = self.compiled_loss(y, y_pred, regularization_losses=self.losses)
+
         # Update the metrics.
+        self.loss_tracker.update_state(loss)
+
         self.f1_score.set_words_context(x[0])
         self.f1_score.update_state(y, y_pred)
 
         self.em_score.set_words_context(x[0])
         self.em_score.update_state(y, y_pred)
 
-        self.compiled_metrics.update_state(y, y_pred)
+        # self.compiled_metrics.update_state(y, y_pred)
 
         # Return a dict mapping metric names to current value
-        #return {m.name: m.result() for m in self.metrics}
-        return {
-            self.f1_score.name: self.f1_score.result(),
-            self.em_score.name: self.em_score.result(),
-            'loss': loss
-        }
+        return {m.name: m.result() for m in self.metrics}
 
     @property
     def metrics(self):
-        # We list our `Metric` objects here so that `reset_states()` can be
+        # List our `Metric` objects here so that `reset_states()` can be
         # called automatically at the start of each epoch
         # or at the start of `evaluate()`.
-        # If you don't implement this property, you have to call
-        # `reset_states()` yourself at the time of your choosing.
-        return [self.f1_score, self.em_score]
+        return [self.loss_tracker, self.f1_score, self.em_score]
