@@ -49,8 +49,9 @@ def load_data():
 
 
 # Build model and compile
-def build_model(input_embedding_params, embedding_encoder_params, conv_layer_params, model_encoder_params,
-                max_context_words, max_query_words, max_chars, optimizer, loss, vocab_size, ignore_tokens):
+def build_model(input_embedding_params, embedding_encoder_params, conv_query_attention_to_encoders_params,
+                model_encoder_params, context_query_attention_params, max_context_words,
+                max_query_words, max_chars, optimizer, vocab_size, ignore_tokens, dropout_rate):
     # Model input tensors
     context_words_input = tf.keras.Input(shape=(max_context_words), name="context words")
     context_characters_input = tf.keras.Input(shape=(max_context_words, max_chars), name="context characters")
@@ -62,17 +63,18 @@ def build_model(input_embedding_params, embedding_encoder_params, conv_layer_par
     # Create the model and force a call
     model = QACNNnet(input_embedding_params,
                      embedding_encoder_params,
-                     conv_layer_params,
+                     conv_query_attention_to_encoders_params,
                      model_encoder_params,
+                     context_query_attention_params,
                      vocab_size,
-                     ignore_tokens)
+                     ignore_tokens,
+                     dropout_rate)
     model(inputs)
 
     # Compile the model
     model.compile(
         optimizer=optimizer,
-        #loss=loss,
-        run_eagerly=Config.EAGER_MODE,
+        run_eagerly=Config.EAGER_MODE
     )
 
     return model
@@ -130,15 +132,16 @@ def main():
 
     model = build_model(Config.input_embedding_params,
                         Config.embedding_encoder_params,
-                        Config.conv_layer_params,
+                        Config.conv_query_attention_to_encoders_params,
                         Config.model_encoder_params,
+                        Config.context_query_attention_params,
                         Config.MAX_CONTEXT_WORDS,
                         Config.MAX_QUERY_WORDS,
                         Config.MAX_CHARS,
                         Config.OPTIMIZER,
-                        qa_loss,
                         Config.WORD_VOCAB_SIZE + 1,
-                        Config.IGNORE_TOKENS)
+                        Config.IGNORE_TOKENS,
+                        Config.DROPOUT_RATE)
 
     print("Model succesfully built!")
     model.summary()

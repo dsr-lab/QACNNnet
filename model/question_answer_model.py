@@ -18,18 +18,20 @@ class QACNNnet(tf.keras.Model):
     def __init__(self,
                  input_embedding_params,
                  embedding_encoder_params,
-                 conv_layer_params,
+                 conv_query_attention_to_encoders_params,
                  model_encoder_params,
+                 context_query_attention_params,
                  vocab_size,
                  ignore_tokens,
-                 dropout_rate=0.0):
+                 dropout_rate):
+
         super(QACNNnet, self).__init__()
 
         self.embedding = InputEmbeddingLayer(**input_embedding_params)
         self.embedding_encoder = EncoderLayer(**embedding_encoder_params)
-        self.context_query_attention = ContextQueryAttentionLayer()
+        self.context_query_attention = ContextQueryAttentionLayer(**context_query_attention_params)
         self.model_encoder = EncoderLayer(**model_encoder_params)
-        self.conv_1d = layers.SeparableConv1D(**conv_layer_params)
+        self.conv_1d = layers.SeparableConv1D(**conv_query_attention_to_encoders_params)
         self.model_output = OutputLayer()
         self.f1_score = F1Score(vocab_size=vocab_size, ignore_tokens=ignore_tokens)
         self.em_score = EMScore(vocab_size=vocab_size, ignore_tokens=ignore_tokens)
@@ -55,14 +57,14 @@ class QACNNnet(tf.keras.Model):
 
         # 3. Context-query attention block
         attention_output = self.context_query_attention([context_encoded, query_encoded], [context_mask, query_mask])
-        attention_output = self.conv_1d(attention_output)
+        attention_output = self.conv_1d(attention_output)  # Used for obtaining back the expected number of channels
 
         # 4. Model encoder blocks
         m0 = self.model_encoder(attention_output, training=training, mask=context_mask)
         m1 = self.model_encoder(m0, training=training, mask=context_mask)
 
-        breakpoint()
         # Apply dropout after 2 blocks
+        # (Created here, and not in the init, for avoiding to see the dropout layer in the summary)
         m1 = tf.keras.layers.Dropout(self.dropout_rate)(m1)
 
         m2 = self.model_encoder(m1, training=training, mask=context_mask)

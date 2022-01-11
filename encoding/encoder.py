@@ -6,15 +6,16 @@ from encoding import positional_encoding, stochastic_dropout
 
 
 class EncodingLayer(layers.Layer):
+
     def __init__(self,
                  d_model: int,
                  kernel_size: int,
                  n_conv_layers: int,
                  n_heads: int,
                  survival_prob: float,
-                 l2_value: float,
                  block_num: int,
-                 dropout_rate: float = 0.0):
+                 dropout_rate: float,
+                 l2_rate: float):
         """
         Parameters:
         -----------
@@ -28,7 +29,7 @@ class EncodingLayer(layers.Layer):
             Number of heads for MultiHeadAttention
         survival_prob: float
             Survival probability of a layer for stochastic dropout.
-        l2_value: float
+        l2_rate: float
             L2 value used in L2 regularization
         block_num: int
             Index of the current encoding layer
@@ -40,7 +41,10 @@ class EncodingLayer(layers.Layer):
         self.n_layers = n_conv_layers + 2
         self.survival_prob = survival_prob
         self.block_num = block_num
-        self.l2_decay = regularizers.l2(l2_value)
+
+        # Regularizer
+        l2 = None if l2_rate == 0.0 else tf.keras.regularizers.l2(l2_rate)
+
         self.dropout = tf.keras.layers.Dropout(dropout_rate)
 
         self.conv_layer_params = {
@@ -48,20 +52,20 @@ class EncodingLayer(layers.Layer):
             "kernel_size": kernel_size,
             "padding": "same",  # necessary for residual blocks
             "data_format": "channels_last",
-            "kernel_regularizer": self.l2_decay
+            "kernel_regularizer": l2
         }
 
         self_attention_layer_params = {
             "num_heads": n_heads,
             "key_dim": d_model,
-            "kernel_regularizer": self.l2_decay
+            "kernel_regularizer": l2
         }
 
         feed_forward_layer_params = {
             "units": d_model,
             "activation": "tanh",  # or Relu?
             # "activation": "relu",
-            "kernel_regularizer": self.l2_decay
+            "kernel_regularizer": l2
         }
 
         self.norm_layers = [layers.LayerNormalization() for _ in range(self.n_layers)]
@@ -72,9 +76,10 @@ class EncodingLayer(layers.Layer):
 
         # self.feed_forward_layer = layers.Dense(**feed_forward_layer_params)  # Is one layer enough?
 
+        # TODO: create a dictionary like the other layers
         # self.ff1 = layers.Conv1D(d_model, 1, activation='relu')
-        self.ff1 = layers.Conv1D(d_model, 1, activation='tanh')
-        self.ff2 = layers.Conv1D(d_model, 1, activation=None)
+        self.ff1 = layers.Conv1D(d_model, 1, activation='tanh', kernel_regularizer=l2)
+        self.ff2 = layers.Conv1D(d_model, 1, activation=None, kernel_regularizer=l2)
 
     def compute_attention_mask(self, mask):
 
@@ -96,8 +101,7 @@ class EncodingLayer(layers.Layer):
                     training: bool,
                     attention_mask=None,
                     feed_forward=False) -> tf.Tensor:
-
-        '''
+        """
         Check whether a layer should be used or not (stochastic dropout), then:
         -Return the input as the output if the layer should not be used;
         -Return layer(layer_normalization(x)) + x if the layer should be used.
@@ -119,17 +123,18 @@ class EncodingLayer(layers.Layer):
         --------
         x: tf.Tensor
             Output of the layer with stochastic dropout.
-        '''
+        """
+
         keep = stochastic_dropout.keep_layer(self.n_layers, layer_num, self.survival_prob) if training else True
         if keep:
             can_apply_residual_block = x.shape[-1] == self.d_model
 
             norm_x = self.norm_layers[layer_num](x)
 
-            # TODO: Check correctness!
+            breakpoint()
             # Apply dropout
-            if (layer_num % 2 == 0 and type(layer) != layers.SeparableConv1D) or \
-                    type(layer) != layers.MultiHeadAttention or \
+            if (layer_num % 2 == 0 and type(layer) == layers.SeparableConv1D) or \
+                    type(layer) == layers.MultiHeadAttention or \
                     feed_forward:
                 norm_x = self.dropout(norm_x)
 
@@ -137,10 +142,12 @@ class EncodingLayer(layers.Layer):
             if feed_forward:
                 f_x = self.ff1(norm_x)
                 f_x = self.ff2(f_x)
+            elif type(layer) != layers.MultiHeadAttention:
+                f_x = layer(norm_x)
             else:
-                f_x = layer(norm_x) if type(layer) != layers.MultiHeadAttention else layer(norm_x, norm_x,
-                                                                                           attention_mask=attention_mask)
+                f_x = layer(norm_x, norm_x,attention_mask=attention_mask)
 
+            # Residual block
             if can_apply_residual_block:
                 return f_x + x
             else:
@@ -159,9 +166,8 @@ class EncodingLayer(layers.Layer):
 
         The input of each layer is the residual block using a normalization layer to the output of the previous layer.
         """
-        maximum_position_encoding = x.shape[1]
         embedding_size = x.shape[2]
-        # TODO: optimizable?
+        maximum_position_encoding = x.shape[1]
         pos_encoding = positional_encoding.get_encoding(maximum_position_encoding,
                                                         embedding_size)
 
@@ -198,9 +204,10 @@ class EncoderLayer(layers.Layer):
                  n_conv_layers: int,
                  n_heads: int,
                  survival_prob: float,
-                 l2_value: float,
                  n_blocks: int,
-                 dropout_rate=0.0):
+                 dropout_rate: float,
+                 l2_rate: float):
+
         """
         Parameters:
         -----------
@@ -214,7 +221,7 @@ class EncoderLayer(layers.Layer):
             Number of heads for MultiHeadAttention
         survival_prob: float
             Survival probability of a layer for stochastic dropout.
-        l2_value: float
+        l2_rate: float
             L2 value used in L2 regularization
         n_blocks: int
             Number of encoding layers to stack
@@ -227,9 +234,9 @@ class EncoderLayer(layers.Layer):
                                               n_conv_layers,
                                               n_heads,
                                               survival_prob,
-                                              l2_value,
                                               i,
-                                              dropout_rate) for i in range(n_blocks)]
+                                              dropout_rate,
+                                              l2_rate) for i in range(n_blocks)]
 
     def call(self, x, training, mask=None):
         """

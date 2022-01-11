@@ -12,8 +12,12 @@ class InputEmbeddingLayer(tf.keras.layers.Layer):
     def __init__(self,
                  w_emb_size, w_pretrained_weights, w_vocab_size, w_n_special_tokens,
                  c_emb_size, c_vocab_size, c_conv_kernel_size, n_highway_layers,
-                 dropout_rate=0.0):
+                 dropout_rate, l2_rate):
+
         super(InputEmbeddingLayer, self).__init__()
+
+        # Regularizer
+        l2 = None if l2_rate == 0.0 else tf.keras.regularizers.l2(l2_rate)
 
         # Layers
         self.char_embedding = CharEmbeddingLayer(
@@ -23,7 +27,7 @@ class InputEmbeddingLayer(tf.keras.layers.Layer):
 
         self.highway_layers = []
         for i in range(n_highway_layers):
-            self.highway_layers.append(HighwayLayer())
+            self.highway_layers.append(HighwayLayer(dropout_rate, l2))
 
     # input-dependent initialization
     def build(self, input_lenght):

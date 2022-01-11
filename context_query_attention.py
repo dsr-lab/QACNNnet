@@ -5,12 +5,15 @@ from tensorflow.keras import layers
 
 class ContextQueryAttentionLayer (layers.Layer):
 
-    def __init__(self, dropout_rate=0.0):
+    def __init__(self, dropout_rate, l2_rate):
 
         super(ContextQueryAttentionLayer, self).__init__()
 
+        # Regularizer
+        l2 = None if l2_rate == 0.0 else tf.keras.regularizers.l2(l2_rate)
+
         self.dropout = tf.keras.layers.Dropout(dropout_rate)
-        self.w = layers.Dense(units=1, use_bias=False)
+        self.w = layers.Dense(units=1, use_bias=False, kernel_regularizer=l2)
 
     def build_similarity_matrix(self, context, query):
 
