@@ -5,10 +5,11 @@ from tensorflow.keras import layers
 
 class ContextQueryAttentionLayer (layers.Layer):
 
-    def __init__(self):
+    def __init__(self, dropout_rate=0.0):
 
         super(ContextQueryAttentionLayer, self).__init__()
 
+        self.dropout = tf.keras.layers.Dropout(dropout_rate)
         self.w = layers.Dense(units=1, use_bias=False)
 
     def build_similarity_matrix(self, context, query):
@@ -87,7 +88,9 @@ class ContextQueryAttentionLayer (layers.Layer):
         assert len(masks)==2
 
         context = inputs[0]
+        context = self.dropout(context)
         query = inputs[1]
+        query = self.dropout(query)
 
         c_mask = masks[0]
         q_mask = masks[1]

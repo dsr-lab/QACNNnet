@@ -4,7 +4,7 @@ import tensorflow as tf
 class HighwayLayer(tf.keras.layers.Layer):
 
     # input-independent initialization
-    def __init__(self, activation=None, dropout=0.1, kernel_size=1):
+    def __init__(self, activation=None, dropout_rate=0.1, kernel_size=1):
         super(HighwayLayer, self).__init__()
 
         # Class variables
@@ -12,7 +12,7 @@ class HighwayLayer(tf.keras.layers.Layer):
         self.activation = activation
 
         # Layers
-        self.dropout = tf.keras.layers.Dropout(dropout)
+        self.dropout = tf.keras.layers.Dropout(dropout_rate)
 
         self.transform = None
         self.conv = None

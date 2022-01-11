@@ -11,14 +11,15 @@ class InputEmbeddingLayer(tf.keras.layers.Layer):
     # input-independent initialization
     def __init__(self,
                  w_emb_size, w_pretrained_weights, w_vocab_size, w_n_special_tokens,
-                 c_emb_size, c_vocab_size, c_conv_kernel_size, n_highway_layers):
+                 c_emb_size, c_vocab_size, c_conv_kernel_size, n_highway_layers,
+                 dropout_rate=0.0):
         super(InputEmbeddingLayer, self).__init__()
 
         # Layers
         self.char_embedding = CharEmbeddingLayer(
-            c_emb_size, c_vocab_size, c_conv_kernel_size)
+            c_emb_size, c_vocab_size, c_conv_kernel_size, dropout_rate=dropout_rate/2)
         self.word_embedding = WordEmbeddingLayer(
-            w_emb_size, w_pretrained_weights, w_vocab_size, w_n_special_tokens)
+            w_emb_size, w_pretrained_weights, w_vocab_size, w_n_special_tokens, dropout_rate=dropout_rate)
 
         self.highway_layers = []
         for i in range(n_highway_layers):

@@ -14,7 +14,7 @@ class EncodingLayer(layers.Layer):
                  survival_prob: float,
                  l2_value: float,
                  block_num: int,
-                 dropout: float = 0.1):
+                 dropout_rate: float = 0.0):
         """
         Parameters:
         -----------
@@ -41,7 +41,7 @@ class EncodingLayer(layers.Layer):
         self.survival_prob = survival_prob
         self.block_num = block_num
         self.l2_decay = regularizers.l2(l2_value)
-        self.dropout = tf.keras.layers.Dropout(dropout)
+        self.dropout = tf.keras.layers.Dropout(dropout_rate)
 
         self.conv_layer_params = {
             "filters": d_model,
@@ -199,7 +199,8 @@ class EncoderLayer(layers.Layer):
                  n_heads: int,
                  survival_prob: float,
                  l2_value: float,
-                 n_blocks: int):
+                 n_blocks: int,
+                 dropout_rate=0.0):
         """
         Parameters:
         -----------
@@ -227,7 +228,8 @@ class EncoderLayer(layers.Layer):
                                               n_heads,
                                               survival_prob,
                                               l2_value,
-                                              i) for i in range(n_blocks)]
+                                              i,
+                                              dropout_rate) for i in range(n_blocks)]
 
     def call(self, x, training, mask=None):
         """
