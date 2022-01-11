@@ -131,7 +131,6 @@ class EncodingLayer(layers.Layer):
 
             norm_x = self.norm_layers[layer_num](x)
 
-            breakpoint()
             # Apply dropout
             if (layer_num % 2 == 0 and type(layer) == layers.SeparableConv1D) or \
                     type(layer) == layers.MultiHeadAttention or \
