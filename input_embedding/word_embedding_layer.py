@@ -5,7 +5,7 @@ from tensorflow.keras import layers
 class WordEmbeddingLayer(tf.keras.layers.Layer):
 
     # input-independent initialization
-    def __init__(self, emb_size, pretrained_weights, vocab_size, n_special_tokens):
+    def __init__(self, emb_size, pretrained_weights, vocab_size, n_special_tokens, dropout=0.1):
         super(WordEmbeddingLayer, self).__init__()
 
         # Class variables
@@ -15,6 +15,8 @@ class WordEmbeddingLayer(tf.keras.layers.Layer):
 
         self.emb_layer_weights, self.special_emb_layer_weights = \
             self._set_weights(pretrained_weights, emb_size, n_special_tokens)
+
+        self.dropout = tf.keras.layers.Dropout(dropout)
 
         # Trainable layers
         self.emb_layer = None
@@ -58,6 +60,8 @@ class WordEmbeddingLayer(tf.keras.layers.Layer):
         # Debug logs
         # tf.print(mask, summarize=-1)
         # tf.print(inputs, summarize=-1)
+
+        embedded_sequences = self.dropout(embedded_sequences)
 
         return embedded_sequences, mask
 

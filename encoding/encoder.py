@@ -13,7 +13,8 @@ class EncodingLayer(layers.Layer):
                  n_heads: int,
                  survival_prob: float,
                  l2_value: float,
-                 block_num: int):
+                 block_num: int,
+                 dropout: float = 0.1):
         """
         Parameters:
         -----------
@@ -40,6 +41,7 @@ class EncodingLayer(layers.Layer):
         self.survival_prob = survival_prob
         self.block_num = block_num
         self.l2_decay = regularizers.l2(l2_value)
+        self.dropout = tf.keras.layers.Dropout(dropout)
 
         self.conv_layer_params = {
             "filters": d_model,
@@ -58,7 +60,7 @@ class EncodingLayer(layers.Layer):
         feed_forward_layer_params = {
             "units": d_model,
             "activation": "tanh",  # or Relu?
-            #"activation": "relu",
+            # "activation": "relu",
             "kernel_regularizer": self.l2_decay
         }
 
@@ -118,19 +120,26 @@ class EncodingLayer(layers.Layer):
         x: tf.Tensor
             Output of the layer with stochastic dropout.
         '''
-
         keep = stochastic_dropout.keep_layer(self.n_layers, layer_num, self.survival_prob) if training else True
         if keep:
-
             can_apply_residual_block = x.shape[-1] == self.d_model
 
             norm_x = self.norm_layers[layer_num](x)
+
+            # TODO: Check correctness!
+            # Apply dropout
+            if (layer_num % 2 == 0 and type(layer) != layers.SeparableConv1D) or \
+                    type(layer) != layers.MultiHeadAttention or \
+                    feed_forward:
+                norm_x = self.dropout(norm_x)
+
+            # Different behaviour if the current layer is the feedforward block
             if feed_forward:
                 f_x = self.ff1(norm_x)
                 f_x = self.ff2(f_x)
             else:
                 f_x = layer(norm_x) if type(layer) != layers.MultiHeadAttention else layer(norm_x, norm_x,
-                                                                                       attention_mask=attention_mask)
+                                                                                           attention_mask=attention_mask)
 
             if can_apply_residual_block:
                 return f_x + x
@@ -178,7 +187,6 @@ class EncodingLayer(layers.Layer):
         # 4. Feed-forward block
         # x = self.apply_layer(x, current_layer_num, self.feed_forward_layer, training)
         x = self.apply_layer(x, current_layer_num, None, training, feed_forward=True)
-
 
         return x
 

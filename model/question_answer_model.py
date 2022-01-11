@@ -21,7 +21,8 @@ class QACNNnet(tf.keras.Model):
                  conv_layer_params,
                  model_encoder_params,
                  vocab_size,
-                 ignore_tokens):
+                 ignore_tokens,
+                 dropout=0.1):
         super(QACNNnet, self).__init__()
 
         self.embedding = InputEmbeddingLayer(**input_embedding_params)
@@ -33,6 +34,7 @@ class QACNNnet(tf.keras.Model):
         self.f1_score = F1Score(vocab_size=vocab_size, ignore_tokens=ignore_tokens)
         self.em_score = EMScore(vocab_size=vocab_size, ignore_tokens=ignore_tokens)
         self.loss_tracker = tf.keras.metrics.Mean(name="loss")
+        self.dropout = tf.keras.layers.Dropout(dropout)
 
     def call(self, inputs, training=None):
         assert len(inputs) == 4
@@ -57,7 +59,13 @@ class QACNNnet(tf.keras.Model):
         # 4. Model encoder blocks
         m0 = self.model_encoder(attention_output, training=training, mask=context_mask)
         m1 = self.model_encoder(m0, training=training, mask=context_mask)
+
+        # Apply dropout after 2 blocks
+        m1 = self.dropout(m1)
+
         m2 = self.model_encoder(m1, training=training, mask=context_mask)
+
+
 
         # 5. Output block
         output = self.model_output([m0, m1, m2], mask=context_mask)
