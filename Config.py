@@ -38,15 +38,10 @@ BATCH_SIZE = 32
 EPOCHS = 20
 
 # Learning rate, optimizer and loss
-#decay_steps = 1000
-#lr_decayed_fn = tf.keras.optimizers.schedules.CosineDecay(0.01, decay_steps)
-FINAL_LEARNING_RATE = 0.001
+FINAL_LEARNING_RATE = 0.0005
 WARMUP_STEPS = 1000.0
 learning_rate = CustomSchedule(FINAL_LEARNING_RATE, WARMUP_STEPS)
 OPTIMIZER = tf.keras.optimizers.Adam(learning_rate, beta_1=0.8, beta_2=0.999, epsilon=1e-7)
-
-
-
 
 # Layers' variables
 
