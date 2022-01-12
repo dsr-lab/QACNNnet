@@ -10,7 +10,8 @@ MAX_CONTEXT_WORDS = 400
 MAX_QUERY_WORDS = 30
 MAX_ANSWER_LENGTH = 50
 
-L2_RATE = 0.01
+#L2_RATE = 0.01
+L2_RAGE = 3e-7
 DROPOUT_RATE = 0.1
 
 IGNORE_TOKENS = tf.constant([[0], [1], [9], [10]])
@@ -38,7 +39,7 @@ BATCH_SIZE = 32
 EPOCHS = 20
 
 # Learning rate, optimizer and loss
-FINAL_LEARNING_RATE = 0.0005
+FINAL_LEARNING_RATE = 0.001
 WARMUP_STEPS = 1000.0
 learning_rate = CustomSchedule(FINAL_LEARNING_RATE, WARMUP_STEPS)
 OPTIMIZER = tf.keras.optimizers.Adam(learning_rate, beta_1=0.8, beta_2=0.999, epsilon=1e-7)
