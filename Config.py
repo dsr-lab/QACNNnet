@@ -1,6 +1,7 @@
 import Config
 import numpy as np
 import tensorflow as tf
+import tensorflow_addons as tfa
 from model.warmup_learning import CustomSchedule
 
 DEBUG = False
@@ -17,10 +18,10 @@ DROPOUT_RATE = 0.1
 IGNORE_TOKENS = tf.constant([[0], [1], [9], [10]])
 
 WORD_EMBEDDING_SIZE = 300
-WORD_VOCAB_SIZE = 10000  # TODO: take from preprocessing step
-PRETRAINED_WEIGHTS = np.random.rand(WORD_VOCAB_SIZE, WORD_EMBEDDING_SIZE)  # TODO: take from GloVe
+WORD_VOCAB_SIZE = 10000
+PRETRAINED_WEIGHTS = np.random.rand(WORD_VOCAB_SIZE, WORD_EMBEDDING_SIZE)
 CHARACTER_EMBEDDING_SIZE = 96
-CHARACTER_VOCAB_SIZE = 100  # TODO: take from preprocessing step
+CHARACTER_VOCAB_SIZE = 100
 MAX_CHARS = 16
 
 EMBEDDING_KERNEL_SIZE = 5
@@ -39,10 +40,12 @@ BATCH_SIZE = 32
 EPOCHS = 20
 
 # Learning rate, optimizer and loss
-FINAL_LEARNING_RATE = 0.001
+FINAL_LEARNING_RATE = 0.0005
 WARMUP_STEPS = 1000.0
 learning_rate = CustomSchedule(FINAL_LEARNING_RATE, WARMUP_STEPS)
+
 OPTIMIZER = tf.keras.optimizers.Adam(learning_rate, beta_1=0.8, beta_2=0.999, epsilon=1e-7)
+# OPTIMIZER = tfa.optimizers.MovingAverage(OPTIMIZER)
 
 # Layers' variables
 
