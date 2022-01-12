@@ -11,7 +11,7 @@ MAX_QUERY_WORDS = 30
 MAX_ANSWER_LENGTH = 50
 
 #L2_RATE = 0.01
-L2_RAGE = 3e-7
+L2_RATE = 3e-7
 DROPOUT_RATE = 0.1
 
 IGNORE_TOKENS = tf.constant([[0], [1], [9], [10]])
