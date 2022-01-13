@@ -68,7 +68,7 @@ conv_query_attention_to_encoders_params = {
     "padding": "same",
     "data_format": "channels_last",
     "kernel_regularizer": tf.keras.regularizers.l2(L2_RATE),
-    "activity_regularizer": tf.keras.regularizers.l2(L2_RATE),
+    # "activity_regularizer": tf.keras.regularizers.l2(L2_RATE),
     "bias_regularizer": tf.keras.regularizers.l2(L2_RATE),
 
 }

@@ -24,10 +24,10 @@ class HighwayLayer(tf.keras.layers.Layer):
 
         self.transform = tf.keras.layers.Conv1D(
             n_filters, self.kernel_size, activation='sigmoid',
-            kernel_regularizer=self.l2, bias_regularizer=self.l2, activity_regularizer=self.l2)
+            kernel_regularizer=self.l2, bias_regularizer=self.l2)
         self.conv = tf.keras.layers.Conv1D(
             n_filters, self.kernel_size, activation=self.activation,
-            kernel_regularizer=self.l2, bias_regularizer=self.l2, activity_regularizer=self.l2)
+            kernel_regularizer=self.l2, bias_regularizer=self.l2)
 
     # forward computation
     def call(self, inputs):

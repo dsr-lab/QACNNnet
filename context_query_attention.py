@@ -14,9 +14,10 @@ class ContextQueryAttentionLayer (layers.Layer):
 
         self.dropout = tf.keras.layers.Dropout(dropout_rate)
         self.w = layers.Dense(units=1, use_bias=False,
-                              kernel_regularizer=l2,
-                              activity_regularizer=l2,
-                              bias_regularizer=l2)
+                              kernel_regularizer=l2)
+                              # activity_regularizer=l2,
+                              # bias_regularizer=l2
+
 
     def build_similarity_matrix(self, context, query):
 
