@@ -95,8 +95,6 @@ class QACNNnet(tf.keras.Model):
 
         # Apply EMA
         self.ema.apply(self.trainable_variables)
-        for var in self.trainable_variables:
-            var.assign(self.ema.average(var))
 
         # Update the metrics
         self.loss_tracker.update_state(loss)
@@ -114,6 +112,10 @@ class QACNNnet(tf.keras.Model):
         return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, data):
+
+        for var in self.trainable_variables:
+            var.assign(self.ema.average(var))
+            
         # Unpack the data
         x, y = data
         # Compute predictions
