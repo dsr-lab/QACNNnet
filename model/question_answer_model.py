@@ -40,6 +40,7 @@ class QACNNnet(tf.keras.Model):
 
         self.dropout_rate = dropout_rate
         self.ema = tf.train.ExponentialMovingAverage(decay=0.9999)
+        self.model_is_training = True
 
     def call(self, inputs, training=None):
         assert len(inputs) == 4
@@ -77,6 +78,9 @@ class QACNNnet(tf.keras.Model):
         return output
 
     def train_step(self, data):
+
+        self.model_is_training = True
+        
         # Unpack the data. Its structure depends on your model and
         # on what you pass to `fit()`.
         x, y = data
@@ -113,8 +117,10 @@ class QACNNnet(tf.keras.Model):
 
     def test_step(self, data):
 
-        for var in self.trainable_variables:
-            var.assign(self.ema.average(var))
+        if self.model_is_training:
+            self.model_is_training = False
+            for var in self.trainable_variables:
+                var.assign(self.ema.average(var))
             
         # Unpack the data
         x, y = data
