@@ -35,9 +35,11 @@ class QACNNnet(tf.keras.Model):
         self.model_output = OutputLayer()
         self.f1_score = F1Score(vocab_size=vocab_size, ignore_tokens=ignore_tokens)
         self.em_score = EMScore(vocab_size=vocab_size, ignore_tokens=ignore_tokens)
+
         self.loss_tracker = tf.keras.metrics.Mean(name="loss")
 
         self.dropout_rate = dropout_rate
+        self.ema = tf.train.ExponentialMovingAverage(decay=0.9999)
 
     def call(self, inputs, training=None):
         assert len(inputs) == 4
@@ -91,6 +93,11 @@ class QACNNnet(tf.keras.Model):
         # Update weights
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
+        # Apply EMA
+        self.ema.apply(self.trainable_variables)
+        for var in self.trainable_variables:
+            var.assign(self.ema.average(var))
+
         # Update the metrics
         self.loss_tracker.update_state(loss)
 
@@ -99,6 +106,7 @@ class QACNNnet(tf.keras.Model):
 
         self.em_score.set_words_context(x[0])
         self.em_score.update_state(y, y_pred)
+
 
         # self.compiled_metrics.update_state(y, y_pred)
 
