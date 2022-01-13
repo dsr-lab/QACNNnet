@@ -52,20 +52,26 @@ class EncodingLayer(layers.Layer):
             "kernel_size": kernel_size,
             "padding": "same",  # necessary for residual blocks
             "data_format": "channels_last",
-            "kernel_regularizer": l2
+            "kernel_regularizer": l2,
+            "activity_regularizer": l2,
+            "bias_regularizer": l2
         }
 
         self_attention_layer_params = {
             "num_heads": n_heads,
             "key_dim": d_model,
-            "kernel_regularizer": l2
+            "kernel_regularizer": l2,
+            "activity_regularizer": l2,
+            "bias_regularizer": l2
         }
 
         feed_forward_layer_params = {
             "units": d_model,
             "activation": "tanh",  # or Relu?
             # "activation": "relu",
-            "kernel_regularizer": l2
+            "kernel_regularizer": l2,
+            "activity_regularizer": l2,
+            "bias_regularizer": l2
         }
 
         self.norm_layers = [layers.LayerNormalization() for _ in range(self.n_layers)]
@@ -78,8 +84,10 @@ class EncodingLayer(layers.Layer):
 
         # TODO: create a dictionary like the other layers
         # self.ff1 = layers.Conv1D(d_model, 1, activation='relu')
-        self.ff1 = layers.Conv1D(d_model, 1, activation='tanh', kernel_regularizer=l2)
-        self.ff2 = layers.Conv1D(d_model, 1, activation=None, kernel_regularizer=l2)
+        self.ff1 = layers.Conv1D(d_model, 1, activation='tanh',
+                                 kernel_regularizer=l2, activity_regularizer=l2, bias_regularizer=l2)
+        self.ff2 = layers.Conv1D(d_model, 1, activation=None,
+                                 kernel_regularizer=l2, activity_regularizer=l2, bias_regularizer=l2)
 
     def compute_attention_mask(self, mask):
 
