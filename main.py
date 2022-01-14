@@ -115,8 +115,8 @@ def main():
     if Config.DEBUG:
         Config.BATCH_SIZE = 4
         Config.EAGER_MODE = True
-        n_train = 32
-        n_val = 16
+        n_train = 8
+        n_val = 4
         train_w_context = train_w_context[:n_train]
         train_c_context = train_c_context[:n_train]
         train_w_query = train_w_query[:n_train]
