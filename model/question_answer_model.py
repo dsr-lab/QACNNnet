@@ -48,26 +48,6 @@ class QACNNnet(tf.keras.Model):
 
         assert len(inputs) == 4
 
-        # Restore unaveraged weights
-        if self.model_is_training == False and training == True:
-            if self.unaveraged_weights is not None:
-                # tf.print('restoring UNAVERAGED weights')
-                for idx, var in enumerate(self.trainable_variables):
-                    var.assign(tf.identity(self.unaveraged_weights[idx]))
-                self.unaveraged_weights = None
-        elif self.model_is_training == True and training == False:
-            # tf.print('setting AVERAGED weights')
-            # Save unaveraged weights and set the averaged ones
-            self.unaveraged_weights = []
-            for var in self.trainable_variables:
-                # Deep copy the original variable
-                self.unaveraged_weights.append(tf.identity(var))
-
-                # Average the current variable
-                var.assign(self.ema.average(var))
-
-        self.model_is_training = training
-
         words_context = inputs[0]
         characters_context = inputs[1]
         words_query = inputs[2]
@@ -103,12 +83,12 @@ class QACNNnet(tf.keras.Model):
     def train_step(self, data):
 
         # Restore unaveraged weights
-        # if self.model_is_training == False:
-        #     if self.unaveraged_weights is not None:
-        #         for idx, var in enumerate(self.trainable_variables):
-        #             var.assign(tf.identity(self.unaveraged_weights[idx]))
-        #         self.unaveraged_weights = None
-        # self.model_is_training = True
+        if self.model_is_training == False:
+            if self.unaveraged_weights is not None:
+                for idx, var in enumerate(self.trainable_variables):
+                    var.assign(tf.Variable(self.unaveraged_weights[idx]))
+                self.unaveraged_weights = None
+        self.model_is_training = True
 
         # Unpack the data. Its structure depends on your model and
         # on what you pass to `fit()`.
@@ -147,18 +127,18 @@ class QACNNnet(tf.keras.Model):
     def test_step(self, data):
 
         # Save unaveraged weights and set the averaged ones
-        # if self.model_is_training == True:
-        #     self.unaveraged_weights = []
-        #     for var in self.trainable_variables:
-        #         # Deep copy the original variable
-        #         self.unaveraged_weights.append(tf.identity(var))
-        #
-        #         # Average the current variable
-        #         var.assign(self.ema.average(var))
-        #
-        #     # self.unaveraged_weights = self.trainable_variables
-        #
-        # self.model_is_training = False
+        if self.model_is_training == True:
+            self.unaveraged_weights = []
+            for var in self.trainable_variables:
+                # Deep copy the original variable
+                self.unaveraged_weights.append(tf.Variable(var))
+
+                # Average the current variable
+                var.assign(self.ema.average(var))
+
+            # self.unaveraged_weights = self.trainable_variables
+
+        self.model_is_training = False
             
         # Unpack the data
         x, y = data
