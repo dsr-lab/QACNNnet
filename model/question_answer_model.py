@@ -100,6 +100,11 @@ class QACNNnet(tf.keras.Model):
             # self.compiled_loss(y, y_pred, regularization_losses=self.losses)
             loss = qa_loss(y, y_pred)
 
+            # Apply weight decay
+            # weight_decay = Config.L2_RATE
+            # l2_loss = weight_decay * tf.reduce_sum([tf.nn.l2_loss(n) for n in self.trainable_variables])
+            loss += sum(self.losses)
+
         # Compute gradients
         trainable_vars = self.trainable_variables
         gradients = tape.gradient(loss, trainable_vars)
@@ -145,6 +150,13 @@ class QACNNnet(tf.keras.Model):
         # Compute predictions
         y_pred = self(x, training=False)
         loss = qa_loss(y, y_pred)
+        loss += sum(self.losses)
+
+        '''
+        weight_decay = 3e-7
+        l2_loss = weight_decay * tf.reduce_sum([tf.nn.l2_loss(n) for n in self.trainable_variables])
+        loss += l2_loss
+        '''
         #loss = self.compiled_loss(y, y_pred, regularization_losses=self.losses)
 
         # Update the metrics.
