@@ -158,8 +158,9 @@ def main():
         batch_size=Config.BATCH_SIZE,
         epochs=Config.EPOCHS)
 
-    return history
+    return history, model
 
 
 if __name__ == '__main__':
-    history = main()
+    history, model = main()
+    model.save_weights('qanet.tf')
