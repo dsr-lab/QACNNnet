@@ -108,5 +108,3 @@ def config_model(word_vocab_size, char_vocab_size, pretrained_weights, ignore_to
         "dropout_rate": DROPOUT_RATE,
         "l2_rate": L2_RATE
     }
-
-

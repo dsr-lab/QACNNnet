@@ -1,5 +1,5 @@
 import tensorflow as tf
-
+from inference import get_predictions
 
 class F1Score(tf.keras.metrics.Metric):
 
@@ -19,7 +19,7 @@ class F1Score(tf.keras.metrics.Metric):
 
         y_true_start, y_true_end, y_pred_start, y_pred_end = _split_start_end_indices(y_true, y_pred)
 
-        y_pred_start, y_pred_end = _get_predictions(y_pred_start, y_pred_end)
+        y_pred_start, y_pred_end = get_predictions(y_pred_start, y_pred_end)
 
         true_tokens = _get_answers(self.w_context, y_true_start, y_true_end)
         pred_tokens = _get_answers(self.w_context, y_pred_start, y_pred_end)
@@ -115,7 +115,7 @@ class EMScore(tf.keras.metrics.Metric):
 
         y_true_start, y_true_end, y_pred_start, y_pred_end = _split_start_end_indices(y_true, y_pred)
 
-        y_pred_start, y_pred_end = _get_predictions(y_pred_start, y_pred_end)
+        y_pred_start, y_pred_end = get_predictions(y_pred_start, y_pred_end)
 
         true_tokens = _get_answers(self.w_context, y_true_start, y_true_end)
         pred_tokens = _get_answers(self.w_context, y_pred_start, y_pred_end)
@@ -276,7 +276,9 @@ def _split_start_end_indices(y_true, y_pred):
     return y_true_start, y_true_end, y_pred_start, y_pred_end
 
 
+'''
 def _get_predictions(y_pred_start, y_pred_end):
     y_pred_start = tf.argmax(y_pred_start, axis=-1, output_type=tf.dtypes.int64)
     y_pred_end = tf.argmax(y_pred_end, axis=-1, output_type=tf.dtypes.int64)
     return y_pred_start, y_pred_end
+'''

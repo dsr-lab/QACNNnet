@@ -86,7 +86,7 @@ class QACNNnet(tf.keras.Model):
         if self.model_is_training == False:
             if self.unaveraged_weights is not None:
                 for idx, var in enumerate(self.trainable_variables):
-                    var.assign(tf.identity(self.unaveraged_weights[idx]))
+                    var.assign(self.unaveraged_weights[idx])
                 self.unaveraged_weights = None
         self.model_is_training = True
 
@@ -131,7 +131,7 @@ class QACNNnet(tf.keras.Model):
             self.unaveraged_weights = []
             for var in self.trainable_variables:
                 # Deep copy the original variable
-                self.unaveraged_weights.append(tf.identity(var))
+                self.unaveraged_weights.append(tf.Variable(var))
 
                 # Average the current variable
                 var.assign(self.ema.average(var))
@@ -139,7 +139,7 @@ class QACNNnet(tf.keras.Model):
             # self.unaveraged_weights = self.trainable_variables
 
         self.model_is_training = False
-            
+
         # Unpack the data
         x, y = data
         # Compute predictions
