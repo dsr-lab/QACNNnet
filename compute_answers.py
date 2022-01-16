@@ -196,7 +196,7 @@ def run_predictions(data_path):
                         Config.IGNORE_TOKENS,
                         Config.DROPOUT_RATE)
 
-    if os.path.exists(Config.CHECKPOINT_PATH):
+    if os.path.exists(Config.CHECKPOINT_PATH+".index"):
         print("Loading model's weights...")
         model.load_weights(Config.CHECKPOINT_PATH)
         print("Model's weights successfully loaded!")

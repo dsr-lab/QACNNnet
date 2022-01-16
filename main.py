@@ -147,7 +147,7 @@ def main():
     print("Model succesfully built!")
     model.summary()
 
-    if Config.LOAD_WEIGHTS and os.path.exists(Config.CHECKPOINT_PATH):
+    if Config.LOAD_WEIGHTS and os.path.exists(Config.CHECKPOINT_PATH+".index"):
         print("Loading model's weights...")
         model.load_weights(Config.CHECKPOINT_PATH)
         print("Model's weights successfully loaded!")
