@@ -7,7 +7,6 @@ import pandas as pd
 import preprocessing.glove_manager as glove_manager
 import preprocessing.preprocess as preprocess
 from preprocessing.dataframe_builder import tokenize_dataframe, build_embedding_matrix
-from preprocessing.tokenizer import detokenize_seq
 from model.question_answer_model import QACNNnet
 from inference import get_predictions
 import numpy as np
@@ -27,9 +26,10 @@ def load_dictionaries():
 
     return words_tokenizer, chars_tokenizer, glove_dict
 
-def build_dataframe_row(context, question, title, id):
+def build_dataframe_row(context, question, title, id, corpus):
 
-    preprocessed_context = preprocess.preprocess_text(context, Config.PREPROCESSING_OPTIONS)
+    preprocessed_context, full_text = preprocess.preprocess_text(context, Config.PREPROCESSING_OPTIONS, get_full_text=True)
+    corpus.append(full_text)
 
     if len(preprocessed_context)>Config.MAX_CONTEXT_WORDS:
         preprocessed_context = preprocessed_context[0:Config.MAX_CONTEXT_WORDS]
@@ -58,6 +58,7 @@ def extract_rows(json_dict):
     data = json_dict["data"]
 
     dataframe_rows = []
+    corpus = []
 
     for element in tqdm(data):
         title = element["title"]
@@ -71,18 +72,18 @@ def extract_rows(json_dict):
                 question = qas["question"]
                 id = qas["id"]
 
-                row = build_dataframe_row(context, question, title, id)
+                row = build_dataframe_row(context, question, title, id, corpus)
                 dataframe_rows.append(row)
 
     print("Data extraction completed!")
 
-    return dataframe_rows
+    return dataframe_rows, corpus
 
 def build_dataframe(data_path):
 
     with open(data_path, "r") as file:
         data = json.loads(file.read())
-    dataframe_rows = extract_rows(data)
+    dataframe_rows, corpus = extract_rows(data)
 
     print("Tokenization started...")
 
@@ -95,11 +96,11 @@ def build_dataframe(data_path):
 
     print("Tokenization completed!")
 
-    return dataframe, words_tokenizer, chars_tokenizer, glove_dict
+    return dataframe, words_tokenizer, chars_tokenizer, glove_dict, corpus
 
 def load_data(data_path):
 
-    dataframe, words_tokenizer, chars_tokenizer, glove_dict = build_dataframe(data_path)
+    dataframe, words_tokenizer, chars_tokenizer, glove_dict, corpus = build_dataframe(data_path)
     pretrained_embedding_weights = build_embedding_matrix(words_tokenizer, glove_dict)
 
     words_to_remove = ['a', 'an', 'the'] + list(string.punctuation)
@@ -124,7 +125,7 @@ def load_data(data_path):
                         pretrained_embedding_weights,
                         tokens_to_remove)
 
-    return input_test, question_ids, words_tokenizer
+    return input_test, question_ids, words_tokenizer, corpus
 
 def build_model(input_embedding_params, embedding_encoder_params, conv_query_attention_to_encoders_params,
                 model_encoder_params, context_query_attention_params, max_context_words,
@@ -160,12 +161,10 @@ def get_preprocessed_answers(contexts, pred_start, pred_end, tokenizer):
 
     pred_slices = tf.concat([pred_start, pred_end],-1).numpy()
 
-    pred_tokenized_answers = []
+    preprocessed_answers = []
     for context, pred_slice in zip(contexts, pred_slices):
         sliced_context = context[pred_slice[0]:pred_slice[1]+1]
-        pred_tokenized_answers.append(sliced_context)
-
-    preprocessed_answers = [detokenize_seq(tokenized_answer, tokenizer) for tokenized_answer in pred_tokenized_answers]
+        preprocessed_answers.append(" ".join(sliced_context))
 
     return preprocessed_answers
 
@@ -180,7 +179,7 @@ def write_answers(question_ids, answers):
 
 def run_predictions(data_path):
 
-    input_test, question_ids, words_tokenizer = load_data(data_path)
+    input_test, question_ids, words_tokenizer, corpus = load_data(data_path)
     test_w_context, test_c_context, test_w_query, test_c_query = input_test
 
     model = build_model(Config.input_embedding_params,
@@ -215,10 +214,9 @@ def run_predictions(data_path):
     raw_predictions_start, raw_predictions_end = tf.split(raw_predictions, num_or_size_splits=2, axis=1)
     pred_start, pred_end = get_predictions(raw_predictions_start, raw_predictions_end)
 
-    preprocessed_answers = get_preprocessed_answers(test_w_context, pred_start, pred_end, words_tokenizer)
+    preprocessed_answers = get_preprocessed_answers(corpus, pred_start, pred_end, words_tokenizer)
     print("Predictions completed!")
 
-    #TODO: get answers before preprocessing
     write_answers(question_ids.tolist(),preprocessed_answers)
 
     print("Predictions successfully written to file.")
