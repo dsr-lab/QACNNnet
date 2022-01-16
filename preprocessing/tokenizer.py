@@ -101,3 +101,8 @@ def detokenize(token,tokenizer):
   position = val_list.index(token)
 
   return key_list[position]
+
+def detokenize_seq(seq, tokenizer):
+
+    words = [detokenize(token, tokenizer) for token in seq]
+    return " ".join(words)

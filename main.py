@@ -1,3 +1,4 @@
+import os
 from metrics import qa_loss
 from model import question_answer_model
 from model.question_answer_model import QACNNnet
@@ -6,7 +7,6 @@ import tensorflow as tf
 import numpy as np
 from preprocessing.dataframe_builder import load_dataframe, build_embedding_matrix
 import string
-
 
 def load_data():
 
@@ -46,7 +46,6 @@ def load_data():
                         tokens_to_remove)
 
     return input_train, input_validation, output_train, output_validation
-
 
 # Build model and compile
 def build_model(input_embedding_params, embedding_encoder_params, conv_query_attention_to_encoders_params,
@@ -148,6 +147,15 @@ def main():
     print("Model succesfully built!")
     model.summary()
 
+    if Config.LOAD_WEIGHTS and os.path.exists(Config.CHECKPOINT_PATH):
+        print("Loading model's weights...")
+        model.load_weights(Config.CHECKPOINT_PATH)
+        print("Model's weights successfully loaded!")
+
+    callbacks_list = []
+    if Config.SAVE_WEIGHTS:
+        callbacks_list.append(tf.keras.callbacks.ModelCheckpoint(filepath=Config.CHECKPOINT_PATH,save_weights_only=True,verbose=1))
+
     history = model.fit(
         x=[train_w_context, train_c_context, train_w_query, train_c_query],
         y=output_train,
@@ -156,7 +164,8 @@ def main():
             output_validation),
         verbose=1,
         batch_size=Config.BATCH_SIZE,
-        epochs=Config.EPOCHS)
+        epochs=Config.EPOCHS,
+        callbacks=callbacks_list)
 
     return history
 

@@ -1,14 +1,35 @@
-import Config
+import os
 import numpy as np
 import tensorflow as tf
 # import tensorflow_addons as tfa
 from model.warmup_learning import CustomSchedule
+import Config
 
 DEBUG = False
 EAGER_MODE = False
+SAVE_WEIGHTS = True
+LOAD_WEIGHTS = False
+
+DATA_PATH = os.path.join("data", "training_set.json")
+DATAFRAME_PATH = os.path.join("data", "training_dataframe.pkl")
+WORDS_TOKENIZER_PATH = os.path.join("data", "words_tokenizer.pkl")
+CHARS_TOKENIZER_PATH = os.path.join("data", "chars_tokenizer.pkl")
+CHECKPOINT_PATH = os.path.join("data","Checkpoints","weights.ckpt")
+PREDICTIONS_PATH = os.path.join("predictions", "predictions.txt")
+
+PREPROCESSING_OPTIONS = {
+"strip":True,
+"lower":True,
+"replace":True,
+"remove special":False,
+"stopwords":False,
+"lemmatize":True
+}
+
+TRAIN_SAMPLES = 78000
 
 MAX_CONTEXT_WORDS = 400
-MAX_QUERY_WORDS = 50
+MAX_QUERY_WORDS = 30
 MAX_ANSWER_LENGTH = 30
 
 L2_RATE = 0.01
@@ -37,7 +58,7 @@ N_BLOCKS_EMBEDDING_ENCODING = 1
 N_BLOCKS_MODEL_ENCODING = 7
 
 BATCH_SIZE = 32
-EPOCHS = 20
+EPOCHS = 30
 
 # Learning rate, optimizer and loss
 FINAL_LEARNING_RATE = 0.0005

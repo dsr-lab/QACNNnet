@@ -9,23 +9,6 @@ import preprocessing.glove_manager as glove_manager
 import pickle
 import Config
 
-DATA_PATH = os.path.join("data", "training_set.json")
-DATAFRAME_PATH = os.path.join("data", "training_dataframe.pkl")
-WORDS_TOKENIZER_PATH = os.path.join("data", "words_tokenizer.pkl")
-CHARS_TOKENIZER_PATH = os.path.join("data", "chars_tokenizer.pkl")
-
-PREPROCESSING_OPTIONS = {
-"strip":True,
-"lower":True,
-"replace":True,
-"remove special":False,
-"stopwords":False,
-"lemmatize":True
-}
-
-TRAIN_SAMPLES = 78000
-# TRAIN_SAMPLES = 5
-
 np.random.seed(seed=100) #Define a seed for randomization, avoiding to get different placeholder or random embeddings each time
 UNK_PLACEHOLDER = np.random.uniform(low=-0.05, high=0.05, size=glove_manager.EMBEDDING_SIZE)
 
@@ -59,13 +42,13 @@ def get_answer_indices(context_words, answer_words):
 
 def build_dataframe_row(context, question, answer, split, title, id):
 
-    preprocessed_context = preprocess.preprocess_text(context, PREPROCESSING_OPTIONS)
+    preprocessed_context = preprocess.preprocess_text(context, Config.PREPROCESSING_OPTIONS)
 
     if len(preprocessed_context)>Config.MAX_CONTEXT_WORDS:
         return None
 
-    preprocessed_question = preprocess.preprocess_text(question, PREPROCESSING_OPTIONS)
-    preprocessed_answer = preprocess.preprocess_text(answer, PREPROCESSING_OPTIONS)
+    preprocessed_question = preprocess.preprocess_text(question, Config.PREPROCESSING_OPTIONS)
+    preprocessed_answer = preprocess.preprocess_text(answer, Config.PREPROCESSING_OPTIONS)
 
     answer_indices = get_answer_indices(preprocessed_context, preprocessed_answer)
     if answer_indices is None:
@@ -130,7 +113,7 @@ def extract_rows(json_dict):
                     answer_start = answer["answer_start"] #Not used
 
                     if not splitted_to_val:
-                        if len(dataframe_rows) > TRAIN_SAMPLES and allow_val_split:
+                        if len(dataframe_rows) > Config.TRAIN_SAMPLES and allow_val_split:
                             splitted_to_val=True
 
                     split = "train" if not splitted_to_val else "validation"
@@ -155,7 +138,7 @@ def tokenize_dataframe(df, words_tokenizer, chars_tokenizer):
 
 def build_dataframe():
 
-    data = get_data(DATA_PATH)
+    data = get_data(Config.DATA_PATH)
     dataframe_rows = extract_rows(data)
 
     print("Tokenization started...")
@@ -183,11 +166,11 @@ def build_dataframe():
 
 def save_dataframe(dataframe, words_tokenizer, chars_tokenizer):
 
-    dataframe.to_pickle(DATAFRAME_PATH)
-    with open(WORDS_TOKENIZER_PATH, 'wb') as handle:
+    dataframe.to_pickle(Config.DATAFRAME_PATH)
+    with open(Config.WORDS_TOKENIZER_PATH, 'wb') as handle:
         pickle.dump(words_tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    with open(CHARS_TOKENIZER_PATH, 'wb') as handle:
+    with open(Config.CHARS_TOKENIZER_PATH, 'wb') as handle:
         pickle.dump(chars_tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     print("Dataframe saved successfully")
@@ -201,17 +184,17 @@ def check_savings(paths):
 
 def load_dataframe(save=True, force_rebuild=False):
 
-    if not check_savings([DATAFRAME_PATH, WORDS_TOKENIZER_PATH, CHARS_TOKENIZER_PATH]) or force_rebuild:
+    if not check_savings([Config.DATAFRAME_PATH, Config.WORDS_TOKENIZER_PATH, Config.CHARS_TOKENIZER_PATH]) or force_rebuild:
         dataframe, words_tokenizer, chars_tokenizer, glove_dict = build_dataframe()
         if save:
             save_dataframe(dataframe, words_tokenizer, chars_tokenizer)
         return dataframe, words_tokenizer, chars_tokenizer, glove_dict
 
     else:
-        dataframe = pd.read_pickle(DATAFRAME_PATH)
-        with open(WORDS_TOKENIZER_PATH, 'rb') as handle:
+        dataframe = pd.read_pickle(Config.DATAFRAME_PATH)
+        with open(Config.WORDS_TOKENIZER_PATH, 'rb') as handle:
             words_tokenizer = pickle.load(handle)
-        with open(CHARS_TOKENIZER_PATH, 'rb') as handle:
+        with open(Config.CHARS_TOKENIZER_PATH, 'rb') as handle:
             chars_tokenizer = pickle.load(handle)
         glove_manager.setup_files()
         glove_dict = glove_manager.load_glove()
