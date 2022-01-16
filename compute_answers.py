@@ -178,7 +178,7 @@ def write_answers(question_ids, answers):
     with open(Config.PREDICTIONS_PATH, 'w') as json_file:
         json.dump(answers_dict, json_file)
 
-def run_test(data_path):
+def run_predictions(data_path):
 
     input_test, question_ids, words_tokenizer = load_data(data_path)
     test_w_context, test_c_context, test_w_query, test_c_query = input_test
@@ -228,7 +228,7 @@ args = sys.argv
 if len(args)==2:
     data_path = args[1]
     if os.path.exists(data_path):
-        run_test(data_path)
+        run_predictions(data_path)
     else:
         print("Invalid argument: {} does not exists".format(data_path))
 elif len(args)<2:
