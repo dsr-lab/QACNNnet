@@ -4,14 +4,14 @@ import tensorflow as tf
 # import tensorflow_addons as tfa
 from model.warmup_learning import CustomSchedule
 
-DEBUG = False
+DEBUG = True
 EAGER_MODE = False
 
 MAX_CONTEXT_WORDS = 400
 MAX_QUERY_WORDS = 50
 MAX_ANSWER_LENGTH = 30
 
-L2_RATE = 1e-3
+L2_RATE = 1e-4
 #L2_RATE = 3e-7
 DROPOUT_RATE = 0.1
 
@@ -20,7 +20,7 @@ IGNORE_TOKENS = tf.constant([[0], [1], [9], [10]])
 WORD_EMBEDDING_SIZE = 300
 WORD_VOCAB_SIZE = 10000
 PRETRAINED_WEIGHTS = np.random.rand(WORD_VOCAB_SIZE, WORD_EMBEDDING_SIZE)
-CHARACTER_EMBEDDING_SIZE = 96
+CHARACTER_EMBEDDING_SIZE = 64
 CHARACTER_VOCAB_SIZE = 100
 MAX_CHARS = 16
 
@@ -37,7 +37,7 @@ N_BLOCKS_EMBEDDING_ENCODING = 1
 N_BLOCKS_MODEL_ENCODING = 7
 
 BATCH_SIZE = 32
-EPOCHS = 20
+EPOCHS = 50
 
 # Learning rate, optimizer and loss
 FINAL_LEARNING_RATE = 0.0005
@@ -62,11 +62,9 @@ embedding_encoder_params = {
     "l2_rate": L2_RATE
 }
 
-conv_query_attention_to_encoders_params = {
+conv_input_projection_params = {
     "filters": D_MODEL,
-    "kernel_size": ENCODER_KERNEL_SIZE,
-    "padding": "same",
-    "data_format": "channels_last",
+    "kernel_size": 1,
     "kernel_regularizer": tf.keras.regularizers.l2(L2_RATE),
     # "activity_regularizer": tf.keras.regularizers.l2(L2_RATE),
     "bias_regularizer": tf.keras.regularizers.l2(L2_RATE),
@@ -104,9 +102,11 @@ def config_model(word_vocab_size, char_vocab_size, pretrained_weights, ignore_to
         "c_emb_size": CHARACTER_EMBEDDING_SIZE,
         "c_vocab_size": CHARACTER_VOCAB_SIZE,
         "c_conv_kernel_size": EMBEDDING_KERNEL_SIZE,
+        "c_conv_output_size": D_MODEL,
         "n_highway_layers": N_HIGHWAY_LAYERS,
         "dropout_rate": DROPOUT_RATE,
-        "l2_rate": L2_RATE
+        "l2_rate": L2_RATE,
+        "conv_input_projection_params": conv_input_projection_params
     }
 
 

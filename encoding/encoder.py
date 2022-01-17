@@ -16,7 +16,7 @@ class EncodingLayer(layers.Layer):
                  block_num: int,
                  dropout_rate: float,
                  l2_rate: float):
-        """
+        '''
         Parameters:
         -----------
         d_model: int
@@ -33,7 +33,7 @@ class EncodingLayer(layers.Layer):
             L2 value used in L2 regularization
         block_num: int
             Index of the current encoding layer
-        """
+        '''
 
         super(EncodingLayer, self).__init__()
 
@@ -109,7 +109,7 @@ class EncodingLayer(layers.Layer):
                     training: bool,
                     attention_mask=None,
                     feed_forward=False) -> tf.Tensor:
-        """
+        '''
         Check whether a layer should be used or not (stochastic dropout), then:
         -Return the input as the output if the layer should not be used;
         -Return layer(layer_normalization(x)) + x if the layer should be used.
@@ -131,7 +131,7 @@ class EncodingLayer(layers.Layer):
         --------
         x: tf.Tensor
             Output of the layer with stochastic dropout.
-        """
+        '''
 
         keep = stochastic_dropout.keep_layer(self.n_layers, layer_num, self.survival_prob) if training else True
         if keep:
@@ -164,7 +164,7 @@ class EncodingLayer(layers.Layer):
 
     def call(self, x, training, mask=None):
 
-        """
+        '''
         Override of keras.layers.Layer method: computes the output of an Encoding Layer:
         1. Apply positional_encoding if required;
         2. Apply a series of separable convolutional layers;
@@ -172,7 +172,7 @@ class EncodingLayer(layers.Layer):
         4. Apply one dense layer.
 
         The input of each layer is the residual block using a normalization layer to the output of the previous layer.
-        """
+        '''
         embedding_size = x.shape[2]
         maximum_position_encoding = x.shape[1]
         pos_encoding = positional_encoding.get_encoding(maximum_position_encoding,
@@ -215,7 +215,7 @@ class EncoderLayer(layers.Layer):
                  dropout_rate: float,
                  l2_rate: float):
 
-        """
+        '''
         Parameters:
         -----------
         d_model: int
@@ -232,7 +232,7 @@ class EncoderLayer(layers.Layer):
             L2 value used in L2 regularization
         n_blocks: int
             Number of encoding layers to stack
-        """
+        '''
 
         super(EncoderLayer, self).__init__()
 

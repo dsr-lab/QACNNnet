@@ -49,7 +49,7 @@ def load_data():
 
 
 # Build model and compile
-def build_model(input_embedding_params, embedding_encoder_params, conv_query_attention_to_encoders_params,
+def build_model(input_embedding_params, embedding_encoder_params, conv_input_projection_params,
                 model_encoder_params, context_query_attention_params, max_context_words,
                 max_query_words, max_chars, optimizer, vocab_size, ignore_tokens, dropout_rate):
     # Model input tensors
@@ -63,7 +63,7 @@ def build_model(input_embedding_params, embedding_encoder_params, conv_query_att
     # Create the model and force a call
     model = QACNNnet(input_embedding_params,
                      embedding_encoder_params,
-                     conv_query_attention_to_encoders_params,
+                     conv_input_projection_params,
                      model_encoder_params,
                      context_query_attention_params,
                      vocab_size,
@@ -115,8 +115,8 @@ def main():
     if Config.DEBUG:
         Config.BATCH_SIZE = 4
         Config.EAGER_MODE = True
-        n_train = 8
-        n_val = 4
+        n_train = 32
+        n_val = 8
         train_w_context = train_w_context[:n_train]
         train_c_context = train_c_context[:n_train]
         train_w_query = train_w_query[:n_train]
@@ -134,7 +134,7 @@ def main():
 
     model = build_model(Config.input_embedding_params,
                         Config.embedding_encoder_params,
-                        Config.conv_query_attention_to_encoders_params,
+                        Config.conv_input_projection_params,
                         Config.model_encoder_params,
                         Config.context_query_attention_params,
                         Config.MAX_CONTEXT_WORDS,
