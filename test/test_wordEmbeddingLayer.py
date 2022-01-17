@@ -42,7 +42,7 @@ class TestWordEmbeddingLayer(TestCase):
         # ####################
         # Act
         # ####################
-        result = emb_layer(sentences_input)
+        result, _ = emb_layer(sentences_input)
 
         # ####################
         # Assert

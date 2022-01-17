@@ -8,11 +8,39 @@ from input_embedding.word_embedding_layer import WordEmbeddingLayer
 
 class InputEmbeddingLayer(tf.keras.layers.Layer):
 
-    # input-independent initialization
     def __init__(self,
                  w_emb_size, w_pretrained_weights, w_vocab_size, w_n_special_tokens,
-                 c_emb_size, c_vocab_size, c_conv_kernel_size, n_highway_layers,
-                 dropout_rate, l2_rate):
+                 c_emb_size, c_vocab_size, c_conv_kernel_size, c_conv_output_size,
+                 n_highway_layers, dropout_rate, l2_rate, conv_input_projection_params):
+        '''
+        Create the first block of the QACNNet
+
+        Parameters:
+        -----------
+        w_emb_size: int
+            The word embedding size
+        w_pretrained_weights: tf.tensor
+            Weighting matrix to apply to the word embedding layer
+        w_vocab_size: int
+            The number of words in the vocaboulary
+        w_n_special_tokens: int
+            The number of tokens considered special (e.g., <UNK>)
+        c_emb_size: int
+            The character embedding size
+        c_vocab_size: int
+            The number of characters in the vocaboulary
+        c_conv_kernel_size: int
+            The convolution kernel size used when processing characters
+        n_highway_layers: int
+            The number of highway layers that are used for generating
+            the output of this layer
+        dropout_rate: float
+            The dropout rate.
+            Passing 0.0 means that dropout is not applied.
+        l2_rate: float
+            The l2 rate.
+            Passing 0.0 means that l2 regularization is not applied.
+        '''
 
         super(InputEmbeddingLayer, self).__init__()
 
@@ -21,17 +49,14 @@ class InputEmbeddingLayer(tf.keras.layers.Layer):
 
         # Layers
         self.char_embedding = CharEmbeddingLayer(
-            c_emb_size, c_vocab_size, c_conv_kernel_size, dropout_rate=dropout_rate/2)
+            c_emb_size, c_vocab_size, c_conv_kernel_size, c_conv_output_size, dropout_rate=dropout_rate/2)
         self.word_embedding = WordEmbeddingLayer(
             w_emb_size, w_pretrained_weights, w_vocab_size, w_n_special_tokens, dropout_rate=dropout_rate)
 
+        self.conv_1d = layers.SeparableConv1D(**conv_input_projection_params)
         self.highway_layers = []
         for i in range(n_highway_layers):
             self.highway_layers.append(HighwayLayer(dropout_rate, l2))
-
-    # input-dependent initialization
-    def build(self, input_lenght):
-        pass
 
     # forward computation
     def call(self, inputs):
@@ -49,6 +74,8 @@ class InputEmbeddingLayer(tf.keras.layers.Layer):
 
         #final_emb = tf.keras.layers.concatenate([w_emb, c_emb], axis=2)
         final_emb = layers.Concatenate(axis=2)([w_emb, c_emb])
+
+        final_emb = self.conv_1d(final_emb)
 
         for highway in self.highway_layers:
             final_emb = highway(final_emb)

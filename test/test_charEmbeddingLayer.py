@@ -16,6 +16,7 @@ class TestCharEmbeddingLayer(TestCase):
         cls.VOCAB_SIZE = 50
         cls.EMB_SIZE = 5
         cls.CONV_OUTPUT_SIZE = 5
+        cls.CONV_KERNEL_SIZE = 3
 
         cls.sentence_input = np.random.randint(
             cls.VOCAB_SIZE, size=(cls.BATCH_SIZE, cls.N_WORDS, cls.N_CHAR)
@@ -29,8 +30,9 @@ class TestCharEmbeddingLayer(TestCase):
         char_emb_layer = CharEmbeddingLayer(
             emb_size=self.EMB_SIZE,
             vocab_size=self.VOCAB_SIZE,
-            conv_output_size=self.CONV_OUTPUT_SIZE,
-            conv_kernel_size=3)
+            conv_kernel_size=self.CONV_KERNEL_SIZE,
+            conv_output_size=self.CONV_OUTPUT_SIZE
+            )
 
         # ####################
         # Act
@@ -49,8 +51,9 @@ class TestCharEmbeddingLayer(TestCase):
         char_emb_layer = CharEmbeddingLayer(
             emb_size=self.EMB_SIZE,
             vocab_size=self.VOCAB_SIZE,
-            conv_output_size=self.CONV_OUTPUT_SIZE,
-            conv_kernel_size=3)
+            conv_kernel_size=self.CONV_KERNEL_SIZE,
+            conv_output_size=self.CONV_OUTPUT_SIZE
+            )
 
         # ####################
         # Act
