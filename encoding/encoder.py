@@ -136,8 +136,6 @@ class EncodingLayer(layers.Layer):
         keep = stochastic_dropout.keep_layer(self.n_layers, layer_num, self.survival_prob) if training else True
         if keep:
             can_apply_residual_block = x.shape[-1] == self.d_model
-            if not can_apply_residual_block:
-                tf.print('CANNOT APPLY RESIDUAL BLOCK!!!!!!!')
 
             norm_x = self.norm_layers[layer_num](x)
 
@@ -158,10 +156,12 @@ class EncodingLayer(layers.Layer):
 
             # Residual block
             if can_apply_residual_block:
+                x = self.dropout(x)
                 return f_x + x
             else:
                 return f_x
         else:
+            tf.print("not keeping layer: ", layer_num, self.norm_layers[layer_num], layer)
             return x
 
     def call(self, x, training, mask=None):
