@@ -156,12 +156,12 @@ class EncodingLayer(layers.Layer):
 
             # Residual block
             if can_apply_residual_block:
-                x = self.dropout(x)
+                f_x = self.dropout(f_x)
                 return f_x + x
             else:
                 return f_x
         else:
-            # tf.print("not keeping layer: ", layer_num, self.norm_layers[layer_num], layer)
+            # tf.print("not keeping layer: ", layer_num, self.norm_layers[layer_num])
             return x
 
     def call(self, x, training, mask=None):
