@@ -11,7 +11,6 @@ MAX_CONTEXT_WORDS = 400
 MAX_QUERY_WORDS = 50
 MAX_ANSWER_LENGTH = 30
 
-#L2_RATE = 1e-4
 L2_RATE = 3e-7
 DROPOUT_RATE = 0.1
 
@@ -65,9 +64,9 @@ embedding_encoder_params = {
 conv_input_projection_params = {
     "filters": D_MODEL,
     "kernel_size": 1,
-    "kernel_regularizer": tf.keras.regularizers.l2(L2_RATE),
+    "kernel_regularizer": None if L2_RATE == 0.0 else tf.keras.regularizers.l2(L2_RATE),
     # "activity_regularizer": tf.keras.regularizers.l2(L2_RATE),
-    "bias_regularizer": tf.keras.regularizers.l2(L2_RATE),
+    "bias_regularizer": None if L2_RATE == 0.0 else tf.keras.regularizers.l2(L2_RATE)
 
 }
 

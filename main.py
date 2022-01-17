@@ -113,10 +113,10 @@ def main():
     valid_w_context, valid_c_context, valid_w_query, valid_c_query = input_validation
 
     if Config.DEBUG:
-        Config.BATCH_SIZE = 4
-        Config.EAGER_MODE = True
-        n_train = 32
-        n_val = 8
+        Config.BATCH_SIZE = 32
+        Config.EAGER_MODE = False
+        n_train = 100
+        n_val = 50
         train_w_context = train_w_context[:n_train]
         train_c_context = train_c_context[:n_train]
         train_w_query = train_w_query[:n_train]

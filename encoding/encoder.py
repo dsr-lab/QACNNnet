@@ -159,6 +159,7 @@ class EncodingLayer(layers.Layer):
                 f_x = self.dropout(f_x)
                 return f_x + x
             else:
+                f_x = self.dropout(f_x)
                 return f_x
         else:
             # tf.print("not keeping layer: ", layer_num, self.norm_layers[layer_num])
