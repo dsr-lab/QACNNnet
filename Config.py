@@ -4,15 +4,15 @@ import tensorflow as tf
 # import tensorflow_addons as tfa
 from model.warmup_learning import CustomSchedule
 
-DEBUG = False
+DEBUG = True
 EAGER_MODE = False
 
 MAX_CONTEXT_WORDS = 400
 MAX_QUERY_WORDS = 50
 MAX_ANSWER_LENGTH = 30
 
-L2_RATE = 1e-4
-#L2_RATE = 3e-7
+#L2_RATE = 1e-4
+L2_RATE = 3e-7
 DROPOUT_RATE = 0.1
 
 IGNORE_TOKENS = tf.constant([[0], [1], [9], [10]])
@@ -27,7 +27,7 @@ MAX_CHARS = 16
 EMBEDDING_KERNEL_SIZE = 5
 N_HIGHWAY_LAYERS = 2
 
-D_MODEL = 128
+D_MODEL = 96
 ENCODER_KERNEL_SIZE = 7
 N_CONV_LAYERS_EMBEDDING_ENCODING = 4
 N_CONV_LAYERS_MODEL_ENCODING = 2
@@ -40,7 +40,7 @@ BATCH_SIZE = 32
 EPOCHS = 50
 
 # Learning rate, optimizer and loss
-FINAL_LEARNING_RATE = 0.0005
+FINAL_LEARNING_RATE = 0.001
 WARMUP_STEPS = 1000.0
 learning_rate = CustomSchedule(FINAL_LEARNING_RATE, WARMUP_STEPS)
 

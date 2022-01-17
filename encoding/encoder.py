@@ -52,9 +52,11 @@ class EncodingLayer(layers.Layer):
             "kernel_size": kernel_size,
             "padding": "same",  # necessary for residual blocks
             "data_format": "channels_last",
-            "kernel_regularizer": l2,
+            "depthwise_regularizer": l2,
+            "pointwise_regularizer": l2,
             # "activity_regularizer": l2,
-            "bias_regularizer": l2
+            "bias_regularizer": l2,
+            "activation": "relu"
         }
 
         self_attention_layer_params = {
@@ -67,8 +69,7 @@ class EncodingLayer(layers.Layer):
 
         feed_forward_layer_params = {
             "units": d_model,
-            "activation": "tanh",  # or Relu?
-            # "activation": "relu",
+            "activation": "relu",
             "kernel_regularizer": l2,
             # "activity_regularizer": l2,
             "bias_regularizer": l2
@@ -83,8 +84,7 @@ class EncodingLayer(layers.Layer):
         # self.feed_forward_layer = layers.Dense(**feed_forward_layer_params)  # Is one layer enough?
 
         # TODO: create a dictionary like the other layers
-        # self.ff1 = layers.Conv1D(d_model, 1, activation='relu')
-        self.ff1 = layers.Conv1D(d_model, 1, activation='tanh',
+        self.ff1 = layers.Conv1D(d_model, 1, activation='relu',
                                  kernel_regularizer=l2, bias_regularizer=l2)
         self.ff2 = layers.Conv1D(d_model, 1, activation=None,
                                  kernel_regularizer=l2, bias_regularizer=l2)
@@ -136,6 +136,8 @@ class EncodingLayer(layers.Layer):
         keep = stochastic_dropout.keep_layer(self.n_layers, layer_num, self.survival_prob) if training else True
         if keep:
             can_apply_residual_block = x.shape[-1] == self.d_model
+            if not can_apply_residual_block:
+                tf.print('CANNOT APPLY RESIDUAL BLOCK!!!!!!!')
 
             norm_x = self.norm_layers[layer_num](x)
 
