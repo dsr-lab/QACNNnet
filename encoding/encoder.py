@@ -161,7 +161,7 @@ class EncodingLayer(layers.Layer):
             else:
                 return f_x
         else:
-            tf.print("not keeping layer: ", layer_num, self.norm_layers[layer_num], layer)
+            # tf.print("not keeping layer: ", layer_num, self.norm_layers[layer_num], layer)
             return x
 
     def call(self, x, training, mask=None):
