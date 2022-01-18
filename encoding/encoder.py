@@ -56,7 +56,8 @@ class EncodingLayer(layers.Layer):
             "pointwise_regularizer": l2,
             # "activity_regularizer": l2,
             "bias_regularizer": l2,
-            "activation": "relu"
+            "activation": "relu",
+            "kernel_initializer": tf.keras.initializers.HeNormal()
         }
 
         self_attention_layer_params = {
@@ -67,13 +68,13 @@ class EncodingLayer(layers.Layer):
             "bias_regularizer": l2
         }
 
-        feed_forward_layer_params = {
-            "units": d_model,
-            "activation": "relu",
-            "kernel_regularizer": l2,
-            # "activity_regularizer": l2,
-            "bias_regularizer": l2
-        }
+        # feed_forward_layer_params = {
+        #     "units": d_model,
+        #     "activation": "relu",
+        #     "kernel_regularizer": l2,
+        #     # "activity_regularizer": l2,
+        #     "bias_regularizer": l2
+        # }
 
         self.norm_layers = [layers.LayerNormalization() for _ in range(self.n_layers)]
 
@@ -85,7 +86,8 @@ class EncodingLayer(layers.Layer):
 
         # TODO: create a dictionary like the other layers
         self.ff1 = layers.Conv1D(d_model, 1, activation='relu',
-                                 kernel_regularizer=l2, bias_regularizer=l2)
+                                 kernel_regularizer=l2, bias_regularizer=l2,
+                                 kernel_initializer=tf.keras.initializers.HeNormal())
         self.ff2 = layers.Conv1D(d_model, 1, activation=None,
                                  kernel_regularizer=l2, bias_regularizer=l2)
 
