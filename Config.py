@@ -5,10 +5,10 @@ import tensorflow as tf
 from model.warmup_learning import CustomSchedule
 import Config
 
-DEBUG = True
+DEBUG = False
 EAGER_MODE = False
-SAVE_WEIGHTS = True
-LOAD_WEIGHTS = True
+SAVE_WEIGHTS = False
+LOAD_WEIGHTS = False
 
 DATA_PATH = os.path.join("data", "training_set.json")
 DATAFRAME_PATH = os.path.join("data", "training_dataframe.pkl")
@@ -40,14 +40,14 @@ IGNORE_TOKENS = tf.constant([[0], [1], [9], [10]])
 WORD_EMBEDDING_SIZE = 100
 WORD_VOCAB_SIZE = 10000
 PRETRAINED_WEIGHTS = np.random.rand(WORD_VOCAB_SIZE, WORD_EMBEDDING_SIZE)
-CHARACTER_EMBEDDING_SIZE = 94
+CHARACTER_EMBEDDING_SIZE = 64
 CHARACTER_VOCAB_SIZE = 100
 MAX_CHARS = 16
 
 EMBEDDING_KERNEL_SIZE = 5
 N_HIGHWAY_LAYERS = 2
 
-D_MODEL = 128
+D_MODEL = 96
 ENCODER_KERNEL_SIZE = 7
 N_CONV_LAYERS_EMBEDDING_ENCODING = 4
 N_CONV_LAYERS_MODEL_ENCODING = 2
