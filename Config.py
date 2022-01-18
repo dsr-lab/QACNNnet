@@ -1,14 +1,35 @@
-import Config
+import os
 import numpy as np
 import tensorflow as tf
 # import tensorflow_addons as tfa
 from model.warmup_learning import CustomSchedule
+import Config
 
 DEBUG = True
 EAGER_MODE = False
+SAVE_WEIGHTS = True
+LOAD_WEIGHTS = True
+
+DATA_PATH = os.path.join("data", "training_set.json")
+DATAFRAME_PATH = os.path.join("data", "training_dataframe.pkl")
+WORDS_TOKENIZER_PATH = os.path.join("data", "words_tokenizer.pkl")
+CHARS_TOKENIZER_PATH = os.path.join("data", "chars_tokenizer.pkl")
+CHECKPOINT_PATH = os.path.join("data","Checkpoints","weights.ckpt")
+PREDICTIONS_PATH = os.path.join("predictions", "predictions.json")
+
+PREPROCESSING_OPTIONS = {
+"strip":True,
+"lower":True,
+"replace":True,
+"remove special":False,
+"stopwords":False,
+"lemmatize":True
+}
+
+TRAIN_SAMPLES = 78000
 
 MAX_CONTEXT_WORDS = 400
-MAX_QUERY_WORDS = 50
+MAX_QUERY_WORDS = 30
 MAX_ANSWER_LENGTH = 30
 
 L2_RATE = 3e-7
@@ -16,7 +37,7 @@ DROPOUT_RATE = 0.1
 
 IGNORE_TOKENS = tf.constant([[0], [1], [9], [10]])
 
-WORD_EMBEDDING_SIZE = 300
+WORD_EMBEDDING_SIZE = 100
 WORD_VOCAB_SIZE = 10000
 PRETRAINED_WEIGHTS = np.random.rand(WORD_VOCAB_SIZE, WORD_EMBEDDING_SIZE)
 CHARACTER_EMBEDDING_SIZE = 94
@@ -33,10 +54,10 @@ N_CONV_LAYERS_MODEL_ENCODING = 2
 N_HEADS = 1
 STOCHASTIC_SURVIVAL_PROB = 0.9
 N_BLOCKS_EMBEDDING_ENCODING = 1
-N_BLOCKS_MODEL_ENCODING = 7
+N_BLOCKS_MODEL_ENCODING = 3
 
 BATCH_SIZE = 32
-EPOCHS = 50
+EPOCHS = 30
 
 # Learning rate, optimizer and loss
 FINAL_LEARNING_RATE = 0.001
@@ -107,5 +128,3 @@ def config_model(word_vocab_size, char_vocab_size, pretrained_weights, ignore_to
         "l2_rate": L2_RATE,
         "conv_input_projection_params": conv_input_projection_params
     }
-
-

@@ -60,7 +60,7 @@ def split_to_chars(word):
 
     return [char for char in word]
 
-def preprocess_text(text, preprocessing_options):
+def preprocess_text(text, preprocessing_options, get_full_text=False):
 
     if preprocessing_options["strip"]:
         text = strip_text(text)
@@ -72,6 +72,7 @@ def preprocess_text(text, preprocessing_options):
         text = replace_with_spaces(text)
 
     words = get_words(text, preprocessing_options["remove special"])
+    full_text = words[0:] if get_full_text else None
 
     if preprocessing_options["stopwords"]:
         words = delete_stop_words(words)
@@ -79,4 +80,8 @@ def preprocess_text(text, preprocessing_options):
     if preprocessing_options["lemmatize"]:
         words = lemmatize(words)
 
-    return words
+    if full_text is not None:
+        return words, full_text
+
+    else:
+        return words

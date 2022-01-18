@@ -151,7 +151,7 @@ class QACNNnet(tf.keras.Model):
         #     # self.unaveraged_weights = self.trainable_variables
         #
         # self.model_is_training = False
-            
+
         # Unpack the data
         x, y = data
         # Compute predictions
