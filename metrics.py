@@ -195,7 +195,7 @@ def qa_loss(y_true, y_pred):
     # y_true = (batch_size, 2, 1) or (batch_size, 2)
     # y_pred = (batch_size, 2, n_words)
 
-    # epsilon = 1e-8
+    epsilon = 1e-8
 
     # Clip values for numerical stability
     # y_pred = tf.clip_by_value(y_pred, 1e-8, 1. - 1e-8)
@@ -207,24 +207,24 @@ def qa_loss(y_true, y_pred):
     y_pred_start, y_pred_end = tf.split(y_pred, num_or_size_splits=2, axis=1)
 
 
-    # # Get the probabilities of the corresponding ground truth
-    # p1 = tf.gather(params=y_pred_start, indices=y_true_start, axis=-1, batch_dims=-1)
-    # p2 = tf.gather(params=y_pred_end, indices=y_true_end, axis=-1, batch_dims=-1)
-    #
-    # # p1 = tf.reshape(p1, shape=(batch_size, 1))
-    # # p2 = tf.reshape(p2, shape=(batch_size, 1))
-    # p1 = tf.reshape(p1, shape=(-1, 1))
-    # p2 = tf.reshape(p2, shape=(-1, 1))
-    #
-    # log_p1 = tf.math.log(p1 + epsilon)
-    # log_p2 = tf.math.log(p2 + epsilon)
-    #
-    # neg_log_p1 = tf.math.negative(log_p1)
-    # neg_log_p2 = tf.math.negative(log_p2)
-    #
-    # neg_log_sum = neg_log_p1 + neg_log_p2
-    #
-    # loss2 = tf.reduce_mean(neg_log_sum)
+    # Get the probabilities of the corresponding ground truth
+    p1 = tf.gather(params=y_pred_start, indices=y_true_start, axis=-1, batch_dims=-1)
+    p2 = tf.gather(params=y_pred_end, indices=y_true_end, axis=-1, batch_dims=-1)
+
+    # p1 = tf.reshape(p1, shape=(batch_size, 1))
+    # p2 = tf.reshape(p2, shape=(batch_size, 1))
+    p1 = tf.reshape(p1, shape=(-1, 1))
+    p2 = tf.reshape(p2, shape=(-1, 1))
+
+    log_p1 = tf.math.log(p1 + epsilon)
+    log_p2 = tf.math.log(p2 + epsilon)
+
+    neg_log_p1 = tf.math.negative(log_p1)
+    neg_log_p2 = tf.math.negative(log_p2)
+
+    neg_log_sum = neg_log_p1 + neg_log_p2
+
+    loss2 = tf.reduce_mean(neg_log_sum)
 
 
 
@@ -272,7 +272,7 @@ def qa_loss(y_true, y_pred):
     tf.print('Paper: ', _res3)
     '''
 
-    return loss
+    return loss2
 
 
 def _split_start_end_indices(y_true, y_pred):
