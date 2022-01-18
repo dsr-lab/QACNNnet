@@ -119,7 +119,7 @@ class QACNNnet(tf.keras.Model):
         self.optimizer.apply_gradients(zip(capped_grads, trainable_vars))
 
         # Apply EMA
-        # self.ema.apply(self.trainable_variables)
+        self.ema.apply(self.trainable_variables)
 
         # Update the metrics
         self.loss_tracker.update_state(loss)
