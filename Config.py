@@ -5,8 +5,8 @@ import tensorflow as tf
 from model.warmup_learning import CustomSchedule
 import Config
 
-DEBUG = False
-EAGER_MODE = False
+DEBUG = True
+EAGER_MODE = True
 SAVE_WEIGHTS = False
 LOAD_WEIGHTS = False
 
@@ -23,7 +23,7 @@ PREPROCESSING_OPTIONS = {
 "replace":True,
 "remove special":False,
 "stopwords":False,
-"lemmatize":False
+"lemmatize":True
 }
 
 TRAIN_SAMPLES = 78000
