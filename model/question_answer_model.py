@@ -110,8 +110,13 @@ class QACNNnet(tf.keras.Model):
         # Compute gradients
         trainable_vars = self.trainable_variables
         gradients = tape.gradient(loss, trainable_vars)
+
+        # Gradients clipping
+        capped_grads, _ = tf.clip_by_global_norm(
+            gradients, 5.0)
+
         # Update weights
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+        self.optimizer.apply_gradients(zip(capped_grads, trainable_vars))
 
         # Apply EMA
         # self.ema.apply(self.trainable_variables)
