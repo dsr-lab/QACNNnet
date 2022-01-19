@@ -5,28 +5,40 @@ import Config
 
 class ContextQueryAttentionLayer2(tf.keras.layers.Layer):
     def __init__(self, n_channels=Config.D_MODEL, max_context_words=Config.MAX_CONTEXT_WORDS,
-                 max_query_words=Config.MAX_QUERY_WORDS):
+                 max_query_words=Config.MAX_QUERY_WORDS, dropout_rate=Config.DROPOUT_RATE, l2_rate=Config.L2_RATE):
         super(ContextQueryAttentionLayer2, self).__init__()
+
+
 
         self.max_context_words = max_context_words
         self.max_query_words = max_query_words
 
+
+        l2=tf.keras.regularizers.l2(l2_rate)
+
         self.weights4arg0 = self.add_weight(
-            shape=(n_channels, 1), initializer='glorot_uniform', trainable=True
+            shape=(n_channels, 1), initializer='glorot_uniform', trainable=True, regularizer=l2
         )
 
         self.weights4arg1 = self.add_weight(
-            shape=(n_channels, 1), initializer='glorot_uniform', trainable=True
+            shape=(n_channels, 1), initializer='glorot_uniform', trainable=True, regularizer=l2
         )
 
         self.weights4mlu = self.add_weight(
-            shape=(1, 1, n_channels), initializer='glorot_uniform', trainable=True
+            shape=(1, 1, n_channels), initializer='glorot_uniform', trainable=True, regularizer=l2
         )
-        self.biases = self.add_weight(shape=[self.max_query_words], initializer='zeros', trainable=True)
+        self.biases = self.add_weight(
+            shape=[self.max_query_words], initializer='zeros', trainable=True, regularizer=l2
+        )
+
+        self.dropout = tf.keras.layers.Dropout(dropout_rate)
 
     def call(self, inputs, masks):
+
         c = inputs[0]
+        c = self.dropout(c)
         q = inputs[1]
+        q = self.dropout(q)
 
         c_mask = masks[0]
         q_mask = masks[1]
