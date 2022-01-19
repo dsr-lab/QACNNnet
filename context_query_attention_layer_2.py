@@ -13,8 +13,7 @@ class ContextQueryAttentionLayer2(tf.keras.layers.Layer):
         self.max_context_words = max_context_words
         self.max_query_words = max_query_words
 
-
-        l2=tf.keras.regularizers.l2(l2_rate)
+        l2 = None if l2_rate == 0.0 else tf.keras.regularizers.l2(l2_rate)
 
         self.weights4arg0 = self.add_weight(
             shape=(n_channels, 1), initializer='glorot_uniform', trainable=True, regularizer=l2
