@@ -1,11 +1,11 @@
 import tensorflow as tf
 
 import Config
-import numpy as np
 
 
 class ContextQueryAttentionLayer2(tf.keras.layers.Layer):
-    def __init__(self, n_channels=Config.D_MODEL, max_context_words=Config.MAX_CONTEXT_WORDS, max_query_words=Config.MAX_QUERY_WORDS):
+    def __init__(self, n_channels=Config.D_MODEL, max_context_words=Config.MAX_CONTEXT_WORDS,
+                 max_query_words=Config.MAX_QUERY_WORDS):
         super(ContextQueryAttentionLayer2, self).__init__()
 
         self.max_context_words = max_context_words
@@ -25,20 +25,15 @@ class ContextQueryAttentionLayer2(tf.keras.layers.Layer):
         self.biases = self.add_weight(shape=[self.max_query_words], initializer='zeros', trainable=True)
 
     def call(self, inputs, masks):
-
         c = inputs[0]
         q = inputs[1]
 
         c_mask = masks[0]
         q_mask = masks[1]
 
-
-
-        #subres0 = tf.tile(np.dot(c, self.weights4arg0), [1, 1, self.max_query_words])
-        subres0 = tf.tile(tf.tensordot(c, self.weights4arg0, axes=(2,0)), [1, 1, self.max_query_words])
-        #subres1 = tf.tile(tf.transpose(np.dot(q, self.weights4arg1), perm=(0, 2, 1)), [1, self.max_context_words, 1])
-        subres1 = tf.tile(tf.transpose(tf.tensordot(q, self.weights4arg1, axes=(2,0)), perm=(0, 2, 1)), [1, self.max_context_words, 1])
-
+        subres0 = tf.tile(tf.tensordot(c, self.weights4arg0, axes=(2, 0)), [1, 1, self.max_query_words])
+        subres1 = tf.tile(tf.transpose(tf.tensordot(q, self.weights4arg1, axes=(2, 0)), perm=(0, 2, 1)),
+                          [1, self.max_context_words, 1])
         subres2 = batch_dot(c * self.weights4mlu, tf.transpose(q, perm=(0, 2, 1)))
 
         res = subres0 + subres1 + subres2
@@ -56,11 +51,10 @@ class ContextQueryAttentionLayer2(tf.keras.layers.Layer):
         return tf.concat(attention_outputs, axis=-1)
 
 
-def mask_logits(inputs, mask, mask_value = -1e30):
+def mask_logits(inputs, mask, mask_value=-1e30):
     shapes = inputs.shape.as_list()
     mask = tf.cast(mask, tf.float32)
     return inputs + mask_value * (1 - mask)
-
 
 
 def ndim(x):
@@ -72,23 +66,12 @@ def ndim(x):
 
     # Returns
         Integer (scalar), number of axes.
-
-    # Examples
-    ```python
-        >>> from keras import backend as K
-        >>> inputs = K.placeholder(shape=(2, 4, 5))
-        >>> val = np.array([[1, 2], [3, 4]])
-        >>> kvar = K.variable(value=val)
-        >>> K.ndim(inputs)
-        3
-        >>> K.ndim(kvar)
-        2
-    ```
     """
     dims = x.get_shape()._dims
     if dims is not None:
         return len(dims)
     return None
+
 
 def batch_dot(x, y, axes=None):
     """Copy from keras==2.0.6

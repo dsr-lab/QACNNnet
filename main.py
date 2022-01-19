@@ -1,4 +1,6 @@
 import os
+
+from context_query_attention_layer_2 import ContextQueryAttentionLayer2
 from metrics import qa_loss
 from model import question_answer_model
 from model.question_answer_model import QACNNnet
@@ -104,7 +106,7 @@ def generate_random_data(n_items):
 
 
 def main():
-
+    
     # tf.keras.utils.plot_model(model, "Architecture.png", show_shapes=True, expand_nested=True)
 
     input_train, input_validation, output_train, output_validation = load_data()
@@ -113,9 +115,9 @@ def main():
 
     if Config.DEBUG:
         Config.BATCH_SIZE = 32
-        Config.EAGER_MODE = False
-        n_train = 100
-        n_val = 50
+        Config.EAGER_MODE = True
+        n_train = 500
+        n_val = 100
         train_w_context = train_w_context[:n_train]
         train_c_context = train_c_context[:n_train]
         train_w_query = train_w_query[:n_train]
