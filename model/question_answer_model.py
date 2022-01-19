@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 
+from context_query_attention_layer_2 import ContextQueryAttentionLayer2
 from metrics import F1Score, EMScore, qa_loss
 from context_query_attention import ContextQueryAttentionLayer
 from encoding.encoder import EncoderLayer
@@ -29,7 +30,12 @@ class QACNNnet(tf.keras.Model):
 
         self.embedding = InputEmbeddingLayer(**input_embedding_params)
         self.embedding_encoder = EncoderLayer(**embedding_encoder_params)
-        self.context_query_attention = ContextQueryAttentionLayer(**context_query_attention_params)
+
+
+        # self.context_query_attention = ContextQueryAttentionLayer(**context_query_attention_params)
+        self.context_query_attention = ContextQueryAttentionLayer2()
+
+
         self.model_encoder = EncoderLayer(**model_encoder_params)
         self.conv_1d = layers.SeparableConv1D(**conv_input_projection_params)
         self.model_output = OutputLayer()
@@ -40,10 +46,10 @@ class QACNNnet(tf.keras.Model):
 
         self.dropout_rate = dropout_rate
 
-        self.ema = tf.train.ExponentialMovingAverage(decay=0.9999)
+        # self.ema = tf.train.ExponentialMovingAverage(decay=0.9999)
 
-        self.model_is_training = None
-        self.unaveraged_weights = None
+        # self.model_is_training = None
+        # self.unaveraged_weights = None
 
     def call(self, inputs, training=None):
 
@@ -84,12 +90,12 @@ class QACNNnet(tf.keras.Model):
     def train_step(self, data):
 
         # Restore unaveraged weights
-        if self.model_is_training == False:
-            if self.unaveraged_weights is not None:
-                for idx, var in enumerate(self.trainable_variables):
-                    var.assign(tf.Variable(self.unaveraged_weights[idx]))
-                self.unaveraged_weights = None
-        self.model_is_training = True
+        # if self.model_is_training == False:
+        #     if self.unaveraged_weights is not None:
+        #         for idx, var in enumerate(self.trainable_variables):
+        #             var.assign(tf.Variable(self.unaveraged_weights[idx]))
+        #         self.unaveraged_weights = None
+        # self.model_is_training = True
 
         # Unpack the data. Its structure depends on your model and
         # on what you pass to `fit()`.
@@ -119,7 +125,7 @@ class QACNNnet(tf.keras.Model):
         self.optimizer.apply_gradients(zip(capped_grads, trainable_vars))
 
         # Apply EMA
-        self.ema.apply(self.trainable_variables)
+        # self.ema.apply(self.trainable_variables)
 
         # Update the metrics
         self.loss_tracker.update_state(loss)
@@ -139,18 +145,18 @@ class QACNNnet(tf.keras.Model):
     def test_step(self, data):
 
         # Save unaveraged weights and set the averaged ones
-        if self.model_is_training == True:
-            self.unaveraged_weights = []
-            for var in self.trainable_variables:
-                # Deep copy the original variable
-                self.unaveraged_weights.append(tf.Variable(var))
-
-                # Average the current variable
-                var.assign(self.ema.average(var))
-
-            # self.unaveraged_weights = self.trainable_variables
-
-        self.model_is_training = False
+        # if self.model_is_training == True:
+        #     self.unaveraged_weights = []
+        #     for var in self.trainable_variables:
+        #         # Deep copy the original variable
+        #         self.unaveraged_weights.append(tf.Variable(var))
+        #
+        #         # Average the current variable
+        #         var.assign(self.ema.average(var))
+        #
+        #     # self.unaveraged_weights = self.trainable_variables
+        #
+        # self.model_is_training = False
 
         # Unpack the data
         x, y = data
