@@ -106,7 +106,7 @@ def generate_random_data(n_items):
 
 
 def main():
-    
+
     # tf.keras.utils.plot_model(model, "Architecture.png", show_shapes=True, expand_nested=True)
 
     input_train, input_validation, output_train, output_validation = load_data()
@@ -115,7 +115,6 @@ def main():
 
     if Config.DEBUG:
         Config.BATCH_SIZE = 32
-        Config.EAGER_MODE = True
         n_train = 500
         n_val = 100
         train_w_context = train_w_context[:n_train]
