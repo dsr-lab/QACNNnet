@@ -14,6 +14,14 @@ import tensorflow as tf
 import string
 import Config
 
+class PredLayer(tf.keras.layers.Layer):
+
+    def call(self, input):
+        raw_predictions_start, raw_predictions_end = tf.split(input, num_or_size_splits=2, axis=1)
+        pred_start, pred_end = get_predictions(raw_predictions_start, raw_predictions_end)
+
+        return pred_start, pred_end
+
 def load_dictionaries():
 
     with open(Config.WORDS_TOKENIZER_PATH, 'rb') as handle:
@@ -60,7 +68,7 @@ def extract_rows(json_dict):
     dataframe_rows = []
     corpus = []
 
-    for element in tqdm(data):
+    for element in tqdm(data[:10]):
         title = element["title"]
         paragraphs = element["paragraphs"]
 
@@ -184,7 +192,7 @@ def run_predictions(data_path):
 
     model = build_model(Config.input_embedding_params,
                         Config.embedding_encoder_params,
-                        Config.conv_query_attention_to_encoders_params,
+                        Config.conv_input_projection_params,
                         Config.model_encoder_params,
                         Config.context_query_attention_params,
                         Config.MAX_CONTEXT_WORDS,
@@ -211,8 +219,16 @@ def run_predictions(data_path):
     batch_size=Config.BATCH_SIZE,
     verbose=1)
 
-    raw_predictions_start, raw_predictions_end = tf.split(raw_predictions, num_or_size_splits=2, axis=1)
-    pred_start, pred_end = get_predictions(raw_predictions_start, raw_predictions_end)
+    inputs = tf.keras.Input(shape=(2,400))
+    outputs = PredLayer()(inputs)
+
+    refine_pred_model = tf.keras.Model(inputs=inputs, outputs=outputs)
+
+    pred_start,pred_end = refine_pred_model.predict(raw_predictions,batch_size=Config.BATCH_SIZE, verbose=1)
+
+    #raw_predictions_start, raw_predictions_end = tf.split(raw_predictions, num_or_size_splits=2, axis=1)
+    #pred_start, pred_end = get_predictions(raw_predictions_start, raw_predictions_end)
+
 
     preprocessed_answers = get_preprocessed_answers(corpus, pred_start, pred_end, words_tokenizer)
     print("Predictions completed!")
