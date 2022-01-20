@@ -12,8 +12,12 @@ class OutputLayer(layers.Layer):
         self.concatenate_layer = layers.Concatenate(axis=-1)
         self.stack = layers.Concatenate(axis=1)
 
-        self.w1 = layers.Dense(units=1, use_bias=False)
-        self.w2 = layers.Dense(units=1, use_bias=False)
+        self.w1 = layers.Dense(units=1, use_bias=False,
+                               kernel_regularizer=tf.keras.regularizers.l2(3e-7),
+                               bias_regularizer=tf.keras.regularizers.l2(3e-7))
+        self.w2 = layers.Dense(units=1, use_bias=False,
+                               kernel_regularizer=tf.keras.regularizers.l2(3e-7),
+                               bias_regularizer=tf.keras.regularizers.l2(3e-7))
 
         self.softmax_layer = layers.Softmax(axis=-1)
 

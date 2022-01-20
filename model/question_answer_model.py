@@ -32,8 +32,8 @@ class QACNNnet(tf.keras.Model):
         self.embedding_encoder = EncoderLayer(**embedding_encoder_params)
 
 
-        # self.context_query_attention = ContextQueryAttentionLayer(**context_query_attention_params)
-        self.context_query_attention = ContextQueryAttentionLayer2()
+        self.context_query_attention = ContextQueryAttentionLayer(**context_query_attention_params)
+        # self.context_query_attention = ContextQueryAttentionLayer2()
 
 
         self.model_encoder = EncoderLayer(**model_encoder_params)
