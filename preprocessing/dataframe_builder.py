@@ -53,9 +53,9 @@ def build_dataframe_row(context, question, answer, split, title, id):
 
 
     # TODO: Remove
-    if len(preprocessed_question > Config.MAX_QUERY_WORDS):
+    if len(preprocessed_question) > Config.MAX_QUERY_WORDS:
         print("QUESTION LONGER!!!!!!!!")
-    if len(preprocessed_answer > Config.MAX_ANSWER_LENGTH):
+    if len(preprocessed_answer) > Config.MAX_ANSWER_LENGTH:
         print("ANSWER LONGER!!!!!!!!")
 
     answer_indices = get_answer_indices(preprocessed_context, preprocessed_answer)
