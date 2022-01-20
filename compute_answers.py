@@ -219,7 +219,7 @@ def run_predictions(data_path):
     batch_size=Config.BATCH_SIZE,
     verbose=1)
 
-    inputs = tf.keras.Input(shape=(2,400))
+    inputs = tf.keras.Input(shape=(2,Config.MAX_CONTEXT_WORDS))
     outputs = PredLayer()(inputs)
 
     refine_pred_model = tf.keras.Model(inputs=inputs, outputs=outputs)
