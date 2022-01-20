@@ -6,18 +6,18 @@ from tensorflow.keras import layers
 
 class OutputLayer(layers.Layer):
 
-    def __init__(self):
+    def __init__(self, l2_rate):
         super(OutputLayer, self).__init__()
+
+        l2 = None if l2_rate == 0.0 else tf.keras.regularizers.l2(l2_rate)
 
         self.concatenate_layer = layers.Concatenate(axis=-1)
         self.stack = layers.Concatenate(axis=1)
 
         self.w1 = layers.Dense(units=1, use_bias=False,
-                               kernel_regularizer=tf.keras.regularizers.l2(3e-7),
-                               bias_regularizer=tf.keras.regularizers.l2(3e-7))
+                               kernel_regularizer=l2)
         self.w2 = layers.Dense(units=1, use_bias=False,
-                               kernel_regularizer=tf.keras.regularizers.l2(3e-7),
-                               bias_regularizer=tf.keras.regularizers.l2(3e-7))
+                               kernel_regularizer=l2)
 
         self.softmax_layer = layers.Softmax(axis=-1)
 

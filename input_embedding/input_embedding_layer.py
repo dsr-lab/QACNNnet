@@ -69,10 +69,6 @@ class InputEmbeddingLayer(tf.keras.layers.Layer):
         w_emb, mask = self.word_embedding(w_inputs)
         c_emb = self.char_embedding(c_inputs)
 
-        # mask = w_inputs != 0
-        # mask2 = self.word_embedding.emb_layer.compute_mask(w_inputs).numpy()
-
-        #final_emb = tf.keras.layers.concatenate([w_emb, c_emb], axis=2)
         final_emb = layers.Concatenate(axis=2)([w_emb, c_emb])
 
         final_emb = self.conv_1d(final_emb)

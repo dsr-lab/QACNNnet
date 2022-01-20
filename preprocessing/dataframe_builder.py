@@ -51,13 +51,6 @@ def build_dataframe_row(context, question, answer, split, title, id):
     preprocessed_question = preprocess.preprocess_text(question, Config.PREPROCESSING_OPTIONS)
     preprocessed_answer = preprocess.preprocess_text(answer, Config.PREPROCESSING_OPTIONS)
 
-
-    # TODO: Remove
-    if len(preprocessed_question) > Config.MAX_QUERY_WORDS:
-        print("QUESTION LONGER!!!!!!!!")
-    if len(preprocessed_answer) > Config.MAX_ANSWER_LENGTH:
-        print("ANSWER LONGER!!!!!!!!")
-
     answer_indices = get_answer_indices(preprocessed_context, preprocessed_answer)
     if answer_indices is None:
         return None  # Discard if answer is not found in context

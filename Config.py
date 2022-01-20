@@ -26,7 +26,8 @@ PREPROCESSING_OPTIONS = {
 "lemmatize":True
 }
 
-TRAIN_SAMPLES = 78000
+# TRAIN_SAMPLES = 78000
+TRAIN_SAMPLES = 69395
 
 MAX_CONTEXT_WORDS = 400
 MAX_QUERY_WORDS = 50
@@ -104,6 +105,10 @@ model_encoder_params = {
 
 context_query_attention_params = {
     "dropout_rate": DROPOUT_RATE,
+    "l2_rate": L2_RATE
+}
+
+output_params = {
     "l2_rate": L2_RATE
 }
 

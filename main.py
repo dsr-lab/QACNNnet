@@ -51,7 +51,7 @@ def load_data():
 
 # Build model and compile
 def build_model(input_embedding_params, embedding_encoder_params, conv_input_projection_params,
-                model_encoder_params, context_query_attention_params, max_context_words,
+                model_encoder_params, context_query_attention_params, output_params, max_context_words,
                 max_query_words, max_chars, optimizer, vocab_size, ignore_tokens, dropout_rate):
     # Model input tensors
     context_words_input = tf.keras.Input(shape=(max_context_words), name="context words")
@@ -67,6 +67,7 @@ def build_model(input_embedding_params, embedding_encoder_params, conv_input_pro
                      conv_input_projection_params,
                      model_encoder_params,
                      context_query_attention_params,
+                     output_params,
                      vocab_size,
                      ignore_tokens,
                      dropout_rate)
@@ -137,6 +138,7 @@ def main():
                         Config.conv_input_projection_params,
                         Config.model_encoder_params,
                         Config.context_query_attention_params,
+                        Config.output_params,
                         Config.MAX_CONTEXT_WORDS,
                         Config.MAX_QUERY_WORDS,
                         Config.MAX_CHARS,

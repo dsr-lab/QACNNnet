@@ -22,6 +22,7 @@ class QACNNnet(tf.keras.Model):
                  conv_input_projection_params,
                  model_encoder_params,
                  context_query_attention_params,
+                 output_params,
                  vocab_size,
                  ignore_tokens,
                  dropout_rate):
@@ -38,7 +39,7 @@ class QACNNnet(tf.keras.Model):
 
         self.model_encoder = EncoderLayer(**model_encoder_params)
         self.conv_1d = layers.SeparableConv1D(**conv_input_projection_params)
-        self.model_output = OutputLayer()
+        self.model_output = OutputLayer(**output_params)
         self.f1_score = F1Score(vocab_size=vocab_size, ignore_tokens=ignore_tokens)
         self.em_score = EMScore(vocab_size=vocab_size, ignore_tokens=ignore_tokens)
 
