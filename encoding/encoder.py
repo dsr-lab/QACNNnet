@@ -6,7 +6,7 @@ from encoding import positional_encoding, stochastic_dropout
 
 
 
-
+# TODO: temporary
 def add_timing_signal_1d(x, min_timescale=1.0, max_timescale=1.0e4):
     """Adds a bunch of sinusoids of different frequencies to a Tensor.
     Each channel of the input Tensor is incremented by a sinusoid of a different
@@ -260,13 +260,9 @@ class EncodingLayer(layers.Layer):
             # seq_len = tf.shape(x)[1]
             # x *= tf.math.sqrt(tf.cast(self.embedding_size, tf.float32)) #Necessary?
 
+            # TODO: decide which one to use for the final model
             x = add_timing_signal_1d(x)
             # x += pos_encoding[:, :seq_len, :]
-
-            print()
-
-
-
 
         # 2. Convolution block
         for conv_layer in self.conv_layers:
