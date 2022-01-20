@@ -68,7 +68,7 @@ def extract_rows(json_dict):
     dataframe_rows = []
     corpus = []
 
-    for element in tqdm(data[:10]):
+    for element in tqdm(data):
         title = element["title"]
         paragraphs = element["paragraphs"]
 
