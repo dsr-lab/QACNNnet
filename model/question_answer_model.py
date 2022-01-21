@@ -90,7 +90,7 @@ class QACNNnet(tf.keras.Model):
 
     def train_step(self, data):
 
-        Restore unaveraged weights
+        # Restore unaveraged weights
         if self.model_is_training == False:
             if self.unaveraged_weights is not None:
                 for idx, var in enumerate(self.trainable_variables):
