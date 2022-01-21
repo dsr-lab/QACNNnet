@@ -133,8 +133,6 @@ class QACNNnet(tf.keras.Model):
 
         self.em_score.set_words_context(x[0])
         self.em_score.update_state(y, y_pred)
-        tf.print("TRAIN_STEP: ", len(self.trainable_variables))
-
 
         # self.compiled_metrics.update_state(y, y_pred)
 
