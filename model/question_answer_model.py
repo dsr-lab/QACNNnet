@@ -160,7 +160,7 @@ class QACNNnet(tf.keras.Model):
         # Compute predictions
         y_pred = self(x, training=False)
         loss = qa_loss(y, y_pred)
-        loss += sum(self.losses)
+        # loss += sum(self.losses)
 
         #loss = self.compiled_loss(y, y_pred, regularization_losses=self.losses)
 
