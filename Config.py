@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import tensorflow as tf
-# import tensorflow_addons as tfa
+import tensorflow_addons as tfa
 from model.warmup_learning import CustomSchedule
 import Config
 
@@ -65,7 +65,7 @@ WARMUP_STEPS = 1000.0
 learning_rate = CustomSchedule(FINAL_LEARNING_RATE, WARMUP_STEPS)
 
 OPTIMIZER = tf.keras.optimizers.Adam(learning_rate, beta_1=0.8, beta_2=0.999, epsilon=1e-7)
-# OPTIMIZER = tfa.optimizers.MovingAverage(OPTIMIZER)
+OPTIMIZER = tfa.optimizers.MovingAverage(OPTIMIZER)
 
 # Layers' variables
 

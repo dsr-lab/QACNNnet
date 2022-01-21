@@ -46,10 +46,10 @@ class QACNNnet(tf.keras.Model):
 
         self.dropout_rate = dropout_rate
 
-        self.ema = tf.train.ExponentialMovingAverage(decay=0.9999)
-
-        self.model_is_training = None
-        self.unaveraged_weights = None
+        # self.ema = tf.train.ExponentialMovingAverage(decay=0.9999)
+        #
+        # self.model_is_training = None
+        # self.unaveraged_weights = None
 
     def call(self, inputs, training=None):
 
@@ -90,11 +90,12 @@ class QACNNnet(tf.keras.Model):
 
     def train_step(self, data):
 
-        # # Restore unaveraged weights
+        # Restore unaveraged weights
         # if self.model_is_training == False:
         #     if self.unaveraged_weights is not None:
-        #         for idx, var in enumerate(self.trainable_variables):
-        #             var.assign(tf.Variable(self.unaveraged_weights[idx]))
+        #         if len(self.trainable_variables) == len(self.unaveraged_weights):
+        #             for idx, var in enumerate(self.trainable_variables):
+        #                 var.assign(tf.Variable(self.unaveraged_weights[idx]))
         #         self.unaveraged_weights = None
         # self.model_is_training = True
 
@@ -132,6 +133,7 @@ class QACNNnet(tf.keras.Model):
 
         self.em_score.set_words_context(x[0])
         self.em_score.update_state(y, y_pred)
+        tf.print("TRAIN_STEP: ", len(self.trainable_variables))
 
 
         # self.compiled_metrics.update_state(y, y_pred)
@@ -140,7 +142,6 @@ class QACNNnet(tf.keras.Model):
         return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, data):
-
         # Save unaveraged weights and set the averaged ones
         # if self.model_is_training == True:
         #     self.unaveraged_weights = []
