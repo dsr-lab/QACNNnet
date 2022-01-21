@@ -184,7 +184,6 @@ class EncodingLayer(layers.Layer):
                                                         embedding_size)
 
         attention_mask = self.compute_attention_mask(mask)
-        attention_mask = None
 
         current_layer_num = 0
 

@@ -32,14 +32,13 @@ class QACNNnet(tf.keras.Model):
         self.embedding = InputEmbeddingLayer(**input_embedding_params)
         self.embedding_encoder = EncoderLayer(**embedding_encoder_params)
 
-
         self.context_query_attention = ContextQueryAttentionLayer(**context_query_attention_params)
         # self.context_query_attention = ContextQueryAttentionLayer2()
-
 
         self.model_encoder = EncoderLayer(**model_encoder_params)
         self.conv_1d = layers.SeparableConv1D(**conv_input_projection_params)
         self.model_output = OutputLayer(**output_params)
+
         self.f1_score = F1Score(vocab_size=vocab_size, ignore_tokens=ignore_tokens)
         self.em_score = EMScore(vocab_size=vocab_size, ignore_tokens=ignore_tokens)
 
@@ -72,6 +71,7 @@ class QACNNnet(tf.keras.Model):
         # 3. Context-query attention block
         attention_output = self.context_query_attention([context_encoded, query_encoded], [context_mask, query_mask])
         attention_output = self.conv_1d(attention_output)  # Used for obtaining back the expected number of channels
+        attention_output = tf.keras.layers.Dropout(self.dropout_rate)(attention_output)
 
         # 4. Model encoder blocks
         m0 = self.model_encoder(attention_output, training=training, mask=context_mask)
@@ -193,45 +193,3 @@ class QACNNnet(tf.keras.Model):
         # called automatically at the start of each epoch
         # or at the start of `evaluate()`.
         return [self.loss_tracker, self.f1_score, self.em_score]
-
-    def swap_weights(self):
-        """Swap the average and moving weights.
-        This is a convenience method to allow one to evaluate the averaged weights
-        at test time. Loads the weights stored in `self._average_weights` into the model,
-        keeping a copy of the original model weights. Swapping twice will return
-        the original weights.
-        """
-        if tf.distribute.in_cross_replica_context():
-            strategy = tf.distribute.get_strategy()
-            return strategy.run(self._swap_weights, args=())
-        else:
-            raise ValueError(
-                "Swapping weights must occur under a " "tf.distribute.Strategy"
-            )
-
-    @tf.function
-    def _swap_weights(self):
-        def fn_0(a, b):
-            return a.assign_add(b, use_locking=self._use_locking)
-
-        def fn_1(b, a):
-            return b.assign(a - b, use_locking=self._use_locking)
-
-        def fn_2(a, b):
-            return a.assign_sub(b, use_locking=self._use_locking)
-
-        def swap(strategy, a, b):
-            """Swap `a` and `b` and mirror to all devices."""
-            for a_element, b_element in zip(a, b):
-                strategy.extended.update(
-                    a_element, fn_0, args=(b_element,)
-                )  # a = a + b
-                strategy.extended.update(
-                    b_element, fn_1, args=(a_element,)
-                )  # b = a - b
-                strategy.extended.update(
-                    a_element, fn_2, args=(b_element,)
-                )  # a = a - b
-
-        ctx = tf.distribute.get_replica_context()
-        return ctx.merge_call(swap, args=(self._average_weights, self._model_weights))
