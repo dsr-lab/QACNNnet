@@ -114,6 +114,12 @@ def main():
     train_w_context, train_c_context, train_w_query, train_c_query = input_train
     valid_w_context, valid_c_context, valid_w_query, valid_c_query = input_validation
 
+    train_w_context = tf.concat([train_w_context, valid_w_context], axis=0)
+    train_c_context = tf.concat([train_c_context, valid_c_context], axis=0)
+    train_w_query = tf.concat([train_w_query, valid_w_query], axis=0)
+    train_c_query = tf.concat([train_c_query, valid_c_query], axis=0)
+    output_train = tf.concat([output_train, output_validation], axis=0)
+
     if Config.DEBUG:
         Config.BATCH_SIZE = 32
         n_train = 500
@@ -157,14 +163,16 @@ def main():
 
     callbacks_list = []
     if Config.SAVE_WEIGHTS:
-        callbacks_list.append(tf.keras.callbacks.ModelCheckpoint(filepath=Config.CHECKPOINT_PATH,save_weights_only=True,verbose=1))
+        callbacks_list.append(tf.keras.callbacks.ModelCheckpoint(filepath=Config.CHECKPOINT_PATH, save_weights_only=True, verbose=1))
+
+    print(f'Launching the training of the full dataset composed by: {train_w_context.shape[0]} elements')
 
     history = model.fit(
         x=[train_w_context, train_c_context, train_w_query, train_c_query],
         y=output_train,
-        validation_data=(
-            [valid_w_context, valid_c_context, valid_w_query, valid_c_query],
-            output_validation),
+        # validation_data=(
+        #    [valid_w_context, valid_c_context, valid_w_query, valid_c_query],
+        #    output_validation),
         verbose=1,
         batch_size=Config.BATCH_SIZE,
         epochs=Config.EPOCHS,
