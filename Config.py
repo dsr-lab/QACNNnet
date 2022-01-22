@@ -20,13 +20,14 @@ PREDICTIONS_PATH = os.path.join("predictions", "predictions.json")
 PREPROCESSING_OPTIONS = {
 "strip":True,
 "lower":True,
-"replace":True,
+"replace":False,
 "remove special":False,
 "stopwords":False,
-"lemmatize":True
+"lemmatize":False
 }
 
 TRAIN_SAMPLES = 78000
+TRAIN_ON_FULL_DATASET = True
 
 MAX_CONTEXT_WORDS = 400
 MAX_QUERY_WORDS = 50
@@ -65,7 +66,7 @@ WARMUP_STEPS = 1000.0
 learning_rate = CustomSchedule(FINAL_LEARNING_RATE, WARMUP_STEPS)
 
 OPTIMIZER = tf.keras.optimizers.Adam(learning_rate, beta_1=0.8, beta_2=0.999, epsilon=1e-7)
-OPTIMIZER = tfa.optimizers.MovingAverage(OPTIMIZER)
+# OPTIMIZER = tfa.optimizers.MovingAverage(OPTIMIZER)
 
 # Layers' variables
 

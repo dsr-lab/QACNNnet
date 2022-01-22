@@ -31,6 +31,8 @@ class InputEmbeddingLayer(tf.keras.layers.Layer):
             The number of characters in the vocaboulary
         c_conv_kernel_size: int
             The convolution kernel size used when processing characters
+        c_conv_output_size: int
+            The number of filters for convolutions used when processing characters
         n_highway_layers: int
             The number of highway layers that are used for generating
             the output of this layer
@@ -40,6 +42,9 @@ class InputEmbeddingLayer(tf.keras.layers.Layer):
         l2_rate: float
             The l2 rate.
             Passing 0.0 means that l2 regularization is not applied.
+        conv_input_projection_params: tf.tensor
+            Dicitonary containing parameters used for projecting the inputs
+            to a specific number of channels in 1x1 convolutions
         '''
 
         super(InputEmbeddingLayer, self).__init__()
@@ -63,16 +68,19 @@ class InputEmbeddingLayer(tf.keras.layers.Layer):
 
         assert len(inputs)==2
 
+        # Get inputs
         w_inputs = inputs[0]
         c_inputs = inputs[1]
 
+        # Apply embeddings
         w_emb, mask = self.word_embedding(w_inputs)
         c_emb = self.char_embedding(c_inputs)
 
+        # Concatenate and project them to appropriate channel dimensions
         final_emb = layers.Concatenate(axis=2)([w_emb, c_emb])
-
         final_emb = self.conv_1d(final_emb)
 
+        # Pass through the highway layer
         for highway in self.highway_layers:
             final_emb = highway(final_emb)
 
