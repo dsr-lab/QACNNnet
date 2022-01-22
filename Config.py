@@ -20,7 +20,7 @@ PREDICTIONS_PATH = os.path.join("predictions", "predictions.json")
 PREPROCESSING_OPTIONS = {
 "strip":True,
 "lower":True,
-"replace":False,
+"replace":True,
 "remove special":False,
 "stopwords":False,
 "lemmatize":False
@@ -29,8 +29,8 @@ PREPROCESSING_OPTIONS = {
 TRAIN_SAMPLES = 78000
 TRAIN_ON_FULL_DATASET = True
 
-MAX_CONTEXT_WORDS = 400
-MAX_QUERY_WORDS = 50
+MAX_CONTEXT_WORDS = 250
+MAX_QUERY_WORDS = 30
 MAX_ANSWER_LENGTH = 30
 
 L2_RATE = 3e-7

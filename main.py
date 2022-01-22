@@ -153,15 +153,15 @@ def main():
                         Config.IGNORE_TOKENS,
                         Config.DROPOUT_RATE)
 
-    # TODO: fix this
-    if os.path.exists(Config.CHECKPOINT_PATH+".index"):
-        print("Loading model's weights...")
-        model.load_weights(Config.CHECKPOINT_PATH)
-        print("Model's weights successfully loaded!")
-
-    else:
-        print("WARNING: model's weights not found, the model will be executed with initialized random weights.")
-        print("Ignore this warning if it is a test.")
+    # # TODO: fix this
+    # if os.path.exists(Config.CHECKPOINT_PATH+".index"):
+    #     print("Loading model's weights...")
+    #     model.load_weights(Config.CHECKPOINT_PATH)
+    #     print("Model's weights successfully loaded!")
+    #
+    # else:
+    #     print("WARNING: model's weights not found, the model will be executed with initialized random weights.")
+    #     print("Ignore this warning if it is a test.")
 
     print("Model succesfully built!")
     model.summary()
