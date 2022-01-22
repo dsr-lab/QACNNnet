@@ -1,10 +1,9 @@
 import numpy as np
 import tensorflow as tf
 
+#This module contains those methods that allow to compute vectors' for positional encoding.
 
-def get_angles(pos: int,
-               i: int,
-               d_model: int) -> np.ndarray:
+def get_angles(pos, i, d_model):
     '''
     Apply official standard positional encoding formula to get positional
     angles of a series of positions in a given number of dimensions.
@@ -27,8 +26,7 @@ def get_angles(pos: int,
     return pos * angle_rates
 
 
-def get_encoding(length: int,
-                 d_model: int) -> tf.Tensor:
+def get_encoding(length, d_model) -> tf.Tensor:
     '''
     Get the positional encoding of a set of positions.
 

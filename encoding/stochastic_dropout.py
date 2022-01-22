@@ -1,8 +1,10 @@
 import random
 
-def get_layer_survival_probability(n_layers: int,
-                                  current_layer: int,
-                                  survival_prob: float) ->float:
+#This module contains methods to compute the stochastic dropout.
+
+def get_layer_survival_probability(n_layers,
+                                  current_layer,
+                                  survival_prob):
 
     '''
     Computes the probability of a layer to survive the stochastic dropout,
@@ -24,12 +26,12 @@ def get_layer_survival_probability(n_layers: int,
     '''
 
     l_fract = current_layer / n_layers
-    l_survival_prob = 1 - l_fract * (1 - survival_prob)
+    l_survival_prob = 1 - l_fract * (1 - survival_prob) #Official formula taken from the paper
     return l_survival_prob
 
-def keep_layer(n_layers: int,
-              current_layer: int,
-              survival_prob: float) ->bool:
+def keep_layer(n_layers,
+              current_layer,
+              survival_prob):
 
     '''
     Decides whether a layer should be kept or not due to stochastic dropout.

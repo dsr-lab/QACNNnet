@@ -9,10 +9,16 @@ import preprocessing.glove_manager as glove_manager
 import pickle
 import Config
 
+#This module is responsible for setting up the entire dataframe to train the model on.
+
 np.random.seed(seed=100) #Define a seed for randomization, avoiding to get different placeholder or random embeddings each time
-UNK_PLACEHOLDER = np.random.uniform(low=-0.05, high=0.05, size=glove_manager.EMBEDDING_SIZE)
+UNK_PLACEHOLDER = np.random.uniform(low=-0.05, high=0.05, size=glove_manager.EMBEDDING_SIZE) #Random initial embedding used for the UNK token
 
 def get_data(path):
+
+    '''
+    Read the json training file at the given path.
+    '''
 
     absolute_data_path = os.path.join(os.getcwd(), path)
 
@@ -23,11 +29,17 @@ def get_data(path):
 
 def get_answer_indices(context_words, answer_words):
 
+    '''
+    Return the start and end indices of an answer's words inside
+    a context.
+    '''
+
     i = 0
     if len(answer_words) == 0:
         print(f"WARNING: answer_words is empty for with context_words {context_words} ")
         return np.array([])
 
+    #Iterate through context and answer to find a match and return indices
     for j, context_word in enumerate(context_words):
         if context_word == answer_words[i]:
             i+=1
@@ -41,6 +53,11 @@ def get_answer_indices(context_words, answer_words):
     return None
 
 def build_dataframe_row(context, question, answer, split, title, id):
+
+    '''
+    Preprocess context, question and answer of a row and return a well-formatted
+    row to be inserted inside a pandas dataframe.
+    '''
 
     preprocessed_context = preprocess.preprocess_text(context, Config.PREPROCESSING_OPTIONS)
 
@@ -83,6 +100,10 @@ def build_dataframe_row(context, question, answer, split, title, id):
 
 def extract_rows(json_dict):
 
+    '''
+    Parse the json dictionary to extract all the data and build dataframe rows.
+    '''
+
     print("Data extraction started...")
 
     version = json_dict["version"] #Not used
@@ -93,7 +114,6 @@ def extract_rows(json_dict):
 
     splitted_to_val = False
 
-    # for element in tqdm(data[0:2]):
     for element in tqdm(data):
         title = element["title"]
         paragraphs = element["paragraphs"]
@@ -112,6 +132,8 @@ def extract_rows(json_dict):
                     answer_text = answer["text"]
                     answer_start = answer["answer_start"] #Not used
 
+                    #Save as validation sample if the number of required training sample has been reached
+                    #and a new paragraph has been processed
                     if not splitted_to_val:
                         if len(dataframe_rows) > Config.TRAIN_SAMPLES and allow_val_split:
                             splitted_to_val=True
@@ -129,6 +151,10 @@ def extract_rows(json_dict):
 
 def tokenize_dataframe(df, words_tokenizer, chars_tokenizer):
 
+    '''
+    Tokenize the entire dataframe.
+    '''
+
     df["Context words"] = df["Context words"].apply(lambda words: tokenizer.pad_truncate_tokenize_words(words, words_tokenizer, Config.MAX_CONTEXT_WORDS))
     df["Question words"] = df["Question words"].apply(lambda words: tokenizer.pad_truncate_tokenize_words(words, words_tokenizer, Config.MAX_QUERY_WORDS))
     df["Context chars"] = df["Context chars"].apply(lambda chars: tokenizer.pad_truncate_tokenize_chars_sequence(chars,chars_tokenizer,Config.MAX_CONTEXT_WORDS,Config.MAX_CHARS))
@@ -137,6 +163,14 @@ def tokenize_dataframe(df, words_tokenizer, chars_tokenizer):
     return df
 
 def build_dataframe():
+
+    '''
+    Apply all the required steps to build the dataframe:
+    1. Extract data;
+    2. Setup and Load GloVe;
+    3. Build tokenizers for words and characters;
+    4. Build and tokenize the dataframe.
+    '''
 
     data = get_data(Config.DATA_PATH)
     dataframe_rows = extract_rows(data)
@@ -166,6 +200,11 @@ def build_dataframe():
 
 def save_dataframe(dataframe, words_tokenizer, chars_tokenizer):
 
+    '''
+    Save the dataframe into a pickle file along with words and characters
+    tokenizers.
+    '''
+
     dataframe.to_pickle(Config.DATAFRAME_PATH)
     with open(Config.WORDS_TOKENIZER_PATH, 'wb') as handle:
         pickle.dump(words_tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -176,6 +215,11 @@ def save_dataframe(dataframe, words_tokenizer, chars_tokenizer):
     print("Dataframe saved successfully")
 
 def check_savings(paths):
+
+    '''
+    Check if saving paths exist.
+    '''
+
     for path in paths:
         if not os.path.exists(path):
             return False
@@ -183,6 +227,10 @@ def check_savings(paths):
     return True
 
 def load_dataframe(save=True, force_rebuild=False):
+
+    '''
+    Load all the dataframe-related files or build them from scratch.
+    '''
 
     if not check_savings([Config.DATAFRAME_PATH, Config.WORDS_TOKENIZER_PATH, Config.CHARS_TOKENIZER_PATH]) or force_rebuild:
         dataframe, words_tokenizer, chars_tokenizer, glove_dict = build_dataframe()
@@ -202,12 +250,18 @@ def load_dataframe(save=True, force_rebuild=False):
 
 def build_embedding_matrix(words_tokenizer, glove_dict):
 
+    '''
+    Return the embedding matrix based on GloVe's embeddings.
+    '''
+
     vocab_size = len(words_tokenizer)
 
+    #Initialize matrix
     embedding_matrix = np.zeros((vocab_size, glove_manager.EMBEDDING_SIZE), dtype=np.float32)
 
     print("Building embedding matrix started...")
 
+    #Fill matrix with Glove's embeddings
     for word, token in tqdm(words_tokenizer.items()):
         if word in glove_dict:
             embedding_matrix[token-1] = glove_dict[word]

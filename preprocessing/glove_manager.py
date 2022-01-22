@@ -4,6 +4,8 @@ import zipfile
 import numpy as np
 import Config
 
+#This module handles all GloVe-related operations.
+
 URL_BASE = "https://nlp.stanford.edu/data" #Location of the pre-trained GloVe's files
 GLOVE_VERSION = "6B"
 

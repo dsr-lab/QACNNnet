@@ -8,14 +8,14 @@ from encoding import positional_encoding, stochastic_dropout
 class EncodingLayer(layers.Layer):
 
     def __init__(self,
-                 d_model: int,
-                 kernel_size: int,
-                 n_conv_layers: int,
-                 n_heads: int,
-                 survival_prob: float,
-                 block_num: int,
-                 dropout_rate: float,
-                 l2_rate: float):
+                 d_model,
+                 kernel_size,
+                 n_conv_layers,
+                 n_heads,
+                 survival_prob,
+                 block_num,
+                 dropout_rate,
+                 l2_rate):
         '''
         Parameters:
         -----------
@@ -38,9 +38,11 @@ class EncodingLayer(layers.Layer):
         super(EncodingLayer, self).__init__()
 
         self.d_model = d_model
-        self.n_layers = n_conv_layers + 2
+        self.n_layers = n_conv_layers + 2 #+2 takes into account self-attention and Dense layers
         self.survival_prob = survival_prob
         self.block_num = block_num
+
+        #Prepare layers:
 
         # Regularizer
         l2 = None if l2_rate == 0.0 else tf.keras.regularizers.l2(l2_rate)
@@ -51,7 +53,7 @@ class EncodingLayer(layers.Layer):
             "filters": d_model,
             "kernel_size": kernel_size,
             "padding": "same",  # necessary for residual blocks
-            "data_format": "channels_last",
+            "data_format": "channels_last", # channels are represented by the last dimension
             "depthwise_regularizer": l2,
             "pointwise_regularizer": l2,
             # "activity_regularizer": l2,
@@ -91,24 +93,33 @@ class EncodingLayer(layers.Layer):
 
     def compute_attention_mask(self, mask):
 
+        '''
+        Compute the mask that will be used in the self-attention layer,
+        in order to avoid padding elements.
+        '''
+
         n = mask.shape[1]
 
+        #Repeat the vector-mask along the first axis
         horizontal_mask = layers.RepeatVector(n)(mask)
 
+        #Repeat the vector-mask along the second axis
         reshaped_mask = layers.Reshape((n, 1))(mask)
         vertical_mask = layers.Concatenate(axis=-1)([reshaped_mask for _ in range(n)])
         vertical_mask = layers.Reshape((n, n))(vertical_mask)
 
+        #Combine horizontal and vertical mask to get the desired matrix-mask
         attention_mask = horizontal_mask & vertical_mask
+
         return attention_mask
 
     def apply_layer(self,
-                    x: tf.Tensor,
-                    layer_num: int,
-                    layer: layers.Layer,
-                    training: bool,
+                    x,
+                    layer_num,
+                    layer,
+                    training,
                     attention_mask=None,
-                    feed_forward=False) -> tf.Tensor:
+                    feed_forward=False):
         '''
         Check whether a layer should be used or not (stochastic dropout), then:
         -Return the input as the output if the layer should not be used;
@@ -133,10 +144,12 @@ class EncodingLayer(layers.Layer):
             Output of the layer with stochastic dropout.
         '''
 
+        #Decides whether disabling or not a layer using stochastic dropout
         keep = stochastic_dropout.keep_layer(self.n_layers, layer_num, self.survival_prob) if training else True
         if keep:
             can_apply_residual_block = x.shape[-1] == self.d_model
 
+            #Apply layer normalization
             norm_x = self.norm_layers[layer_num](x)
 
             # Apply dropout
@@ -162,7 +175,6 @@ class EncodingLayer(layers.Layer):
                 f_x = self.dropout(f_x)
                 return f_x
         else:
-            # tf.print("not keeping layer: ", layer_num, self.norm_layers[layer_num])
             return x
 
     def call(self, x, training, mask=None):
@@ -176,6 +188,7 @@ class EncodingLayer(layers.Layer):
 
         The input of each layer is the residual block using a normalization layer to the output of the previous layer.
         '''
+
         embedding_size = x.shape[2]
         maximum_position_encoding = x.shape[1]
         pos_encoding = positional_encoding.get_encoding(maximum_position_encoding,
@@ -188,7 +201,6 @@ class EncodingLayer(layers.Layer):
         # 1. Apply positional encoding if it is the first block
         if self.block_num == 0:
             seq_len = tf.shape(x)[1]
-            # x *= tf.math.sqrt(tf.cast(self.embedding_size, tf.float32)) #Necessary?
             x += pos_encoding[:, :seq_len, :]
 
         # 2. Convolution block
@@ -209,14 +221,14 @@ class EncodingLayer(layers.Layer):
 
 class EncoderLayer(layers.Layer):
     def __init__(self,
-                 d_model: int,
-                 kernel_size: int,
-                 n_conv_layers: int,
-                 n_heads: int,
-                 survival_prob: float,
-                 n_blocks: int,
-                 dropout_rate: float,
-                 l2_rate: float):
+                 d_model,
+                 kernel_size,
+                 n_conv_layers,
+                 n_heads,
+                 survival_prob,
+                 n_blocks,
+                 dropout_rate,
+                 l2_rate):
 
         '''
         Parameters:
@@ -239,6 +251,7 @@ class EncoderLayer(layers.Layer):
 
         super(EncoderLayer, self).__init__()
 
+        #Stack n encoding blocks to form the Encoder layer.
         self.encoding_blocks = [EncodingLayer(d_model,
                                               kernel_size,
                                               n_conv_layers,
