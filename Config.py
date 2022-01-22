@@ -23,7 +23,7 @@ PREPROCESSING_OPTIONS = {
 "replace":True,
 "remove special":False,
 "stopwords":False,
-"lemmatize":False
+"lemmatize":True
 }
 
 TRAIN_SAMPLES = 78000
