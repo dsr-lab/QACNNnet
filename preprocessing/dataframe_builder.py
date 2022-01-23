@@ -107,6 +107,7 @@ def extract_rows(json_dict):
     print("Data extraction started...")
 
     version = json_dict["version"] #Not used
+    print("Dataset: SQuAD version "+version)
 
     data = json_dict["data"]
 
