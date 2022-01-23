@@ -23,11 +23,11 @@ def get_batched_inference_mask(batch_size, max_words):
 
     return batched_inference_mask
 
-def get_predictions(predictions_start, predictions_end):
+def get_predictions(predictions_start, predictions_end, n_words=Config.MAX_CONTEXT_WORDS):
 
     batch_size = tf.shape(predictions_start)[0]
     #n_words = predictions_start.shape[1]
-    n_words = Config.MAX_CONTEXT_WORDS
+    #n_words = Config.MAX_CONTEXT_WORDS
 
     if inference_mask is None:
         create_inference_mask(n_words)
