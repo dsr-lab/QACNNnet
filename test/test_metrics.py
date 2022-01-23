@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 
 from metrics import *
-from metrics import _get_answers, _split_start_end_indices, _get_predictions
+from metrics import _get_answers, _split_start_end_indices
 
 
 class TestMetrics(TestCase):
@@ -54,7 +54,7 @@ class TestMetrics(TestCase):
 
         # Act
         y_true_start, y_true_end, y_pred_start, y_pred_end = _split_start_end_indices(self.y_true, self.y_pred)
-        y_pred_start, y_pred_end = _get_predictions(y_pred_start, y_pred_end)
+        y_pred_start, y_pred_end = get_predictions(y_pred_start, y_pred_end)
 
         true_tokens = _get_answers(self.w_context, y_true_start, y_true_end)
         pred_tokens = _get_answers(self.w_context, y_pred_start, y_pred_end)
@@ -103,7 +103,7 @@ class TestMetrics(TestCase):
         b_size = self.w_context.shape[0]
         y_true_start, y_true_end, y_pred_start, y_pred_end = _split_start_end_indices(self.y_true, self.y_pred)
 
-        y_pred_start, y_pred_end = _get_predictions(y_pred_start, y_pred_end)
+        y_pred_start, y_pred_end = get_predictions(y_pred_start, y_pred_end)
 
         true_tokens = _get_answers(self.w_context, y_true_start, y_true_end)
         pred_tokens = _get_answers(self.w_context, y_pred_start, y_pred_end)
@@ -140,7 +140,7 @@ class TestMetrics(TestCase):
 
         y_true_start, y_true_end, y_pred_start, y_pred_end = _split_start_end_indices(self.y_true, self.y_pred)
 
-        y_pred_start, y_pred_end = _get_predictions(y_pred_start, y_pred_end)
+        y_pred_start, y_pred_end = get_predictions(y_pred_start, y_pred_end)
 
         true_tokens = _get_answers(self.w_context, y_true_start, y_true_end)
         pred_tokens = _get_answers(self.w_context, y_pred_start, y_pred_end)
@@ -163,7 +163,7 @@ class TestMetrics(TestCase):
 
         y_true_start, y_true_end, y_pred_start, y_pred_end = _split_start_end_indices(self.y_true, self.y_pred)
 
-        y_pred_start, y_pred_end = _get_predictions(y_pred_start, y_pred_end)
+        y_pred_start, y_pred_end = get_predictions(y_pred_start, y_pred_end)
 
         true_tokens = _get_answers(self.w_context, y_true_start, y_true_end)
         pred_tokens = _get_answers(self.w_context, y_pred_start, y_pred_end)

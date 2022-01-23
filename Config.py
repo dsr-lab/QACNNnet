@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import tensorflow as tf
-import tensorflow_addons as tfa
 from model.warmup_learning import CustomSchedule
 import Config
 
@@ -20,7 +19,7 @@ PREDICTIONS_PATH = os.path.join("predictions", "predictions.json")
 PREPROCESSING_OPTIONS = {
 "strip":True,
 "lower":True,
-"replace":True,
+"replace":False,
 "remove special":False,
 "stopwords":False,
 "lemmatize":False
@@ -29,8 +28,8 @@ PREPROCESSING_OPTIONS = {
 TRAIN_SAMPLES = 78000
 TRAIN_ON_FULL_DATASET = True
 
-MAX_CONTEXT_WORDS = 250
-MAX_QUERY_WORDS = 30
+MAX_CONTEXT_WORDS = 400
+MAX_QUERY_WORDS = 50
 MAX_ANSWER_LENGTH = 30
 
 L2_RATE = 3e-7
@@ -41,18 +40,18 @@ IGNORE_TOKENS = tf.constant([[0], [1], [9], [10]])
 WORD_EMBEDDING_SIZE = 300
 WORD_VOCAB_SIZE = 10000
 PRETRAINED_WEIGHTS = np.random.rand(WORD_VOCAB_SIZE, WORD_EMBEDDING_SIZE)
-CHARACTER_EMBEDDING_SIZE = 200
+CHARACTER_EMBEDDING_SIZE = 64
 CHARACTER_VOCAB_SIZE = 100
 MAX_CHARS = 16
 
 EMBEDDING_KERNEL_SIZE = 5
 N_HIGHWAY_LAYERS = 2
 
-D_MODEL = 128
+D_MODEL = 96
 ENCODER_KERNEL_SIZE = 7
 N_CONV_LAYERS_EMBEDDING_ENCODING = 4
 N_CONV_LAYERS_MODEL_ENCODING = 2
-N_HEADS = 8
+N_HEADS = 1
 STOCHASTIC_SURVIVAL_PROB = 0.9
 N_BLOCKS_EMBEDDING_ENCODING = 1
 N_BLOCKS_MODEL_ENCODING = 7
