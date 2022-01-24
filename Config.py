@@ -13,16 +13,16 @@ DATA_PATH = os.path.join("data", "training_set.json")
 DATAFRAME_PATH = os.path.join("data", "training_dataframe.pkl")
 WORDS_TOKENIZER_PATH = os.path.join("data", "words_tokenizer.pkl")
 CHARS_TOKENIZER_PATH = os.path.join("data", "chars_tokenizer.pkl")
-CHECKPOINT_PATH = os.path.join("data","Checkpoints","weights.ckpt")
+CHECKPOINT_PATH = os.path.join("data", "Checkpoints", "weights.ckpt")
 PREDICTIONS_PATH = os.path.join("predictions", "predictions.json")
 
 PREPROCESSING_OPTIONS = {
-"strip":True,
-"lower":True,
-"replace":False,
-"remove special":False,
-"stopwords":False,
-"lemmatize":False
+    "strip": True,
+    "lower": True,
+    "replace": False,
+    "remove special": False,
+    "stopwords": False,
+    "lemmatize": False
 }
 
 TRAIN_SAMPLES = 78000

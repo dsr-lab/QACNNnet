@@ -1,17 +1,11 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 
-from context_query_attention_layer_2 import ContextQueryAttentionLayer2
 from metrics import F1Score, EMScore, qa_loss
 from context_query_attention import ContextQueryAttentionLayer
 from encoding.encoder import EncoderLayer
 from input_embedding.input_embedding_layer import InputEmbeddingLayer
 from model_output import OutputLayer
-import Config
-
-# TODO: pass the correct word vocab size and ingore tokens
-# f1_score = F1Score(vocab_size=Config.WORD_VOCAB_SIZE+1, ignore_tokens=tf.constant([[0], [1], [9], [10]]))
-# em_score = EMScore(vocab_size=Config.WORD_VOCAB_SIZE+1, ignore_tokens=tf.constant([[0], [1], [9], [10]]))
 
 
 class QACNNnet(tf.keras.Model):
@@ -33,7 +27,6 @@ class QACNNnet(tf.keras.Model):
         self.embedding_encoder = EncoderLayer(**embedding_encoder_params)
 
         self.context_query_attention = ContextQueryAttentionLayer(**context_query_attention_params)
-        # self.context_query_attention = ContextQueryAttentionLayer2()
 
         self.model_encoder = EncoderLayer(**model_encoder_params)
         self.conv_1d = layers.SeparableConv1D(**conv_input_projection_params)
@@ -45,11 +38,6 @@ class QACNNnet(tf.keras.Model):
         self.loss_tracker = tf.keras.metrics.Mean(name="loss")
 
         self.dropout_rate = dropout_rate
-
-        # self.ema = tf.train.ExponentialMovingAverage(decay=0.9999)
-        #
-        # self.model_is_training = None
-        # self.unaveraged_weights = None
 
     def call(self, inputs, training=None):
 
@@ -90,15 +78,6 @@ class QACNNnet(tf.keras.Model):
 
     def train_step(self, data):
 
-        # Restore unaveraged weights
-        # if self.model_is_training == False:
-        #     if self.unaveraged_weights is not None:
-        #         if len(self.trainable_variables) == len(self.unaveraged_weights):
-        #             for idx, var in enumerate(self.trainable_variables):
-        #                 var.assign(tf.Variable(self.unaveraged_weights[idx]))
-        #         self.unaveraged_weights = None
-        # self.model_is_training = True
-
         # Unpack the data. Its structure depends on your model and
         # on what you pass to `fit()`.
         x, y = data
@@ -109,7 +88,6 @@ class QACNNnet(tf.keras.Model):
             # self.compiled_loss(y, y_pred, regularization_losses=self.losses)
             loss = qa_loss(y, y_pred)
             loss += sum(self.losses)
-
 
         # Compute gradients
         trainable_vars = self.trainable_variables
@@ -122,9 +100,6 @@ class QACNNnet(tf.keras.Model):
         # Update weights
         self.optimizer.apply_gradients(zip(capped_grads, trainable_vars))
 
-        # Apply EMA
-        # self.ema.apply(self.trainable_variables)
-
         # Update the metrics
         self.loss_tracker.update_state(loss)
 
@@ -134,34 +109,17 @@ class QACNNnet(tf.keras.Model):
         self.em_score.set_words_context(x[0])
         self.em_score.update_state(y, y_pred)
 
-        # self.compiled_metrics.update_state(y, y_pred)
-
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, data):
-        # Save unaveraged weights and set the averaged ones
-        # if self.model_is_training == True:
-        #     self.unaveraged_weights = []
-        #     for var in self.trainable_variables:
-        #         # Deep copy the original variable
-        #         self.unaveraged_weights.append(tf.Variable(var))
-        #
-        #         # Average the current variable
-        #         var.assign(self.ema.average(var))
-        #
-        #     # self.unaveraged_weights = self.trainable_variables
-        #
-        # self.model_is_training = False
 
         # Unpack the data
         x, y = data
         # Compute predictions
         y_pred = self(x, training=False)
         loss = qa_loss(y, y_pred)
-        # loss += sum(self.losses)
-
-        #loss = self.compiled_loss(y, y_pred, regularization_losses=self.losses)
+        # loss += sum(self.losses)  # Not required to add regularization losses during the testing phase.
 
         # Update the metrics.
         self.loss_tracker.update_state(loss)
