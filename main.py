@@ -1,12 +1,12 @@
 import os
-from metrics import qa_loss
-from model import question_answer_model
+
 from model.question_answer_model import QACNNnet
 import Config
 import tensorflow as tf
 import numpy as np
 from preprocessing.dataframe_builder import load_dataframe, build_embedding_matrix
 import string
+
 
 def load_data():
 
@@ -47,9 +47,10 @@ def load_data():
 
     return input_train, input_validation, output_train, output_validation
 
+
 # Build model and compile
 def build_model(input_embedding_params, embedding_encoder_params, conv_input_projection_params,
-                model_encoder_params, context_query_attention_params, max_context_words,
+                model_encoder_params, context_query_attention_params, output_params, max_context_words,
                 max_query_words, max_chars, optimizer, vocab_size, ignore_tokens, dropout_rate):
     # Model input tensors
     context_words_input = tf.keras.Input(shape=(max_context_words), name="context words")
@@ -65,6 +66,7 @@ def build_model(input_embedding_params, embedding_encoder_params, conv_input_pro
                      conv_input_projection_params,
                      model_encoder_params,
                      context_query_attention_params,
+                     output_params,
                      vocab_size,
                      ignore_tokens,
                      dropout_rate)
@@ -112,10 +114,10 @@ def main():
     valid_w_context, valid_c_context, valid_w_query, valid_c_query = input_validation
 
     if Config.DEBUG:
+        # Create a dummy dataset
         Config.BATCH_SIZE = 32
-        Config.EAGER_MODE = False
-        n_train = 100
-        n_val = 50
+        n_train = 50
+        n_val = 10
         train_w_context = train_w_context[:n_train]
         train_c_context = train_c_context[:n_train]
         train_w_query = train_w_query[:n_train]
@@ -128,14 +130,24 @@ def main():
         valid_c_query = valid_c_query[:n_val]
         output_validation = output_validation[:n_val]
 
+    if Config.TRAIN_ON_FULL_DATASET:
+        train_w_context = tf.concat([train_w_context, valid_w_context], axis=0)
+        train_c_context = tf.concat([train_c_context, valid_c_context], axis=0)
+        train_w_query = tf.concat([train_w_query, valid_w_query], axis=0)
+        train_c_query = tf.concat([train_c_query, valid_c_query], axis=0)
+        output_train = tf.concat([output_train, output_validation], axis=0)
+
+    # Adjust tensor dimension
     output_train = np.expand_dims(output_train, -1)
     output_validation = np.expand_dims(output_validation, -1)
 
+    # Build the model
     model = build_model(Config.input_embedding_params,
                         Config.embedding_encoder_params,
                         Config.conv_input_projection_params,
                         Config.model_encoder_params,
                         Config.context_query_attention_params,
+                        Config.output_params,
                         Config.MAX_CONTEXT_WORDS,
                         Config.MAX_QUERY_WORDS,
                         Config.MAX_CHARS,
@@ -145,23 +157,33 @@ def main():
                         Config.DROPOUT_RATE)
 
     print("Model succesfully built!")
+
     model.summary()
 
-    if Config.LOAD_WEIGHTS and os.path.exists(Config.CHECKPOINT_PATH+".index"):
-        print("Loading model's weights...")
-        model.load_weights(Config.CHECKPOINT_PATH)
-        print("Model's weights successfully loaded!")
+    # Load model weights if required
+    if Config.LOAD_WEIGHTS:
+        if os.path.exists(Config.CHECKPOINT_PATH + ".index"):
+            print("Loading model's weights...")
+            model.load_weights(Config.CHECKPOINT_PATH)
+            print("Model's weights successfully loaded!")
 
+        else:
+            print("WARNING: model's weights not found, the model will be executed with initialized random weights.")
+            print("Ignore this warning if it is a test.")
+
+    # Add model checkpoint callbacks
     callbacks_list = []
     if Config.SAVE_WEIGHTS:
-        callbacks_list.append(tf.keras.callbacks.ModelCheckpoint(filepath=Config.CHECKPOINT_PATH,save_weights_only=True,verbose=1))
+        callbacks_list.append(tf.keras.callbacks.ModelCheckpoint(filepath=Config.CHECKPOINT_PATH, save_weights_only=True, verbose=1))
 
+    # Start the model training
     history = model.fit(
         x=[train_w_context, train_c_context, train_w_query, train_c_query],
         y=output_train,
         validation_data=(
-            [valid_w_context, valid_c_context, valid_w_query, valid_c_query],
-            output_validation),
+            [valid_w_context, valid_c_context,
+             valid_w_query, valid_c_query],
+            output_validation) if not Config.TRAIN_ON_FULL_DATASET else None,
         verbose=1,
         batch_size=Config.BATCH_SIZE,
         epochs=Config.EPOCHS,
@@ -172,4 +194,3 @@ def main():
 
 if __name__ == '__main__':
     history, model = main()
-    model.save_weights('qanet.tf')

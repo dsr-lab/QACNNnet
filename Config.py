@@ -1,35 +1,35 @@
 import os
 import numpy as np
 import tensorflow as tf
-# import tensorflow_addons as tfa
 from model.warmup_learning import CustomSchedule
 import Config
 
 DEBUG = True
-EAGER_MODE = False
-SAVE_WEIGHTS = True
-LOAD_WEIGHTS = True
+EAGER_MODE = True
+SAVE_WEIGHTS = False
+LOAD_WEIGHTS = False
 
 DATA_PATH = os.path.join("data", "training_set.json")
 DATAFRAME_PATH = os.path.join("data", "training_dataframe.pkl")
 WORDS_TOKENIZER_PATH = os.path.join("data", "words_tokenizer.pkl")
 CHARS_TOKENIZER_PATH = os.path.join("data", "chars_tokenizer.pkl")
-CHECKPOINT_PATH = os.path.join("data","Checkpoints","weights.ckpt")
+CHECKPOINT_PATH = os.path.join("data", "Checkpoints", "weights.ckpt")
 PREDICTIONS_PATH = os.path.join("predictions", "predictions.json")
 
 PREPROCESSING_OPTIONS = {
-"strip":True,
-"lower":True,
-"replace":True,
-"remove special":False,
-"stopwords":False,
-"lemmatize":False
+    "strip": True,
+    "lower": True,
+    "replace": False,
+    "remove special": False,
+    "stopwords": False,
+    "lemmatize": False
 }
 
 TRAIN_SAMPLES = 78000
+TRAIN_ON_FULL_DATASET = True
 
 MAX_CONTEXT_WORDS = 400
-MAX_QUERY_WORDS = 30
+MAX_QUERY_WORDS = 50
 MAX_ANSWER_LENGTH = 30
 
 L2_RATE = 3e-7
@@ -37,24 +37,24 @@ DROPOUT_RATE = 0.1
 
 IGNORE_TOKENS = tf.constant([[0], [1], [9], [10]])
 
-WORD_EMBEDDING_SIZE = 100
+WORD_EMBEDDING_SIZE = 300
 WORD_VOCAB_SIZE = 10000
 PRETRAINED_WEIGHTS = np.random.rand(WORD_VOCAB_SIZE, WORD_EMBEDDING_SIZE)
-CHARACTER_EMBEDDING_SIZE = 94
+CHARACTER_EMBEDDING_SIZE = 64
 CHARACTER_VOCAB_SIZE = 100
 MAX_CHARS = 16
 
 EMBEDDING_KERNEL_SIZE = 5
 N_HIGHWAY_LAYERS = 2
 
-D_MODEL = 128
+D_MODEL = 96
 ENCODER_KERNEL_SIZE = 7
 N_CONV_LAYERS_EMBEDDING_ENCODING = 4
 N_CONV_LAYERS_MODEL_ENCODING = 2
 N_HEADS = 1
 STOCHASTIC_SURVIVAL_PROB = 0.9
 N_BLOCKS_EMBEDDING_ENCODING = 1
-N_BLOCKS_MODEL_ENCODING = 3
+N_BLOCKS_MODEL_ENCODING = 7
 
 BATCH_SIZE = 32
 EPOCHS = 30
@@ -104,6 +104,10 @@ model_encoder_params = {
 
 context_query_attention_params = {
     "dropout_rate": DROPOUT_RATE,
+    "l2_rate": L2_RATE
+}
+
+output_params = {
     "l2_rate": L2_RATE
 }
 

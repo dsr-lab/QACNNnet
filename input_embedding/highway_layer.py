@@ -3,7 +3,6 @@ import tensorflow as tf
 
 class HighwayLayer(tf.keras.layers.Layer):
 
-    # input-independent initialization
     def __init__(self, dropout_rate, l2=None, activation=None, kernel_size=1):
         super(HighwayLayer, self).__init__()
 
@@ -18,7 +17,6 @@ class HighwayLayer(tf.keras.layers.Layer):
         self.transform = None
         self.conv = None
 
-    # input-dependent initialization
     def build(self, input_lenght):
         n_filters = input_lenght[-1]
 
@@ -29,7 +27,6 @@ class HighwayLayer(tf.keras.layers.Layer):
             n_filters, self.kernel_size, activation=self.activation,
             kernel_regularizer=self.l2, bias_regularizer=self.l2)
 
-    # forward computation
     def call(self, inputs):
         t = self.transform(inputs)
 

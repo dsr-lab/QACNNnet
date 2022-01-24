@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-from encoding.encoder import Encoding_Layer
-
 import numpy as np
+
+from encoding.encoder import EncodingLayer
 
 
 class TestEncoding_Layer(TestCase):
@@ -13,15 +13,16 @@ class TestEncoding_Layer(TestCase):
         N_CONTEXT = 400
         W_VOCAB_SIZE = 10000
 
-        encoding_layer = Encoding_Layer(
-            embedding_size=500,
+        encoding_layer = EncodingLayer(
             d_model=128,
             kernel_size=7,
             n_conv_layers=4,
             n_heads=8,
             survival_prob=1.0,
-            l2_value=3e-7,
-            block_num=1
+            block_num=1,
+            dropout_rate=0.1,
+            l2_rate=3e-7,
+
         )
         w_context = np.random.randint(1, W_VOCAB_SIZE, (BATCH_SIZE, N_CONTEXT))
 

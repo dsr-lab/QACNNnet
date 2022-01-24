@@ -46,6 +46,7 @@ def get_answer_indices(context_words, answer_words):
             if i==len(answer_words):
                 start = j - len(answer_words) + 1
                 end = j if len(answer_words)<Config.MAX_ANSWER_LENGTH else start+Config.MAX_ANSWER_LENGTH-1 #Truncate answer
+
                 return np.array([start,end],dtype=np.int64)
         else:
             i=0

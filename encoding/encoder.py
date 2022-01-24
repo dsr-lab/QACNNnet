@@ -1,6 +1,5 @@
 import tensorflow as tf
 from tensorflow.keras import layers
-from tensorflow.keras import regularizers
 
 from encoding import positional_encoding, stochastic_dropout
 
@@ -56,38 +55,31 @@ class EncodingLayer(layers.Layer):
             "data_format": "channels_last", # channels are represented by the last dimension
             "depthwise_regularizer": l2,
             "pointwise_regularizer": l2,
-            # "activity_regularizer": l2,
             "bias_regularizer": l2,
-            "activation": "relu"
+            "activation": "relu",
+            "kernel_initializer": tf.keras.initializers.HeNormal()
         }
 
         self_attention_layer_params = {
             "num_heads": n_heads,
             "key_dim": d_model,
             "kernel_regularizer": l2,
-            # "activity_regularizer": l2,
             "bias_regularizer": l2
         }
 
-        feed_forward_layer_params = {
-            "units": d_model,
-            "activation": "relu",
-            "kernel_regularizer": l2,
-            # "activity_regularizer": l2,
-            "bias_regularizer": l2
-        }
-
+        # Norm layers
         self.norm_layers = [layers.LayerNormalization() for _ in range(self.n_layers)]
 
+        # Conv layers
         self.conv_layers = [layers.SeparableConv1D(**self.conv_layer_params) for _ in range(n_conv_layers)]
 
+        # Self attention
         self.self_attention_layer = layers.MultiHeadAttention(**self_attention_layer_params)
 
-        # self.feed_forward_layer = layers.Dense(**feed_forward_layer_params)  # Is one layer enough?
-
-        # TODO: create a dictionary like the other layers
+        # Feed-forward
         self.ff1 = layers.Conv1D(d_model, 1, activation='relu',
-                                 kernel_regularizer=l2, bias_regularizer=l2)
+                                 kernel_regularizer=l2, bias_regularizer=l2,
+                                 kernel_initializer=tf.keras.initializers.HeNormal())
         self.ff2 = layers.Conv1D(d_model, 1, activation=None,
                                  kernel_regularizer=l2, bias_regularizer=l2)
 
@@ -146,6 +138,7 @@ class EncodingLayer(layers.Layer):
 
         #Decides whether disabling or not a layer using stochastic dropout
         keep = stochastic_dropout.keep_layer(self.n_layers, layer_num, self.survival_prob) if training else True
+
         if keep:
             can_apply_residual_block = x.shape[-1] == self.d_model
 
