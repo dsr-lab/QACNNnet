@@ -43,13 +43,13 @@ MAX_ANSWER_LENGTH = 30
 L2_RATE = 3e-7
 DROPOUT_RATE = 0.1
 
-IGNORE_TOKENS = tf.constant([[0], [1], [9], [10]])
+IGNORE_TOKENS = tf.constant([[0], [1], [9], [10]])  # This is a placeholder. The correct values are set after reading the dataset.
 
 WORD_EMBEDDING_SIZE = 300
-WORD_VOCAB_SIZE = 10000
+WORD_VOCAB_SIZE = 10000  # This is a placeholder. The correct size is set after reading the dataset.
 PRETRAINED_WEIGHTS = np.random.rand(WORD_VOCAB_SIZE, WORD_EMBEDDING_SIZE)
 CHARACTER_EMBEDDING_SIZE = 64
-CHARACTER_VOCAB_SIZE = 100
+CHARACTER_VOCAB_SIZE = 100  # This is a placeholder. The correct size is set after reading the dataset.
 MAX_CHARS = 16
 
 EMBEDDING_KERNEL_SIZE = 5
