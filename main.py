@@ -7,6 +7,7 @@ import numpy as np
 from preprocessing.dataframe_builder import load_dataframe, build_embedding_matrix
 import string
 
+
 def load_data():
 
     dataframe, words_tokenizer, chars_tokenizer, glove_dict = load_dataframe(force_rebuild=False)
@@ -45,6 +46,7 @@ def load_data():
                         tokens_to_remove)
 
     return input_train, input_validation, output_train, output_validation
+
 
 # Build model and compile
 def build_model(input_embedding_params, embedding_encoder_params, conv_input_projection_params,
