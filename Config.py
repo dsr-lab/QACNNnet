@@ -4,17 +4,20 @@ import tensorflow as tf
 from model.warmup_learning import CustomSchedule
 import Config
 
-DEBUG = True
-EAGER_MODE = True
-SAVE_WEIGHTS = False
-LOAD_WEIGHTS = False
 
+# ##################################
+# FILE PATHS
+# ##################################
 DATA_PATH = os.path.join("data", "training_set.json")
 DATAFRAME_PATH = os.path.join("data", "training_dataframe.pkl")
 WORDS_TOKENIZER_PATH = os.path.join("data", "words_tokenizer.pkl")
 CHARS_TOKENIZER_PATH = os.path.join("data", "chars_tokenizer.pkl")
 CHECKPOINT_PATH = os.path.join("data", "Checkpoints", "weights.ckpt")
 PREDICTIONS_PATH = os.path.join("predictions", "predictions.json")
+
+# ##################################
+# MODEL CONFIGURATION AND CONSTANTS
+# ##################################
 
 PREPROCESSING_OPTIONS = {
     "strip": True,
@@ -24,6 +27,11 @@ PREPROCESSING_OPTIONS = {
     "stopwords": False,
     "lemmatize": False
 }
+
+DEBUG = True
+EAGER_MODE = True
+SAVE_WEIGHTS = False
+LOAD_WEIGHTS = False
 
 TRAIN_SAMPLES = 78000
 TRAIN_ON_FULL_DATASET = True
@@ -65,10 +73,10 @@ WARMUP_STEPS = 1000.0
 learning_rate = CustomSchedule(FINAL_LEARNING_RATE, WARMUP_STEPS)
 
 OPTIMIZER = tf.keras.optimizers.Adam(learning_rate, beta_1=0.8, beta_2=0.999, epsilon=1e-7)
-# OPTIMIZER = tfa.optimizers.MovingAverage(OPTIMIZER)
 
-# Layers' variables
-
+# ##################################
+# LAYERS CONFIGURATON PARAMETERS
+# ##################################
 input_embedding_params = {}
 
 embedding_encoder_params = {
@@ -86,7 +94,6 @@ conv_input_projection_params = {
     "filters": D_MODEL,
     "kernel_size": 1,
     "kernel_regularizer": None if L2_RATE == 0.0 else tf.keras.regularizers.l2(L2_RATE),
-    # "activity_regularizer": tf.keras.regularizers.l2(L2_RATE),
     "bias_regularizer": None if L2_RATE == 0.0 else tf.keras.regularizers.l2(L2_RATE)
 
 }
@@ -113,6 +120,11 @@ output_params = {
 
 
 def config_model(word_vocab_size, char_vocab_size, pretrained_weights, ignore_tokens):
+    '''
+    Method called immediately after loading the dataset, and used for settings
+    some model variables that are necessary for correctly configure all the
+    network layers.
+    '''
     Config.WORD_VOCAB_SIZE = word_vocab_size
     Config.CHARACTER_VOCAB_SIZE = char_vocab_size
     Config.PRETRAINED_WEIGHTS = pretrained_weights
