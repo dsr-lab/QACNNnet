@@ -3,9 +3,9 @@ This repository contains a project whose goal is to solve a very interesting and
 
 
 ## Description
-QACNNet is a neural network mainly composed by CNNs along with attentions.
+QACNNet is the neural network that has been created for solving the question answering task, and it is mainly composed by CNNs along with attentions.
 
-The relation that comes along with the project contains all the details that are related to the network that has been created, from the architecture specifications to the results obtained after a lot of the testing.
+The relation that comes along with the project contains all the details that are related to the network, from the architecture specifications to the various results obtained during our testing.
 
 For convenience, it is reported here the architecture overview, and how to execute the evaluation script for the model.
 
@@ -23,6 +23,10 @@ For evaluating the model, it is necessary to execute the two following scripts.
 * **evaluate.py**: after executing the previous script it is possible to proceed with the actual evaluation of the model. The script requires two arguments: the path of the dataset that must be tested (the same used in the previous script), and the predictions.json file path. This file is automatically created in the *predictions* project folder. Usage example:
 
         python evaluate.py data/dev_set.json predictions/predictions.json
+
+## Contributors
+* Gaetano Signorelli
+* Daniele Sirocchi
      
  
 
