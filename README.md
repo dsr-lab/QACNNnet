@@ -11,6 +11,7 @@ For convenience, it is reported here the architecture overview, and how to execu
 
 ### Architecture Overview
 The following picture depicts an overview of the implemented model architecture.
+![Alt text](QACNNet_Architecture.jpg?raw=true "QACNNet")
 
 
 ### Evaluation Script
