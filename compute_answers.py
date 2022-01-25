@@ -266,20 +266,27 @@ def run_predictions(data_path):
     print("Model succesfully built!")
 
     print("Starting predicting...")
+
+    # Get the output predictions from the originally trained model
     raw_predictions = model.predict(x=[test_w_context, test_c_context, test_w_query, test_c_query],
                                     batch_size=config.BATCH_SIZE,
                                     verbose=1)
 
+    # Create a new fake model, composed just by one layer, whose goal is to conveniently
+    # convert the raw_predictions to predictions that leverage the inferencea algorithm
+    # (see the relation for more details)
     inputs = tf.keras.Input(shape=(2, config.MAX_CONTEXT_WORDS))
     outputs = PredLayer()(inputs)
 
     refine_pred_model = tf.keras.Model(inputs=inputs, outputs=outputs)
+    pred_start, pred_end = refine_pred_model.predict(raw_predictions, batch_size=config.BATCH_SIZE, verbose=1)
 
-    pred_start,pred_end = refine_pred_model.predict(raw_predictions, batch_size=config.BATCH_SIZE, verbose=1)
-
+    # Get the answers from out of the model predictions
     preprocessed_answers = get_preprocessed_answers(corpus, pred_start, pred_end, words_tokenizer)
+
     print("Predictions completed!")
 
+    # Write the results to the prediction.json file
     write_answers(question_ids.tolist(),preprocessed_answers)
 
     print("Predictions successfully written to file.")
