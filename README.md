@@ -1,4 +1,5 @@
 # QACNNnet
+The QACNNet is a neural network mainly composed by CNNs along with attentions for solving NLP tasks.
 
 ## Description
 This repository contains a project whose goal is to solve a very interesting and challenging NLP task: Question Answering.
