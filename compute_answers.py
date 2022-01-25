@@ -14,7 +14,11 @@ import tensorflow as tf
 import string
 import config
 
+
 class PredLayer(tf.keras.layers.Layer):
+    '''
+    A custom layer used just for splitting the start and end predictions
+    '''
 
     def call(self, input):
         raw_predictions_start, raw_predictions_end = tf.split(input, num_or_size_splits=2, axis=1)
@@ -22,8 +26,11 @@ class PredLayer(tf.keras.layers.Layer):
 
         return pred_start, pred_end
 
-def load_dictionaries():
 
+def load_dictionaries():
+    '''
+    Load tokenizers and GLoVe
+    '''
     with open(config.WORDS_TOKENIZER_PATH, 'rb') as handle:
         words_tokenizer = pickle.load(handle)
     with open(config.CHARS_TOKENIZER_PATH, 'rb') as handle:
@@ -34,32 +41,45 @@ def load_dictionaries():
 
     return words_tokenizer, chars_tokenizer, glove_dict
 
-def build_dataframe_row(context, question, title, id, corpus):
 
+def build_dataframe_row(context, question, title, id, corpus):
+    '''
+    Methods that take as input a context, a question, a title, an identifier and a corpus
+    that is filled every time a new row is processed.
+    '''
+
+    # Preprocess the context words and append it to the corpus
     preprocessed_context, full_text = preprocess.preprocess_text(context, config.PREPROCESSING_OPTIONS, get_full_text=True)
     corpus.append(full_text)
 
+    # Limit the max length
     if len(preprocessed_context)>config.MAX_CONTEXT_WORDS:
         preprocessed_context = preprocessed_context[0:config.MAX_CONTEXT_WORDS]
 
+    # Preprocess the question words
     preprocessed_question = preprocess.preprocess_text(question, config.PREPROCESSING_OPTIONS)
 
+    # Preprocess the context and question chars
     preprocessed_context_chars = [preprocess.split_to_chars(word) for word in preprocessed_context]
     preprocessed_question_chars = [preprocess.split_to_chars(word) for word in preprocessed_question]
 
+    # Create the dataframe row
     row = {
-    "Title": title,
-    "Question ID":id,
-    "Context words":preprocessed_context,
-    "Context chars":preprocessed_context_chars,
-    "Question words":preprocessed_question,
-    "Question chars":preprocessed_question_chars,
+        "Title": title,
+        "Question ID":id,
+        "Context words":preprocessed_context,
+        "Context chars":preprocessed_context_chars,
+        "Question words":preprocessed_question,
+        "Question chars":preprocessed_question_chars,
     }
 
     return row
 
 
 def extract_rows(json_dict):
+    '''
+    Method responsible for creating the dataframe rows from the original json dataset
+    '''
 
     print("Data extraction started...")
 
@@ -87,7 +107,12 @@ def extract_rows(json_dict):
 
     return dataframe_rows, corpus
 
+
 def build_dataframe(data_path):
+    '''
+    Methods that create the DataFrame containing all the information stored in the json
+    that is at the path passed as argument.
+    '''
 
     with open(data_path, "r") as file:
         data = json.loads(file.read())
@@ -106,8 +131,12 @@ def build_dataframe(data_path):
 
     return dataframe, words_tokenizer, chars_tokenizer, glove_dict, corpus
 
-def load_data(data_path):
 
+def load_data(data_path):
+    '''
+    Wrapper method that calls all the sub-methods for creating the dataset that can be used
+    by the model
+    '''
     dataframe, words_tokenizer, chars_tokenizer, glove_dict, corpus = build_dataframe(data_path)
     pretrained_embedding_weights = build_embedding_matrix(words_tokenizer, glove_dict)
 
@@ -139,6 +168,10 @@ def load_data(data_path):
 def build_model(input_embedding_params, embedding_encoder_params, conv_input_projection_params,
                 model_encoder_params, context_query_attention_params, output_params, max_context_words,
                 max_query_words, max_chars, optimizer, vocab_size, ignore_tokens, dropout_rate):
+    '''
+    Method that has been also define in the main.py, and replicated here for convenience.
+    This is the method responsible for creating and compiling the tensorflow model.
+    '''
 
     # Model input tensors
     context_words_input = tf.keras.Input(shape=(max_context_words), name="context words")
@@ -167,7 +200,12 @@ def build_model(input_embedding_params, embedding_encoder_params, conv_input_pro
 
     return model
 
+
 def get_preprocessed_answers(contexts, pred_start, pred_end, tokenizer):
+    '''
+    Method that creates an array of preprocessed answers.
+    The preprocessing applied is the same that has been used during the training of the model.
+    '''
 
     pred_slices = tf.concat([pred_start, pred_end],-1).numpy()
 
@@ -178,7 +216,12 @@ def get_preprocessed_answers(contexts, pred_start, pred_end, tokenizer):
 
     return preprocessed_answers
 
+
 def write_answers(question_ids, answers):
+    '''
+    Write the answers in the predictions.json file, that will be ultimately used by
+    the evaluation script.
+    '''
 
     assert len(question_ids)==len(answers)
 
@@ -187,7 +230,12 @@ def write_answers(question_ids, answers):
     with open(config.PREDICTIONS_PATH, 'w') as json_file:
         json.dump(answers_dict, json_file)
 
+
 def run_predictions(data_path):
+    '''
+    Create the model by restoring the training weights, and then perform a model.predict()
+    on the dataset whose path is passed as argument of the function.
+    '''
 
     input_test, question_ids, words_tokenizer, corpus = load_data(data_path)
     test_w_context, test_c_context, test_w_query, test_c_query = input_test
@@ -229,10 +277,6 @@ def run_predictions(data_path):
 
     pred_start,pred_end = refine_pred_model.predict(raw_predictions, batch_size=config.BATCH_SIZE, verbose=1)
 
-    #raw_predictions_start, raw_predictions_end = tf.split(raw_predictions, num_or_size_splits=2, axis=1)
-    #pred_start, pred_end = get_predictions(raw_predictions_start, raw_predictions_end)
-
-
     preprocessed_answers = get_preprocessed_answers(corpus, pred_start, pred_end, words_tokenizer)
     print("Predictions completed!")
 
@@ -240,7 +284,8 @@ def run_predictions(data_path):
 
     print("Predictions successfully written to file.")
 
-#Main:
+
+# Main:
 args = sys.argv
 if len(args)==2:
     data_path = args[1]

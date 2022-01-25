@@ -52,6 +52,7 @@ def load_data():
 def build_model(input_embedding_params, embedding_encoder_params, conv_input_projection_params,
                 model_encoder_params, context_query_attention_params, output_params, max_context_words,
                 max_query_words, max_chars, optimizer, vocab_size, ignore_tokens, dropout_rate):
+
     # Model input tensors
     context_words_input = tf.keras.Input(shape=(max_context_words), name="context words")
     context_characters_input = tf.keras.Input(shape=(max_context_words, max_chars), name="context characters")
