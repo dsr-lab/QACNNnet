@@ -18,6 +18,7 @@ class HighwayLayer(tf.keras.layers.Layer):
         self.conv = None
 
     def build(self, input_lenght):
+        # define input-dependent variables
         n_filters = input_lenght[-1]
 
         self.transform = tf.keras.layers.Conv1D(

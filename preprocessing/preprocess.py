@@ -5,23 +5,22 @@ from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet
 from nltk.corpus import stopwords
 
-#This module handles all the preprocessing operations.
+# This module handles all the preprocessing operations.
 
-#Download requested modules from nltk
+# Download requested modules from nltk
 nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('averaged_perceptron_tagger')
 nltk.download('wordnet')
 nltk.download('omw-1.4')
 
-#List of characters to be removed
+# List of characters to be removed
 REPLACE_BY_SPACE_RE = re.compile('[/(){}\[\]\|@,;:".!?\-]')
 
 lemmatizer = WordNetLemmatizer()
 stop_words = set(stopwords.words("english"))
 
 def strip_text(text):
-
     '''
     Strip the given text
     '''
@@ -29,7 +28,6 @@ def strip_text(text):
     return text.strip()
 
 def set_to_lower(text):
-
     '''
     Lower the given text
     '''
@@ -37,7 +35,6 @@ def set_to_lower(text):
     return text.lower()
 
 def replace_with_spaces(text):
-
     '''
     Remove unwanted characters
     '''
@@ -45,20 +42,18 @@ def replace_with_spaces(text):
     return REPLACE_BY_SPACE_RE.sub(' ', text)
 
 def get_words(text, remove_special_symbols=True):
-
     '''
     Split the text into words using the nltk toolkit
     '''
 
     words = word_tokenize(text)
     if remove_special_symbols:
-        filtered_words = [word for word in words if word.isalnum()] #remove special symbols and punctuation
+        filtered_words = [word for word in words if word.isalnum()]  # remove special symbols and punctuation
         return filtered_words
     else:
         return words
 
 def get_wordnet_pos(word):
-
     '''
     Get the pos tag of a given word using the nltk toolkit
     '''
@@ -69,10 +64,9 @@ def get_wordnet_pos(word):
                 "V": wordnet.VERB,
                 "R": wordnet.ADV}
 
-    return tag_dict.get(tag, wordnet.NOUN) #Return the correspondent tag or NOUN if it is not in tag_dict
+    return tag_dict.get(tag, wordnet.NOUN)  # Return the correspondent tag or NOUN if it is not in tag_dict
 
 def lemmatize(words):
-
     '''
     Lemmatize a list of words using nltk's lemmatizer
     '''
@@ -81,7 +75,6 @@ def lemmatize(words):
     return lemmatized_words
 
 def delete_stop_words(words):
-
     '''
     Remove stop words from a list of words
     '''
@@ -90,7 +83,6 @@ def delete_stop_words(words):
     return filtered_words
 
 def split_to_chars(word):
-
     '''
     Split a word into a list of characters
     '''
@@ -98,7 +90,6 @@ def split_to_chars(word):
     return [char for char in word]
 
 def preprocess_text(text, preprocessing_options, get_full_text=False):
-
     '''
     Apply the entire preprocess pipeline to a given text. The pipeline is defined by
     "preprocessing_options".

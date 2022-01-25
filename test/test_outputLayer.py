@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import numpy as np
 
-from model_output import OutputLayer
+from layer_model_output.model_output import OutputLayer
 
 
 class TestOutputLayer(TestCase):

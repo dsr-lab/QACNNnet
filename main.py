@@ -1,7 +1,7 @@
 import os
 
 from model.question_answer_model import QACNNnet
-import Config
+import config
 import tensorflow as tf
 import numpy as np
 from preprocessing.dataframe_builder import load_dataframe, build_embedding_matrix
@@ -40,7 +40,7 @@ def load_data():
 
     output_validation = np.stack(validation_set["Labels"],axis=0)
 
-    Config.config_model(len(words_tokenizer),
+    config.config_model(len(words_tokenizer),
                         len(chars_tokenizer),
                         pretrained_embedding_weights,
                         tokens_to_remove)
@@ -75,32 +75,32 @@ def build_model(input_embedding_params, embedding_encoder_params, conv_input_pro
     # Compile the model
     model.compile(
         optimizer=optimizer,
-        run_eagerly=Config.EAGER_MODE
+        run_eagerly=config.EAGER_MODE
     )
 
     return model
 
 
 def generate_random_data(n_items):
-    w_context = np.random.randint(1, Config.WORD_VOCAB_SIZE, (n_items, Config.MAX_CONTEXT_WORDS))
+    w_context = np.random.randint(1, config.WORD_VOCAB_SIZE, (n_items, config.MAX_CONTEXT_WORDS))
     # Force some random padding in the input
     for row in range(w_context.shape[0]):
         n_pad = np.random.randint(0, 16)
         if n_pad > 0:
             w_context[row][-n_pad:] = 0
 
-    c_context = np.random.randint(0, 100, (n_items, Config.MAX_CONTEXT_WORDS, Config.MAX_CHARS))
+    c_context = np.random.randint(0, 100, (n_items, config.MAX_CONTEXT_WORDS, config.MAX_CHARS))
 
-    w_query = np.random.randint(1, Config.WORD_VOCAB_SIZE, (n_items, Config.MAX_QUERY_WORDS))
+    w_query = np.random.randint(1, config.WORD_VOCAB_SIZE, (n_items, config.MAX_QUERY_WORDS))
     # Force some random padding in the input
     for row in range(w_query.shape[0]):
         n_pad = np.random.randint(0, 5)
         if n_pad > 0:
             w_query[row][-n_pad:] = 0
 
-    c_query = np.random.randint(0, 100, (n_items, Config.MAX_QUERY_WORDS, Config.MAX_CHARS))
+    c_query = np.random.randint(0, 100, (n_items, config.MAX_QUERY_WORDS, config.MAX_CHARS))
 
-    labels = tf.random.uniform(shape=(n_items, 2, 1), minval=0, maxval=Config.MAX_CONTEXT_WORDS, dtype=tf.dtypes.int64)
+    labels = tf.random.uniform(shape=(n_items, 2, 1), minval=0, maxval=config.MAX_CONTEXT_WORDS, dtype=tf.dtypes.int64)
 
     return w_context, c_context, w_query, c_query, labels
 
@@ -113,9 +113,9 @@ def main():
     train_w_context, train_c_context, train_w_query, train_c_query = input_train
     valid_w_context, valid_c_context, valid_w_query, valid_c_query = input_validation
 
-    if Config.DEBUG:
+    if config.DEBUG:
         # Create a dummy dataset
-        Config.BATCH_SIZE = 32
+        config.BATCH_SIZE = 32
         n_train = 50
         n_val = 10
         train_w_context = train_w_context[:n_train]
@@ -130,7 +130,7 @@ def main():
         valid_c_query = valid_c_query[:n_val]
         output_validation = output_validation[:n_val]
 
-    if Config.TRAIN_ON_FULL_DATASET:
+    if config.TRAIN_ON_FULL_DATASET:
         train_w_context = tf.concat([train_w_context, valid_w_context], axis=0)
         train_c_context = tf.concat([train_c_context, valid_c_context], axis=0)
         train_w_query = tf.concat([train_w_query, valid_w_query], axis=0)
@@ -142,29 +142,29 @@ def main():
     output_validation = np.expand_dims(output_validation, -1)
 
     # Build the model
-    model = build_model(Config.input_embedding_params,
-                        Config.embedding_encoder_params,
-                        Config.conv_input_projection_params,
-                        Config.model_encoder_params,
-                        Config.context_query_attention_params,
-                        Config.output_params,
-                        Config.MAX_CONTEXT_WORDS,
-                        Config.MAX_QUERY_WORDS,
-                        Config.MAX_CHARS,
-                        Config.OPTIMIZER,
-                        Config.WORD_VOCAB_SIZE + 1,
-                        Config.IGNORE_TOKENS,
-                        Config.DROPOUT_RATE)
+    model = build_model(config.input_embedding_params,
+                        config.embedding_encoder_params,
+                        config.conv_input_projection_params,
+                        config.model_encoder_params,
+                        config.context_query_attention_params,
+                        config.output_params,
+                        config.MAX_CONTEXT_WORDS,
+                        config.MAX_QUERY_WORDS,
+                        config.MAX_CHARS,
+                        config.OPTIMIZER,
+                        config.WORD_VOCAB_SIZE + 1,
+                        config.IGNORE_TOKENS,
+                        config.DROPOUT_RATE)
 
     print("Model succesfully built!")
 
     model.summary()
 
     # Load model weights if required
-    if Config.LOAD_WEIGHTS:
-        if os.path.exists(Config.CHECKPOINT_PATH + ".index"):
+    if config.LOAD_WEIGHTS:
+        if os.path.exists(config.CHECKPOINT_PATH + ".index"):
             print("Loading model's weights...")
-            model.load_weights(Config.CHECKPOINT_PATH)
+            model.load_weights(config.CHECKPOINT_PATH)
             print("Model's weights successfully loaded!")
 
         else:
@@ -173,8 +173,8 @@ def main():
 
     # Add model checkpoint callbacks
     callbacks_list = []
-    if Config.SAVE_WEIGHTS:
-        callbacks_list.append(tf.keras.callbacks.ModelCheckpoint(filepath=Config.CHECKPOINT_PATH, save_weights_only=True, verbose=1))
+    if config.SAVE_WEIGHTS:
+        callbacks_list.append(tf.keras.callbacks.ModelCheckpoint(filepath=config.CHECKPOINT_PATH, save_weights_only=True, verbose=1))
 
     # Start the model training
     history = model.fit(
@@ -183,10 +183,10 @@ def main():
         validation_data=(
             [valid_w_context, valid_c_context,
              valid_w_query, valid_c_query],
-            output_validation) if not Config.TRAIN_ON_FULL_DATASET else None,
+            output_validation) if not config.TRAIN_ON_FULL_DATASET else None,
         verbose=1,
-        batch_size=Config.BATCH_SIZE,
-        epochs=Config.EPOCHS,
+        batch_size=config.BATCH_SIZE,
+        epochs=config.EPOCHS,
         callbacks=callbacks_list)
 
     return history, model

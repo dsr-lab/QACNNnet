@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 
-from encoding import positional_encoding, stochastic_dropout
+from layer_encoder import positional_encoding, stochastic_dropout
 
 
 class EncodingLayer(layers.Layer):
@@ -28,26 +28,28 @@ class EncodingLayer(layers.Layer):
             Number of heads for MultiHeadAttention
         survival_prob: float
             Survival probability of a layer for stochastic dropout.
-        l2_rate: float
-            L2 value used in L2 regularization
         block_num: int
-            Index of the current encoding layer
+            Index of the current layer_encoder layer
+        dropout_rate: float
+            The dropout rate.
+            Passing 0.0 means that dropout is not applied.
+        l2_rate: float
+            The l2 rate.
+            Passing 0.0 means that l2 regularization is not applied.
+
         '''
 
         super(EncodingLayer, self).__init__()
 
         self.d_model = d_model
-        self.n_layers = n_conv_layers + 2 #+2 takes into account self-attention and Dense layers
+        self.n_layers = n_conv_layers + 2  # +2 takes into account self-attention and Dense layers
         self.survival_prob = survival_prob
         self.block_num = block_num
-
-        #Prepare layers:
 
         # Regularizer
         l2 = None if l2_rate == 0.0 else tf.keras.regularizers.l2(l2_rate)
 
-        self.dropout = tf.keras.layers.Dropout(dropout_rate)
-
+        # Layers parameters
         self.conv_layer_params = {
             "filters": d_model,
             "kernel_size": kernel_size,
@@ -67,6 +69,9 @@ class EncodingLayer(layers.Layer):
             "bias_regularizer": l2
         }
 
+        # Dropout
+        self.dropout = tf.keras.layers.Dropout(dropout_rate)
+
         # Norm layers
         self.norm_layers = [layers.LayerNormalization() for _ in range(self.n_layers)]
 
@@ -84,23 +89,22 @@ class EncodingLayer(layers.Layer):
                                  kernel_regularizer=l2, bias_regularizer=l2)
 
     def compute_attention_mask(self, mask):
-
         '''
         Compute the mask that will be used in the self-attention layer,
-        in order to avoid padding elements.
+        in order to avoid to consider <PAD> elements.
         '''
 
         n = mask.shape[1]
 
-        #Repeat the vector-mask along the first axis
+        # Repeat the vector-mask along the first axis
         horizontal_mask = layers.RepeatVector(n)(mask)
 
-        #Repeat the vector-mask along the second axis
+        # Repeat the vector-mask along the second axis
         reshaped_mask = layers.Reshape((n, 1))(mask)
         vertical_mask = layers.Concatenate(axis=-1)([reshaped_mask for _ in range(n)])
         vertical_mask = layers.Reshape((n, n))(vertical_mask)
 
-        #Combine horizontal and vertical mask to get the desired matrix-mask
+        # Combine horizontal and vertical mask to get the desired matrix-mask
         attention_mask = horizontal_mask & vertical_mask
 
         return attention_mask
@@ -114,8 +118,8 @@ class EncodingLayer(layers.Layer):
                     feed_forward=False):
         '''
         Check whether a layer should be used or not (stochastic dropout), then:
-        -Return the input as the output if the layer should not be used;
-        -Return layer(layer_normalization(x)) + x if the layer should be used.
+         - Return the input as the output if the layer is dropped out
+         - Return layer (layer_normalization(x)) + x if the layer is mantained.
 
         Parameters:
         ----------
@@ -129,6 +133,9 @@ class EncodingLayer(layers.Layer):
             True if the model is training, False otherwise
         attention_mask: tf.Tensor
             Boolean mask used for MultiHeadAttention
+        feed_forward: bool
+            Flag used for doing a different operation when the last feed-forward
+            block is reached by the inputs
 
         Returns:
         --------
@@ -136,13 +143,13 @@ class EncodingLayer(layers.Layer):
             Output of the layer with stochastic dropout.
         '''
 
-        #Decides whether disabling or not a layer using stochastic dropout
+        # Decides whether to disable or not a layer using stochastic dropout
         keep = stochastic_dropout.keep_layer(self.n_layers, layer_num, self.survival_prob) if training else True
 
         if keep:
             can_apply_residual_block = x.shape[-1] == self.d_model
 
-            #Apply layer normalization
+            # Apply layer normalization
             norm_x = self.norm_layers[layer_num](x)
 
             # Apply dropout
@@ -151,7 +158,7 @@ class EncodingLayer(layers.Layer):
                     feed_forward:
                 norm_x = self.dropout(norm_x)
 
-            # Different behaviour if the current layer is the feedforward block
+            # Different behaviour if the current layer is the feed-forward block
             if feed_forward:
                 f_x = self.ff1(norm_x)
                 f_x = self.ff2(f_x)
@@ -171,13 +178,12 @@ class EncodingLayer(layers.Layer):
             return x
 
     def call(self, x, training, mask=None):
-
         '''
-        Override of keras.layers.Layer method: computes the output of an Encoding Layer:
-        1. Apply positional_encoding if required;
-        2. Apply a series of separable convolutional layers;
-        3. Apply one self-attention layer;
-        4. Apply one dense layer.
+        Computes the output of an Encoding Layer:
+         1. Apply positional_encoding if required;
+         2. Apply a series of separable convolutional layers;
+         3. Apply one self-attention layer;
+         4. Apply one dense layer.
 
         The input of each layer is the residual block using a normalization layer to the output of the previous layer.
         '''
@@ -191,7 +197,7 @@ class EncodingLayer(layers.Layer):
 
         current_layer_num = 0
 
-        # 1. Apply positional encoding if it is the first block
+        # 1. Apply positional layer_encoder if it is the first block
         if self.block_num == 0:
             seq_len = tf.shape(x)[1]
             x += pos_encoding[:, :seq_len, :]
@@ -206,7 +212,6 @@ class EncodingLayer(layers.Layer):
         current_layer_num += 1
 
         # 4. Feed-forward block
-        # x = self.apply_layer(x, current_layer_num, self.feed_forward_layer, training)
         x = self.apply_layer(x, current_layer_num, None, training, feed_forward=True)
 
         return x
@@ -236,15 +241,19 @@ class EncoderLayer(layers.Layer):
             Number of heads for MultiHeadAttention
         survival_prob: float
             Survival probability of a layer for stochastic dropout.
+        block_num: int
+            Index of the current layer_encoder layer
+        dropout_rate: float
+            The dropout rate.
+            Passing 0.0 means that dropout is not applied.
         l2_rate: float
-            L2 value used in L2 regularization
-        n_blocks: int
-            Number of encoding layers to stack
+            The l2 rate.
+            Passing 0.0 means that l2 regularization is not applied.
         '''
 
         super(EncoderLayer, self).__init__()
 
-        #Stack n encoding blocks to form the Encoder layer.
+        # Stack n layer_encoder blocks to form the Encoder layer.
         self.encoding_blocks = [EncodingLayer(d_model,
                                               kernel_size,
                                               n_conv_layers,
@@ -255,10 +264,9 @@ class EncoderLayer(layers.Layer):
                                               l2_rate) for i in range(n_blocks)]
 
     def call(self, x, training, mask=None):
-        """
-        Override of keras.layers.Layer method: computes the output of an Encoder Layer,
-        by computing the output of all the stacked Encoding layers.
-        """
+        '''
+        Computes the output of an Encoder Layer, by computing the output of all the stacked Encoding layers.
+        '''
 
         for encoding_block in self.encoding_blocks:
             x = encoding_block(x, training=training, mask=mask)

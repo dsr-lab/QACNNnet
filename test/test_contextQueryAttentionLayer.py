@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from context_query_attention import ContextQueryAttentionLayer
+from layer_context_query_attention.context_query_attention import ContextQueryAttentionLayer
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import initializers

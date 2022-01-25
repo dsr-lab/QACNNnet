@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers
 
+
 class WordEmbeddingLayer(tf.keras.layers.Layer):
 
     def __init__(self, emb_size, pretrained_weights, vocab_size, n_special_tokens, dropout_rate=0.0):
@@ -23,6 +24,7 @@ class WordEmbeddingLayer(tf.keras.layers.Layer):
         self.special_emb_layer = None
 
     def build(self, input_lenght):
+        # define input-dependent variables
         self.emb_layer = tf.keras.layers.Embedding(
             self.vocab_size + 1,  # +1 for padding
             self.emb_size,
@@ -61,8 +63,7 @@ class WordEmbeddingLayer(tf.keras.layers.Layer):
 
         return embedded_sequences, mask
 
-    @staticmethod
-    def _set_weights(pretrained_weights, emb_size, n_special_tokens):
+    def _set_weights(self, pretrained_weights, emb_size, n_special_tokens):
         zero_val = np.zeros((1, emb_size))
 
         # Set normal words embedding layer weights

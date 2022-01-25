@@ -26,7 +26,7 @@ def get_layer_survival_probability(n_layers,
     '''
 
     l_fract = current_layer / n_layers
-    l_survival_prob = 1 - l_fract * (1 - survival_prob) #Official formula taken from the paper
+    l_survival_prob = 1 - l_fract * (1 - survival_prob)  # Official formula taken from the paper
     return l_survival_prob
 
 def keep_layer(n_layers,

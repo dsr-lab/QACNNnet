@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 import numpy as np
-from input_embedding.word_embedding_layer import WordEmbeddingLayer
+from layer_input_embedding.word_embedding_layer import WordEmbeddingLayer
 
 
 class TestWordEmbeddingLayer(TestCase):

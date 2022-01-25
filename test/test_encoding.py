@@ -1,7 +1,7 @@
 from unittest import TestCase
 import numpy as np
 
-from encoding.positional_encoding import get_encoding
+from layer_encoder.positional_encoding import get_encoding
 
 
 class TestEncoding(TestCase):
@@ -28,6 +28,7 @@ class TestEncoding(TestCase):
         np.testing.assert_array_equal(result, expected_result)
 
     def test_call_getEncoding(self):
+
         # Arrange
         expected_result = np.zeros((1, self.MAX_WORDS, self.EMB_SIZE), dtype=np.float32)
         for b in range(1):

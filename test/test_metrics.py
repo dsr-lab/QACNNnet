@@ -1,9 +1,8 @@
 from unittest import TestCase
-import tensorflow as tf
 import numpy as np
 
-from metrics import *
-from metrics import _get_answers, _split_start_end_indices
+from model.metrics import *
+from model.metrics import _get_answers, _split_start_end_indices
 
 
 class TestMetrics(TestCase):

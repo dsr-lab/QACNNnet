@@ -1,9 +1,8 @@
 import numpy as np
 
-#This module hanldes all the tokenization operations.
+# This module hanldes all the tokenization operations.
 
 def get_unique_words(text_rows):
-
     '''
     Build set of unique words in a given text.
     '''
@@ -18,7 +17,6 @@ def get_unique_words(text_rows):
     return unique_words
 
 def get_unique_chars(text_rows):
-
     '''
     Build set of unique characters in a given text.
     '''
@@ -37,7 +35,6 @@ def get_unique_chars(text_rows):
     return unique_chars
 
 def build_words_tokenizer(unique_words, glove):
-
     '''
     Build tokenizer dictionary containing an integer value for each
     unique word that has an entry in GloVe's dictionary. All the other
@@ -54,7 +51,6 @@ def build_words_tokenizer(unique_words, glove):
     return vocab
 
 def build_chars_tokenizer(unique_chars):
-
     '''
     Build tokenizer dictionary containing an integer value for each
     unique character.
@@ -69,7 +65,6 @@ def build_chars_tokenizer(unique_chars):
     return vocab
 
 def tokenize_word(word, tokenizer):
-
     '''
     Return the token of a given word inside the built tokenizer.
     '''
@@ -80,7 +75,6 @@ def tokenize_word(word, tokenizer):
         return tokenizer["UNK"]
 
 def tokenize_char(char,tokenizer):
-
     '''
     Return the token of a given character inside the built tokenizer.
     '''
@@ -91,7 +85,6 @@ def tokenize_char(char,tokenizer):
         return tokenizer["unk"]
 
 def tokenize_char_sequence(char_sequence, tokenizer):
-
     '''
     Return the tokenized sequence of a given list of characters.
     '''
@@ -99,7 +92,6 @@ def tokenize_char_sequence(char_sequence, tokenizer):
     return [tokenize_char(char,tokenizer) for char in char_sequence]
 
 def add_padding_or_truncate(tokenized_sequence, max_length, char_mode=False):
-
     '''
     Given a tokenized sequence and a maximum length, return the same sequence
     so that it is truncated or padded to reach exactly the maximum length.
@@ -118,7 +110,6 @@ def add_padding_or_truncate(tokenized_sequence, max_length, char_mode=False):
             return np.pad(tokenized_sequence, (0, length_diff), 'constant')
 
 def pad_truncate_tokenize_words(words, tokenizer, max_words):
-
     '''
     Tokenize and then apply padding or truncation to a list of words.
     '''
@@ -127,7 +118,6 @@ def pad_truncate_tokenize_words(words, tokenizer, max_words):
     return add_padding_or_truncate(tokenized_sequence, max_words)
 
 def pad_truncate_tokenize_chars(chars, tokenizer, max_chars):
-
     '''
     Tokenize and then apply padding or truncation to a list of characters.
     '''
@@ -136,7 +126,6 @@ def pad_truncate_tokenize_chars(chars, tokenizer, max_chars):
     return add_padding_or_truncate(tokenized_sequence, max_chars)
 
 def pad_truncate_tokenize_chars_sequence(chars_lists, tokenizer, max_words, max_chars):
-
     '''
     Tokenize and then apply padding or truncation to a list of lists of characters.
     '''
@@ -145,7 +134,6 @@ def pad_truncate_tokenize_chars_sequence(chars_lists, tokenizer, max_words, max_
     return add_padding_or_truncate(tokenized_sequence, max_words, char_mode=True)
 
 def detokenize(token, tokenizer):
-
     '''
     Return a word or character, given its token value and the correspondent
     tokenizer.

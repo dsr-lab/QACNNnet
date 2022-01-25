@@ -2,7 +2,7 @@ import os
 import numpy as np
 import tensorflow as tf
 from model.warmup_learning import CustomSchedule
-import Config
+import config
 
 
 # ##################################
@@ -34,7 +34,7 @@ SAVE_WEIGHTS = False
 LOAD_WEIGHTS = False
 
 TRAIN_SAMPLES = 78000
-TRAIN_ON_FULL_DATASET = True
+TRAIN_ON_FULL_DATASET = False
 
 MAX_CONTEXT_WORDS = 400
 MAX_QUERY_WORDS = 50
@@ -59,7 +59,7 @@ D_MODEL = 96
 ENCODER_KERNEL_SIZE = 7
 N_CONV_LAYERS_EMBEDDING_ENCODING = 4
 N_CONV_LAYERS_MODEL_ENCODING = 2
-N_HEADS = 5
+N_HEADS = 1
 STOCHASTIC_SURVIVAL_PROB = 0.9
 N_BLOCKS_EMBEDDING_ENCODING = 1
 N_BLOCKS_MODEL_ENCODING = 7
@@ -75,7 +75,7 @@ learning_rate = CustomSchedule(FINAL_LEARNING_RATE, WARMUP_STEPS)
 OPTIMIZER = tf.keras.optimizers.Adam(learning_rate, beta_1=0.8, beta_2=0.999, epsilon=1e-7)
 
 # ##################################
-# LAYERS CONFIGURATON PARAMETERS
+# LAYERS CONFIGURATON
 # ##################################
 input_embedding_params = {}
 
@@ -125,12 +125,12 @@ def config_model(word_vocab_size, char_vocab_size, pretrained_weights, ignore_to
     some model variables that are necessary for correctly configure all the
     network layers.
     '''
-    Config.WORD_VOCAB_SIZE = word_vocab_size
-    Config.CHARACTER_VOCAB_SIZE = char_vocab_size
-    Config.PRETRAINED_WEIGHTS = pretrained_weights
-    Config.IGNORE_TOKENS = ignore_tokens
+    config.WORD_VOCAB_SIZE = word_vocab_size
+    config.CHARACTER_VOCAB_SIZE = char_vocab_size
+    config.PRETRAINED_WEIGHTS = pretrained_weights
+    config.IGNORE_TOKENS = ignore_tokens
 
-    Config.input_embedding_params = {
+    config.input_embedding_params = {
         "w_emb_size": WORD_EMBEDDING_SIZE,
         "w_pretrained_weights": PRETRAINED_WEIGHTS,
         "w_vocab_size": WORD_VOCAB_SIZE,

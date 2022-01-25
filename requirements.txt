@@ -3,4 +3,3 @@ numpy
 pandas
 pydot
 nltk
-pyyaml h5py

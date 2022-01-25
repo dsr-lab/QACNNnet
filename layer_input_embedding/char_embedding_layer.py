@@ -3,7 +3,6 @@ import tensorflow as tf
 
 class CharEmbeddingLayer(tf.keras.layers.Layer):
 
-    # input-independent initialization
     def __init__(self, emb_size, vocab_size, conv_kernel_size, conv_output_size, dropout_rate=0.0):
         super(CharEmbeddingLayer, self).__init__()
 
@@ -19,8 +18,8 @@ class CharEmbeddingLayer(tf.keras.layers.Layer):
         self.dropout = tf.keras.layers.Dropout(dropout_rate)
         self.emb_layer = None
 
-    # input-dependent initialization
     def build(self, input_lenght):
+        # define input-dependent variables
         self.emb_layer = tf.keras.layers.Embedding(
             self.vocab_size + 1,  # +1 for padding
             self.emb_size,

@@ -1,8 +1,6 @@
 from unittest import TestCase
-
 import numpy as np
-
-from encoding.encoder import EncodingLayer
+from layer_encoder.encoder import EncodingLayer
 
 
 class TestEncoding_Layer(TestCase):

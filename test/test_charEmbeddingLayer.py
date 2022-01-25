@@ -3,7 +3,7 @@ from unittest import TestCase
 import tensorflow as tf
 import numpy as np
 
-from input_embedding.char_embedding_layer import CharEmbeddingLayer
+from layer_input_embedding.char_embedding_layer import CharEmbeddingLayer
 
 
 class TestCharEmbeddingLayer(TestCase):
@@ -23,10 +23,8 @@ class TestCharEmbeddingLayer(TestCase):
         )
 
     def test_call_checkOutputShapeValidity(self):
-        # ####################
-        # Arrange
-        # ####################
 
+        # Arrange
         char_emb_layer = CharEmbeddingLayer(
             emb_size=self.EMB_SIZE,
             vocab_size=self.VOCAB_SIZE,
@@ -34,20 +32,15 @@ class TestCharEmbeddingLayer(TestCase):
             conv_output_size=self.CONV_OUTPUT_SIZE
             )
 
-        # ####################
         # Act
-        # ####################
         result = char_emb_layer(self.sentence_input)
 
-        # ####################
         # Assert
-        # ####################
         self.assertEqual(result.shape, (self.BATCH_SIZE, self.N_WORDS, self.CONV_OUTPUT_SIZE))
 
     def test_call_checkMaxpoolValidity(self):
-        # ####################
+
         # Arrange
-        # ####################
         char_emb_layer = CharEmbeddingLayer(
             emb_size=self.EMB_SIZE,
             vocab_size=self.VOCAB_SIZE,
@@ -55,9 +48,7 @@ class TestCharEmbeddingLayer(TestCase):
             conv_output_size=self.CONV_OUTPUT_SIZE
             )
 
-        # ####################
         # Act
-        # ####################
         fake_conv_output = np.random.randint(
             100, size=(self.BATCH_SIZE, self.N_WORDS, self.N_CHAR, self.CONV_OUTPUT_SIZE)
         )
@@ -70,7 +61,5 @@ class TestCharEmbeddingLayer(TestCase):
 
         result = char_emb_layer._maxpool(fake_conv_output)
 
-        # ####################
         # Assert
-        # ####################
         np.testing.assert_array_equal(expected_output, result)

@@ -1,9 +1,9 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 
-from input_embedding.char_embedding_layer import CharEmbeddingLayer
-from input_embedding.highway_layer import HighwayLayer
-from input_embedding.word_embedding_layer import WordEmbeddingLayer
+from layer_input_embedding.char_embedding_layer import CharEmbeddingLayer
+from layer_input_embedding.highway_layer import HighwayLayer
+from layer_input_embedding.word_embedding_layer import WordEmbeddingLayer
 
 
 class InputEmbeddingLayer(tf.keras.layers.Layer):
@@ -13,7 +13,10 @@ class InputEmbeddingLayer(tf.keras.layers.Layer):
                  c_emb_size, c_vocab_size, c_conv_kernel_size, c_conv_output_size,
                  n_highway_layers, dropout_rate, l2_rate, conv_input_projection_params):
         '''
-        Create the first block of the QACNNet
+        Create the first block of the QACNNet.
+        All the parameters passed are necessary for configuring the sublayers composing
+        the InputEmbeddingLayer.
+        NOTE: Their descriptions are not repeated in the sublayers.
 
         Parameters:
         -----------
@@ -63,7 +66,6 @@ class InputEmbeddingLayer(tf.keras.layers.Layer):
         for i in range(n_highway_layers):
             self.highway_layers.append(HighwayLayer(dropout_rate, l2))
 
-    # forward computation
     def call(self, inputs):
 
         assert len(inputs)==2
@@ -80,7 +82,7 @@ class InputEmbeddingLayer(tf.keras.layers.Layer):
         final_emb = layers.Concatenate(axis=2)([w_emb, c_emb])
         final_emb = self.conv_1d(final_emb)
 
-        # Pass through the highway layer
+        # Pass through the highway layers
         for highway in self.highway_layers:
             final_emb = highway(final_emb)
 

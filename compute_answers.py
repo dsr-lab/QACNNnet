@@ -12,7 +12,7 @@ from inference import get_predictions
 import numpy as np
 import tensorflow as tf
 import string
-import Config
+import config
 
 class PredLayer(tf.keras.layers.Layer):
 
@@ -24,9 +24,9 @@ class PredLayer(tf.keras.layers.Layer):
 
 def load_dictionaries():
 
-    with open(Config.WORDS_TOKENIZER_PATH, 'rb') as handle:
+    with open(config.WORDS_TOKENIZER_PATH, 'rb') as handle:
         words_tokenizer = pickle.load(handle)
-    with open(Config.CHARS_TOKENIZER_PATH, 'rb') as handle:
+    with open(config.CHARS_TOKENIZER_PATH, 'rb') as handle:
         chars_tokenizer = pickle.load(handle)
 
     glove_manager.setup_files()
@@ -36,13 +36,13 @@ def load_dictionaries():
 
 def build_dataframe_row(context, question, title, id, corpus):
 
-    preprocessed_context, full_text = preprocess.preprocess_text(context, Config.PREPROCESSING_OPTIONS, get_full_text=True)
+    preprocessed_context, full_text = preprocess.preprocess_text(context, config.PREPROCESSING_OPTIONS, get_full_text=True)
     corpus.append(full_text)
 
-    if len(preprocessed_context)>Config.MAX_CONTEXT_WORDS:
-        preprocessed_context = preprocessed_context[0:Config.MAX_CONTEXT_WORDS]
+    if len(preprocessed_context)>config.MAX_CONTEXT_WORDS:
+        preprocessed_context = preprocessed_context[0:config.MAX_CONTEXT_WORDS]
 
-    preprocessed_question = preprocess.preprocess_text(question, Config.PREPROCESSING_OPTIONS)
+    preprocessed_question = preprocess.preprocess_text(question, config.PREPROCESSING_OPTIONS)
 
     preprocessed_context_chars = [preprocess.split_to_chars(word) for word in preprocessed_context]
     preprocessed_question_chars = [preprocess.split_to_chars(word) for word in preprocessed_question]
@@ -128,7 +128,7 @@ def load_data(data_path):
 
     question_ids = np.stack(dataframe["Question ID"],axis=0)
 
-    Config.config_model(len(words_tokenizer),
+    config.config_model(len(words_tokenizer),
                         len(chars_tokenizer),
                         pretrained_embedding_weights,
                         tokens_to_remove)
@@ -184,7 +184,7 @@ def write_answers(question_ids, answers):
 
     answers_dict = {id:answer for id,answer in zip(question_ids,answers)}
 
-    with open(Config.PREDICTIONS_PATH, 'w') as json_file:
+    with open(config.PREDICTIONS_PATH, 'w') as json_file:
         json.dump(answers_dict, json_file)
 
 def run_predictions(data_path):
@@ -192,23 +192,23 @@ def run_predictions(data_path):
     input_test, question_ids, words_tokenizer, corpus = load_data(data_path)
     test_w_context, test_c_context, test_w_query, test_c_query = input_test
 
-    model = build_model(Config.input_embedding_params,
-                        Config.embedding_encoder_params,
-                        Config.conv_input_projection_params,
-                        Config.model_encoder_params,
-                        Config.context_query_attention_params,
-                        Config.output_params,
-                        Config.MAX_CONTEXT_WORDS,
-                        Config.MAX_QUERY_WORDS,
-                        Config.MAX_CHARS,
-                        Config.OPTIMIZER,
-                        Config.WORD_VOCAB_SIZE + 1,
-                        Config.IGNORE_TOKENS,
-                        Config.DROPOUT_RATE)
+    model = build_model(config.input_embedding_params,
+                        config.embedding_encoder_params,
+                        config.conv_input_projection_params,
+                        config.model_encoder_params,
+                        config.context_query_attention_params,
+                        config.output_params,
+                        config.MAX_CONTEXT_WORDS,
+                        config.MAX_QUERY_WORDS,
+                        config.MAX_CHARS,
+                        config.OPTIMIZER,
+                        config.WORD_VOCAB_SIZE + 1,
+                        config.IGNORE_TOKENS,
+                        config.DROPOUT_RATE)
 
-    if os.path.exists(Config.CHECKPOINT_PATH+".index"):
+    if os.path.exists(config.CHECKPOINT_PATH + ".index"):
         print("Loading model's weights...")
-        model.load_weights(Config.CHECKPOINT_PATH)
+        model.load_weights(config.CHECKPOINT_PATH)
         print("Model's weights successfully loaded!")
 
     else:
@@ -219,15 +219,15 @@ def run_predictions(data_path):
 
     print("Starting predicting...")
     raw_predictions = model.predict(x=[test_w_context, test_c_context, test_w_query, test_c_query],
-    batch_size=Config.BATCH_SIZE,
-    verbose=1)
+                                    batch_size=config.BATCH_SIZE,
+                                    verbose=1)
 
-    inputs = tf.keras.Input(shape=(2,Config.MAX_CONTEXT_WORDS))
+    inputs = tf.keras.Input(shape=(2, config.MAX_CONTEXT_WORDS))
     outputs = PredLayer()(inputs)
 
     refine_pred_model = tf.keras.Model(inputs=inputs, outputs=outputs)
 
-    pred_start,pred_end = refine_pred_model.predict(raw_predictions,batch_size=Config.BATCH_SIZE, verbose=1)
+    pred_start,pred_end = refine_pred_model.predict(raw_predictions, batch_size=config.BATCH_SIZE, verbose=1)
 
     #raw_predictions_start, raw_predictions_end = tf.split(raw_predictions, num_or_size_splits=2, axis=1)
     #pred_start, pred_end = get_predictions(raw_predictions_start, raw_predictions_end)
