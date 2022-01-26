@@ -53,6 +53,7 @@ class F1Score(tf.keras.metrics.Metric):
         current_f1_score = self._compute_f1_score(len_true_token, len_pred_token, len_common_tokens)
         self.f1_score.assign(((self.f1_score * (self.batch_idx - 1)) + current_f1_score)/self.batch_idx)
         self.batch_idx.assign_add(1.0)
+
         # Reset variables
         self.w_context = None
 
@@ -111,6 +112,7 @@ class F1Score(tf.keras.metrics.Metric):
         '''
         Utility method for counting the total number of token that are within a bin
         '''
+
         len_token = tf.math.reduce_sum(token_bins, axis=-1)
         return len_token
 
@@ -202,7 +204,7 @@ class EMScore(tf.keras.metrics.Metric):
         self.w_context = None
 
     def set_words_context(self, words):
-        # This method will be called at each mini-batch, because the tensor containing
+        # This method will be called after each mini-batch, because the tensor containing
         # the contexts will change at each iteration.
         self.w_context = words
 

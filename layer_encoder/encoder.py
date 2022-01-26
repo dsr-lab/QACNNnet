@@ -56,7 +56,7 @@ class EncodingLayer(layers.Layer):
             "filters": d_model,
             "kernel_size": kernel_size,
             "padding": "same",  # necessary for residual blocks
-            "data_format": "channels_last", # channels are represented by the last dimension
+            "data_format": "channels_last",  # channels are represented by the last dimension
             "depthwise_regularizer": l2,
             "pointwise_regularizer": l2,
             "bias_regularizer": l2,

@@ -18,8 +18,8 @@ import config
 class PredLayer(tf.keras.layers.Layer):
     '''
     A custom layer conveniently used just for splitting the start and end predictions.
-    This is not part of the actual model, and it is only used for creating the prediction.json
-    file required by the evaluation script.
+    This is not part of the actual model, and it is specifically used in this script only for
+    creating the prediction.json file required by the evaluation script.
     '''
 
     def call(self, input):
@@ -33,6 +33,7 @@ def load_dictionaries():
     '''
     Load tokenizers and GLoVe
     '''
+
     with open(config.WORDS_TOKENIZER_PATH, 'rb') as handle:
         words_tokenizer = pickle.load(handle)
     with open(config.CHARS_TOKENIZER_PATH, 'rb') as handle:
@@ -112,7 +113,7 @@ def extract_rows(json_dict):
 
 def build_dataframe(data_path):
     '''
-    Methods that create the DataFrame containing all the information stored in the json
+    Method that creates the DataFrame containing all the information stored in the json
     that is at the path passed as argument.
     '''
 
@@ -139,6 +140,7 @@ def load_data(data_path):
     Wrapper method that calls all the sub-methods for creating the dataset usable
     by the model
     '''
+
     dataframe, words_tokenizer, chars_tokenizer, glove_dict, corpus = build_dataframe(data_path)
     pretrained_embedding_weights = build_embedding_matrix(words_tokenizer, glove_dict)
 
@@ -289,7 +291,7 @@ def run_predictions(data_path):
     print("Predictions completed!")
 
     # Write the results to the prediction.json file
-    write_answers(question_ids.tolist(),preprocessed_answers)
+    write_answers(question_ids.tolist(), preprocessed_answers)
 
     print("Predictions successfully written to file.")
 

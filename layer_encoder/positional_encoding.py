@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-# This module contains those methods that allow to compute vectors' for positional layer_encoder.
+# This module contains those methods that allow to compute vectors for positional layer_encoder.
 
 def get_angles(pos, i, d_model):
     '''
@@ -51,7 +51,7 @@ def get_encoding(length, d_model):
     # Compute the sin of angles of even positions
     angle_rads[:, 0::2] = np.sin(angle_rads[:, 0::2])
 
-    # Compute the cosin of angles of odd positions
+    # Compute the cosine of angles of odd positions
     angle_rads[:, 1::2] = np.cos(angle_rads[:, 1::2])
 
     # Get positional layer_encoder for each position

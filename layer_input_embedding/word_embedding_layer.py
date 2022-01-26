@@ -59,6 +59,7 @@ class WordEmbeddingLayer(tf.keras.layers.Layer):
         # Add the matrices to obtain a single embedding result
         embedded_sequences = layers.Add()([embedded_sequences, embedded_special])
 
+        # Apply dropout
         embedded_sequences = self.dropout(embedded_sequences)
 
         return embedded_sequences, mask

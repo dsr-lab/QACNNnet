@@ -30,8 +30,8 @@ class ContextQueryAttentionLayer (layers.Layer):
 
     def build_similarity_matrix(self, context, query):
         '''
-        Given a context-related tensor and a query-related one, this method
-        computes their similarity maytrix following paper's approach.
+        Given a context-related tensor and a query-related tensor, this method
+        computes their similarity matrix following paper's approach.
         '''
 
         # Get shapes' info
@@ -55,7 +55,7 @@ class ContextQueryAttentionLayer (layers.Layer):
         # Build context-query-matrix by multiplying context and query matrices
         mult_matrix = mult_layer([q_matrix,c_matrix])
 
-        # Build similarity matrix by stacking each matrix on last dimension and multiplying to trainable weights
+        # Build similarity matrix by stacking each matrix on last dimension and multiplying with trainable weights
         similarity_matrix = stack_layer([q_matrix,c_matrix,mult_matrix])
         similarity_matrix = self.w(similarity_matrix)
         similarity_matrix = matrix_reshape_layer(similarity_matrix)
