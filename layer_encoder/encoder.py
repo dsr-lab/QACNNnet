@@ -16,6 +16,8 @@ class EncodingLayer(layers.Layer):
                  dropout_rate,
                  l2_rate):
         '''
+        Initialize a single encoder block.
+
         Parameters:
         -----------
         d_model: int
@@ -229,6 +231,8 @@ class EncoderLayer(layers.Layer):
                  l2_rate):
 
         '''
+        Initialize an EncoderLayer, that could be composed by multiple EncodingLayers.
+
         Parameters:
         -----------
         d_model: int

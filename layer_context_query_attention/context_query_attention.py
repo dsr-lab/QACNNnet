@@ -5,6 +5,18 @@ from tensorflow.keras import layers
 class ContextQueryAttentionLayer (layers.Layer):
 
     def __init__(self, dropout_rate, l2_rate):
+        '''
+        Create the Context-Query-Attention block
+
+        Parameters:
+        -----------
+        dropout_rate: float
+            The dropout rate.
+            Passing 0.0 means that dropout is not applied.
+        l2_rate: float
+            The l2 rate.
+            Passing 0.0 means that l2 regularization is not applied.
+        '''
 
         super(ContextQueryAttentionLayer, self).__init__()
 

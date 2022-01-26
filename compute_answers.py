@@ -17,7 +17,9 @@ import config
 
 class PredLayer(tf.keras.layers.Layer):
     '''
-    A custom layer used just for splitting the start and end predictions
+    A custom layer conveniently used just for splitting the start and end predictions.
+    This is not part of the actual model, and it is only used for creating the prediction.json
+    file required by the evaluation script.
     '''
 
     def call(self, input):
@@ -134,7 +136,7 @@ def build_dataframe(data_path):
 
 def load_data(data_path):
     '''
-    Wrapper method that calls all the sub-methods for creating the dataset that can be used
+    Wrapper method that calls all the sub-methods for creating the dataset usable
     by the model
     '''
     dataframe, words_tokenizer, chars_tokenizer, glove_dict, corpus = build_dataframe(data_path)
@@ -169,7 +171,7 @@ def build_model(input_embedding_params, embedding_encoder_params, conv_input_pro
                 model_encoder_params, context_query_attention_params, output_params, max_context_words,
                 max_query_words, max_chars, optimizer, vocab_size, ignore_tokens, dropout_rate):
     '''
-    Method that has been also define in the main.py, and replicated here for convenience.
+    Method that has been also defined in the main.py, and replicated here for convenience.
     This is the method responsible for creating and compiling the tensorflow model.
     '''
 
@@ -234,7 +236,7 @@ def write_answers(question_ids, answers):
 def run_predictions(data_path):
     '''
     Create the model by restoring the training weights, and then perform a model.predict()
-    on the dataset whose path is passed as argument of the function.
+    on the dataset whose path is passed as argument of this function.
     '''
 
     input_test, question_ids, words_tokenizer, corpus = load_data(data_path)

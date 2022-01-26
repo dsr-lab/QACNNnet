@@ -6,7 +6,7 @@ class F1Score(tf.keras.metrics.Metric):
 
     def __init__(self, vocab_size=10, ignore_tokens=tf.constant([[0]]), name='f1_score', **kwargs):
         '''
-        Create the F1 score metric
+        Create the F1 score metric.
 
         Parameters:
         -----------

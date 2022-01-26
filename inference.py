@@ -39,16 +39,14 @@ def get_predictions(predictions_start, predictions_end, n_words=config.MAX_CONTE
     '''
     Compute the real predictions from model's output.
     For each batch:
-     1. Create a matrix nxn for start's predictions (n=max number of tokens)
-     2. Create a matrix nxn for end's prediction
-     3. Compute thei product
+     1. Create a matrix nxn for starting predictions (n=max number of tokens)
+     2. Create a matrix nxn for ending prediction
+     3. Compute their product
      4. Get the max value from it
      5. Extract the indices of the max value and return them
     '''
 
     batch_size = tf.shape(predictions_start)[0]
-    # n_words = predictions_start.shape[1]
-    # n_words = Config.MAX_CONTEXT_WORDS
 
     if inference_mask is None:
         create_inference_mask(n_words)

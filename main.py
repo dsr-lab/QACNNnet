@@ -9,6 +9,10 @@ import string
 
 
 def load_data():
+    '''
+    Method responsible for loading the dataset, and returning it split as train
+    and validation sets
+    '''
 
     dataframe, words_tokenizer, chars_tokenizer, glove_dict = load_dataframe(force_rebuild=False)
     pretrained_embedding_weights = build_embedding_matrix(words_tokenizer, glove_dict)
@@ -52,6 +56,10 @@ def load_data():
 def build_model(input_embedding_params, embedding_encoder_params, conv_input_projection_params,
                 model_encoder_params, context_query_attention_params, output_params, max_context_words,
                 max_query_words, max_chars, optimizer, vocab_size, ignore_tokens, dropout_rate):
+    '''
+    Build and compile the model by using all the configuration parameters and dictionaries
+    received as argument.
+    '''
 
     # Model input tensors
     context_words_input = tf.keras.Input(shape=(max_context_words), name="context words")
@@ -82,30 +90,6 @@ def build_model(input_embedding_params, embedding_encoder_params, conv_input_pro
     return model
 
 
-def generate_random_data(n_items):
-    w_context = np.random.randint(1, config.WORD_VOCAB_SIZE, (n_items, config.MAX_CONTEXT_WORDS))
-    # Force some random padding in the input
-    for row in range(w_context.shape[0]):
-        n_pad = np.random.randint(0, 16)
-        if n_pad > 0:
-            w_context[row][-n_pad:] = 0
-
-    c_context = np.random.randint(0, 100, (n_items, config.MAX_CONTEXT_WORDS, config.MAX_CHARS))
-
-    w_query = np.random.randint(1, config.WORD_VOCAB_SIZE, (n_items, config.MAX_QUERY_WORDS))
-    # Force some random padding in the input
-    for row in range(w_query.shape[0]):
-        n_pad = np.random.randint(0, 5)
-        if n_pad > 0:
-            w_query[row][-n_pad:] = 0
-
-    c_query = np.random.randint(0, 100, (n_items, config.MAX_QUERY_WORDS, config.MAX_CHARS))
-
-    labels = tf.random.uniform(shape=(n_items, 2, 1), minval=0, maxval=config.MAX_CONTEXT_WORDS, dtype=tf.dtypes.int64)
-
-    return w_context, c_context, w_query, c_query, labels
-
-
 def main():
 
     # tf.keras.utils.plot_model(model, "Architecture.png", show_shapes=True, expand_nested=True)
@@ -114,8 +98,8 @@ def main():
     train_w_context, train_c_context, train_w_query, train_c_query = input_train
     valid_w_context, valid_c_context, valid_w_query, valid_c_query = input_validation
 
+    # Check if it necessary to create a dummy dataset
     if config.DEBUG:
-        # Create a dummy dataset
         config.BATCH_SIZE = 32
         n_train = 50
         n_val = 10
@@ -131,6 +115,7 @@ def main():
         valid_c_query = valid_c_query[:n_val]
         output_validation = output_validation[:n_val]
 
+    # Check if it is necessary to remove the validation set
     if config.TRAIN_ON_FULL_DATASET:
         train_w_context = tf.concat([train_w_context, valid_w_context], axis=0)
         train_c_context = tf.concat([train_c_context, valid_c_context], axis=0)
