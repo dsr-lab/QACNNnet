@@ -168,10 +168,10 @@ def tokenize_dataframe(df, words_tokenizer, chars_tokenizer):
 def build_dataframe():
     '''
     Apply all the required steps to build the dataframe:
-    1. Extract data;
-    2. Setup and Load GloVe;
-    3. Build tokenizers for words and characters;
-    4. Build and tokenize the dataframe.
+     1. Extract data;
+     2. Setup and Load GloVe;
+     3. Build tokenizers for words and characters;
+     4. Build and tokenize the dataframe.
     '''
 
     data = get_data(config.DATA_PATH)
