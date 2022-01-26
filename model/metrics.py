@@ -1,5 +1,5 @@
 import tensorflow as tf
-from inference import get_predictions
+from model.inference import get_predictions
 
 
 class F1Score(tf.keras.metrics.Metric):

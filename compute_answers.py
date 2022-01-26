@@ -8,7 +8,7 @@ import preprocessing.glove_manager as glove_manager
 import preprocessing.preprocess as preprocess
 from preprocessing.dataframe_builder import tokenize_dataframe, build_embedding_matrix
 from model.question_answer_model import QACNNnet
-from inference import get_predictions
+from model.inference import get_predictions
 import numpy as np
 import tensorflow as tf
 import string
