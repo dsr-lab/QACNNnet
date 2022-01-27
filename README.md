@@ -20,9 +20,17 @@ For evaluating the model, it is necessary to execute the two following scripts.
 * **compute_answers.py**: this script is responsible of creating the predictions.json file, which is necessary for the following script. As argument it requires the path of the dataset that must be tested. Usage example:
 
         python compute_answers.py data/dev_set.json
+    It is important that model weights are correcly loaded before it proceeds to compute the answers. If everything is ok (e.g., the **data** folder has been correctly imported in the project), then you should read the following logs:
+    
+        ....
+        Loading model's weights...
+        Model's weights successfully loaded!
+        Model succesfully built!  
+        ...
 * **evaluate.py**: after executing the previous script it is possible to proceed with the actual evaluation of the model. The script requires two arguments: the path of the dataset that must be tested (the same used in the previous script), and the predictions.json file path. This file is automatically created in the *predictions* project folder. Usage example:
 
         python evaluate.py data/dev_set.json predictions/predictions.json
+      
 
 ## Contributors
 * Gaetano Signorelli
