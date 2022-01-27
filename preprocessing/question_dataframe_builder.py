@@ -6,13 +6,22 @@ import preprocessing.tokenizer as tokenizer
 import preprocessing.glove_manager as glove_manager
 import config
 
-F1_ERROR_THRESHOLD = 0.5
-CLASSIFICATION_LABELS = {"Easy":[1,0,0], "Medium":[0,1,0],"Difficult":[0,0,1]}
+#This module is used to create the dataset used by the question classifier
 
-np.random.seed(seed=100)
-UNK_PLACEHOLDER = np.random.uniform(low=-0.05, high=0.05, size=glove_manager.EMBEDDING_SIZE)
+F1_ERROR_THRESHOLD = 0.5 #Define the minimum F1 score to consider a question partially solved
+CLASSIFICATION_LABELS = {"Easy":[1,0,0], "Medium":[0,1,0],"Difficult":[0,0,1]} #One-hot encoding of classes
+
+np.random.seed(seed=100) #Define a seed for randomization, avoiding to get different placeholder or random embeddings each time
+UNK_PLACEHOLDER = np.random.uniform(low=-0.05, high=0.05, size=glove_manager.EMBEDDING_SIZE) #Random initial embedding used for the UNK token
 
 def classify_into_label(question,exact,f1):
+
+    '''
+    classifiy questions into one of the following classes:
+    -Easy (EM=1)
+    -Medium (F1>threshold)
+    -Difficult (F1<threshold and EM=0)
+    '''
 
     if exact==1.0:
         return CLASSIFICATION_LABELS["Easy"]
@@ -23,10 +32,16 @@ def classify_into_label(question,exact,f1):
 
 def extract_row(question, val):
 
+    '''
+    Build a row (for the dataframe) containing the preprocessed question texts
+    (split into tokens) and the correspondent labels.
+    '''
+
     exact = val["EM"]
     f1 = val["F1"]
 
     label = classify_into_label(question, exact, f1)
+    #Use the same preprocessing adopted fot the main model for coherence
     preprocessed_question = preprocess.preprocess_text(question, config.PREPROCESSING_OPTIONS)
 
     row = {
@@ -38,6 +53,10 @@ def extract_row(question, val):
 
 def get_unique_words(text_rows):
 
+    '''
+    Get a set of unique words in a list of texts.
+    '''
+
     unique_words = set()
     for row in text_rows:
         question_words = set(row["Question"])
@@ -48,9 +67,13 @@ def get_unique_words(text_rows):
 
 def build_embedding_matrix(words_tokenizer, glove_dict):
 
+    '''
+    Return the embedding matrix based on GloVe embeddings.
+    '''
+
     vocab_size = len(words_tokenizer)+1
 
-    # Initialize matrix
+    # Initialize matrix, padding is considered
     embedding_matrix = np.zeros((vocab_size, glove_manager.EMBEDDING_SIZE), dtype=np.float32)
 
     print("Building embedding matrix started...")
@@ -67,21 +90,30 @@ def build_embedding_matrix(words_tokenizer, glove_dict):
     return embedding_matrix
 
 def build_dataframe(true_ans_path, pred_ans_path):
+
+    '''
+    Build the dataframe used for question classification.
+    '''
+
+    #Get the scores from official the evaluation script
     scores = extract_metrics(true_ans_path, pred_ans_path)
 
     print("Building dataframe...")
 
+    #Build dataframe rows
     df_rows = []
     for question, val in scores.items():
         df_rows.append(extract_row(question,val))
 
     print("Dataframe succesfully built")
 
+    #Load GloVe
     glove_manager.setup_files()
     glove_dict = glove_manager.load_glove()
 
     print("Tokenization started...")
 
+    #Tokenize the dataframe questions
     unique_words = get_unique_words(df_rows)
     words_tokenizer = tokenizer.build_words_tokenizer(unique_words, glove_dict)
 
