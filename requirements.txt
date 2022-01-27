@@ -4,3 +4,4 @@ pandas
 pydot
 nltk
 tqdm
+matplotlib
