@@ -17,7 +17,7 @@ The following picture depicts an overview of the implemented model architecture.
 ### The data folder
 It is **mandatory** to copy the content of the data folder in the project files, and it can be downloaded from the following link: https://drive.google.com/drive/folders/1HAOte5VlHcmSgkMv4-G6JlXyFRLHqGME?usp=sharing.
 
-The final result that you should see inside the project data folder is the following one:
+The final result that you should see inside the project data folder is:
 
 ![Alt text](docs/data_folder.png?raw=true "data folder")
 
