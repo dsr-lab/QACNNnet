@@ -22,7 +22,7 @@ PREDICTIONS_PATH = os.path.join("predictions", "predictions.json")
 PREPROCESSING_OPTIONS = {
     "strip": True,
     "lower": True,
-    "replace": True,
+    "replace": False,
     "remove special": False,
     "stopwords": False,
     "lemmatize": False
