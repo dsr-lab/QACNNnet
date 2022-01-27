@@ -14,6 +14,7 @@ def read_data(true_ans_path, pred_ans_path):
 def get_scores(dataset, preds):
   exact_scores = {}
   f1_scores = {}
+  ans_lenghts = {}
   for article in dataset:
     for p in article['paragraphs']:
       for qa in p['qas']:
@@ -31,20 +32,24 @@ def get_scores(dataset, preds):
         # Take max over all gold answers
         exact_scores[q_text] = max(compute_exact(a, a_pred) for a in gold_answers)
         f1_scores[q_text] = max(compute_f1(a, a_pred) for a in gold_answers)
-  return exact_scores, f1_scores
+        ans_lenghts[q_text] = min(len(a) for a in gold_answers)
 
-def merge_scores(exact, f1):
+  return exact_scores, f1_scores, ans_lenghts
+
+def merge_scores(exact, f1, ans_lenghts):
+
     assert len(exact)==len(f1)
+    assert len(exact)==len(ans_lenghts)
 
     scores = {}
     for question in exact.keys():
-        scores[question]={"EM": exact[question],"F1": f1[question]}
+        scores[question]={"EM": exact[question],"F1": f1[question], "Answer length":ans_lenghts[question]}
 
     return scores
 
 def extract_metrics (true_ans_path, pred_ans_path):
     dataset, preds = read_data(true_ans_path, pred_ans_path)
-    exact, f1 = get_scores(dataset, preds)
-    scores = merge_scores(exact, f1)
+    exact, f1, ans_lenghts = get_scores(dataset, preds)
+    scores = merge_scores(exact, f1, ans_lenghts)
 
     return scores

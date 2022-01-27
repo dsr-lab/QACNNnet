@@ -38,21 +38,33 @@ def remove_articles(words):
     filtered_words = [word for word in words if word not in ARTICLES]
     return filtered_words
 
-def classify_questions(scores):
+def classify_questions(scores, compare_ans_lengths=True):
 
     solved = []
     partially_solved = []
     unsolved = []
 
+    ans_lenghts_solved = []
+    ans_lenghts_parsolved = []
+    ans_lenghts_unsolved = []
+
     for question, val  in scores.items():
         exact = val["EM"]
         f1 = val["F1"]
+        answer_length = val["Answer length"]
         if exact==1.0:
             solved.append(remove_articles(preprocess_text(question, config.PREPROCESSING_OPTIONS)))
+            ans_lenghts_solved.append(answer_length)
         elif f1>F1_ERROR_THRESHOLD:
             partially_solved.append(remove_articles(preprocess_text(question, config.PREPROCESSING_OPTIONS)))
+            ans_lenghts_parsolved.append(answer_length)
         else:
             unsolved.append(remove_articles(preprocess_text(question, config.PREPROCESSING_OPTIONS)))
+            ans_lenghts_unsolved.append(answer_length)
+
+    if compare_ans_lengths:
+        compare_distributions([ans_lenghts_solved,ans_lenghts_parsolved, ans_lenghts_unsolved],
+                            ["Solved","Partially solved", "Unsolved"])
 
     return solved, partially_solved, unsolved
 
@@ -112,6 +124,22 @@ def show_distribution(distribution):
 
     plt.gca().set(title='Frequency histogram of question tokens', ylabel='Frequency')
     plt.legend(bars, QUESTION_TOKENS)
+    plt.show()
+
+
+def compare_distributions(distributions, names):
+
+    assert len(distributions)==len(names)
+
+    color_map = plt.cm.get_cmap("hsv", len(distributions)+1)
+    kwargs = {"alpha":0.2, "bins":100}
+
+    for i, distribution in enumerate(distributions):
+        name = names[i]
+        plt.hist(distribution, **kwargs, color=color_map(i), label=name)
+
+    plt.gca().set(title='Answers length histogram', ylabel='Frequency')
+    plt.legend()
     plt.show()
 
 def run_full_analysis(category, name, show_frequent=True):
