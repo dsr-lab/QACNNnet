@@ -9,7 +9,10 @@ import config
 F1_ERROR_THRESHOLD = 0.5 #Define the minimum F1 score to be considered partially solved
 QUANTILE = 0.99
 ARTICLES = ["the","a","an"]
-QUESTION_TOKENS = ["why","who","what","where","when","how"]
+QUESTION_TOKENS = ["why","who","what","where","when","which","how"]
+
+PREPROCESSING_OPTIONS = config.PREPROCESSING_OPTIONS.copy()
+PREPROCESSING_OPTIONS["replace"]=True
 
 def extract_parameters(args):
 
@@ -53,13 +56,13 @@ def classify_questions(scores, compare_ans_lengths=True):
         f1 = val["F1"]
         answer_length = val["Answer length"]
         if exact==1.0:
-            solved.append(remove_articles(preprocess_text(question, config.PREPROCESSING_OPTIONS)))
+            solved.append(remove_articles(preprocess_text(question, PREPROCESSING_OPTIONS)))
             ans_lenghts_solved.append(answer_length)
         elif f1>F1_ERROR_THRESHOLD:
-            partially_solved.append(remove_articles(preprocess_text(question, config.PREPROCESSING_OPTIONS)))
+            partially_solved.append(remove_articles(preprocess_text(question, PREPROCESSING_OPTIONS)))
             ans_lenghts_parsolved.append(answer_length)
         else:
-            unsolved.append(remove_articles(preprocess_text(question, config.PREPROCESSING_OPTIONS)))
+            unsolved.append(remove_articles(preprocess_text(question, PREPROCESSING_OPTIONS)))
             ans_lenghts_unsolved.append(answer_length)
 
     if compare_ans_lengths:
@@ -139,6 +142,7 @@ def compare_distributions(distributions, names):
         plt.hist(distribution, **kwargs, color=color_map(i), label=name)
 
     plt.gca().set(title='Answers length histogram', ylabel='Frequency')
+    plt.xlim(0,60)
     plt.legend()
     plt.show()
 
