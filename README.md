@@ -26,7 +26,8 @@ For evaluating the model, it is necessary to execute the two following scripts.
 
 * **compute_answers.py**: this script is responsible of creating the predictions.json file, which is necessary for the following script. As argument it requires the path of the dataset that must be tested. Usage example:
 
-        python compute_answers.py data/dev_set.json
+        python compute_answers.py "data/dev_set.json"
+        
     It is important that model weights are correcly loaded before it proceeds to compute the answers. If everything is ok (e.g., the **data** folder has been correctly imported in the project), then you should read the following logs:
     
         ....
@@ -36,8 +37,16 @@ For evaluating the model, it is necessary to execute the two following scripts.
         ...
 * **evaluate.py**: after executing the previous script it is possible to proceed with the actual evaluation of the model. The script requires two arguments: the path of the dataset that must be tested (the same used in the previous script), and the predictions.json file path. This file is automatically created in the *predictions* project folder. Usage example:
 
-        python evaluate.py data/dev_set.json predictions/predictions.json
-      
+        python evaluate.py "data/dev_set.json" "predictions/predictions.json"
+        
+### Error Analysis Scripts
+**error_analyzer.py**: to launch a statistical error analysis of the model through its predictions, run the module *error_analyzer.py*, with the same parameters used for the evaluation script *evaluate.py*. Usage example:
+
+        python error_analyzer.py "data/dev_set.json" "predictions/predictions.json"
+        
+**question_classifier.py**: to launch questions classifier based on models' predictions (see official report for more), run the module *question_classifier.py*, with the same parameters as above. Usage example:
+
+        python question_classifier.py "data/dev_set.json" "predictions/predictions.json"
 
 ## Contributors
 * Gaetano Signorelli
