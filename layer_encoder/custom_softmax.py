@@ -1,3 +1,10 @@
+# ################################################################################
+# IMPORTANT NOTE: this is an exact copy of the Tensorflow's code, with just a
+# change on line 84, which consists in slightly increment the minium value
+# returned from the _large_compatible_negative function.
+# For further details refer to the docs folder.
+# ################################################################################
+
 # Copyright 2015 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

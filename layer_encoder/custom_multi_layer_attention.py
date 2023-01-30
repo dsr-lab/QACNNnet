@@ -1,3 +1,9 @@
+# ################################################################################
+# IMPORTANT NOTE: this is an exact copy of the Tensorflow's code, with just a
+# change on line 409, which consists in using a fixed version of the Softmax.
+# For further details refer to the docs folder.
+# ################################################################################
+
 # Lint as: python3
 # Copyright 2019 The TensorFlow Authors. All Rights Reserved.
 #
