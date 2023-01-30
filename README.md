@@ -10,7 +10,7 @@ Currently there are two branches:
 For supporting the data augmentation, a new package called **augmentation** has been added to the project. This package contains some modules that can be conveniently used for generating new augmented datasets. 
 However, the datasets previously agreed with the professors have been pushed to the repository. Therefore it should not be necessary to rerun these modules, unless new augmented datasets are required.
 
-Moreover, the the embedding layer of the model has been updated so as to support fastText (in place of GloVe). 
+Moreover, the embedding layer of the model has been updated so as to support fastText (in place of GloVe). 
 
 Finally, note that all the theoretical information about the applied data augmentation can be found in the **docs** folder.
 
