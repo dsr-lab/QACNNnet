@@ -9,6 +9,8 @@
 .idea
 __pycache__/
 data/Glove/
+data/fastText/
+/venv/
 
 # User-specific stuff
 .idea/**/workspace.xml
@@ -110,3 +112,4 @@ fabric.properties
 .idea/codestream.xml
 
 # End of https://www.toptal.com/developers/gitignore/api/pycharm
+

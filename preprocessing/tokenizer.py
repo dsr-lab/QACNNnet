@@ -9,10 +9,16 @@ def get_unique_words(text_rows):
 
     unique_words = set()
     for row in text_rows:
-        context_words = set(row["Context words"])
-        question_words = set(row["Question words"])
+        context_language = row["Context language"]
+        question_language = row["Question language"]
+        context_words = row["Context words"]
+        question_words = row["Question words"]
 
-        unique_words = unique_words | context_words | question_words
+        for word in context_words:
+            unique_words.add((context_language, word))
+
+        for word in question_words:
+            unique_words.add((question_language, word))
 
     return unique_words
 
@@ -64,17 +70,16 @@ def build_chars_tokenizer(unique_chars):
 
     return vocab
 
-def tokenize_word(word, tokenizer):
+def tokenize_word(word, language, tokenizer):
     '''
     Return the token of a given word inside the built tokenizer.
     '''
 
-    if word in tokenizer:
-        return tokenizer[word]
-    else:
-        return tokenizer["UNK"]
+    key = (language, word)
 
-def tokenize_char(char,tokenizer):
+    return tokenizer.get(key, tokenizer["UNK"])
+
+def tokenize_char(char, tokenizer):
     '''
     Return the token of a given character inside the built tokenizer.
     '''
@@ -109,12 +114,12 @@ def add_padding_or_truncate(tokenized_sequence, max_length, char_mode=False):
         else:
             return np.pad(tokenized_sequence, (0, length_diff), 'constant')
 
-def pad_truncate_tokenize_words(words, tokenizer, max_words):
+def pad_truncate_tokenize_words(words, language, tokenizer, max_words):
     '''
     Tokenize and then apply padding or truncation to a list of words.
     '''
 
-    tokenized_sequence = [tokenize_word(word, tokenizer) for word in words]
+    tokenized_sequence = [tokenize_word(word, language, tokenizer) for word in words]
     return add_padding_or_truncate(tokenized_sequence, max_words)
 
 def pad_truncate_tokenize_chars(chars, tokenizer, max_chars):

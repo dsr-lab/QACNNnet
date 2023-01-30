@@ -1,18 +1,22 @@
 import json
 import os
+from os.path import dirname
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
 import preprocessing.preprocess as preprocess
 import preprocessing.tokenizer as tokenizer
 import preprocessing.glove_manager as glove_manager
+import preprocessing.fast_text_manager as fast_text_manager
 import pickle
 import config
 
 # This module is responsible for setting up the entire dataframe to train the model on.
 
-np.random.seed(seed=100) #Define a seed for randomization, avoiding to get different placeholder or random embeddings each time
-UNK_PLACEHOLDER = np.random.uniform(low=-0.05, high=0.05, size=glove_manager.EMBEDDING_SIZE) #Random initial embedding used for the UNK token
+np.random.seed(
+    seed=100)  # Define a seed for randomization, avoiding to get different placeholder or random embeddings each time
+UNK_PLACEHOLDER = np.random.uniform(low=-0.05, high=0.05,
+                                    size=glove_manager.EMBEDDING_SIZE)  # Random initial embedding used for the UNK token
 
 
 def get_data(path):
@@ -20,9 +24,11 @@ def get_data(path):
     Read the json training file at the given path.
     '''
 
-    absolute_data_path = os.path.join(os.getcwd(), path)
+    project_root = dirname(dirname(__file__))
+    # absolute_data_path = os.path.join(os.getcwd(), path)
+    absolute_data_path = os.path.join(project_root, path)
 
-    with open(absolute_data_path, "r") as file:
+    with open(absolute_data_path, "r", encoding="utf-8") as file:
         data = json.loads(file.read())
 
     return data
@@ -42,19 +48,23 @@ def get_answer_indices(context_words, answer_words):
     # Iterate through context and answer to find a match and return indices
     for j, context_word in enumerate(context_words):
         if context_word == answer_words[i]:
-            i+=1
-            if i==len(answer_words):
+            i += 1
+            if i == len(answer_words):
                 start = j - len(answer_words) + 1
-                end = j if len(answer_words) < config.MAX_ANSWER_LENGTH else start + config.MAX_ANSWER_LENGTH - 1 #Truncate answer
+                end = j if len(
+                    answer_words) < config.MAX_ANSWER_LENGTH else start + config.MAX_ANSWER_LENGTH - 1  # Truncate answer
 
-                return np.array([start,end],dtype=np.int64)
+                return np.array([start, end], dtype=np.int64)
         else:
-            i=0
+            i = 0
 
     return None
 
 
-def build_dataframe_row(context, question, answer, split, title, id):
+def build_dataframe_row(context, context_language,
+                        question, question_language,
+                        answer, answer_language,
+                        split, title, id):
     '''
     Preprocess context, question and answer of a row and return a well-formatted
     row to be inserted inside a pandas dataframe.
@@ -62,7 +72,7 @@ def build_dataframe_row(context, question, answer, split, title, id):
 
     preprocessed_context = preprocess.preprocess_text(context, config.PREPROCESSING_OPTIONS)
 
-    if len(preprocessed_context)>config.MAX_CONTEXT_WORDS:
+    if len(preprocessed_context) > config.MAX_CONTEXT_WORDS:
         return None
 
     preprocessed_question = preprocess.preprocess_text(question, config.PREPROCESSING_OPTIONS)
@@ -88,13 +98,15 @@ def build_dataframe_row(context, question, answer, split, title, id):
 
     row = {
         "Title": title,
-        "Question ID":id,
-        "Context words":preprocessed_context,
-        "Context chars":preprocessed_context_chars,
-        "Question words":preprocessed_question,
-        "Question chars":preprocessed_question_chars,
-        "Labels":answer_indices,
-        "Split":split,
+        "Question ID": id,
+        "Context words": preprocessed_context,
+        "Context chars": preprocessed_context_chars,
+        "Context language": context_language,
+        "Question words": preprocessed_question,
+        "Question chars": preprocessed_question_chars,
+        "Question language": question_language,
+        "Labels": answer_indices,
+        "Split": split,
     }
 
     return row
@@ -108,7 +120,7 @@ def extract_rows(json_dict):
     print("Data extraction started...")
 
     version = json_dict["version"]  # Not used
-    print("Dataset: SQuAD version "+version)
+    print("Dataset: SQuAD version " + version)
 
     data = json_dict["data"]
 
@@ -123,29 +135,39 @@ def extract_rows(json_dict):
 
         for paragraph in paragraphs:
             context = paragraph["context"]
+            context_language = paragraph["language"] if "language" in paragraph else 'en'
+
             questions_answers = paragraph["qas"]
 
             for qas in questions_answers:
                 question = qas["question"]
+                question_langauge = qas["language"] if "language" in qas else 'en'
+
                 id = qas["id"]
                 answers = qas["answers"]
 
                 for answer in answers:
                     answer_text = answer["text"]
+                    answer_language = answer["language"] if "language" in answer else 'en'
+
                     answer_start = answer["answer_start"]  # Not used
 
                     # Save as validation sample if the number of required training sample has been reached
                     # and a new paragraph has been processed
                     if not splitted_to_val:
                         if len(dataframe_rows) > config.TRAIN_SAMPLES and allow_val_split:
-                            splitted_to_val=True
+                            splitted_to_val = True
 
                     split = "train" if not splitted_to_val else "validation"
 
-                    row = build_dataframe_row(context, question, answer_text, split, title, id)
-                    if row!= None:
+                    row = build_dataframe_row(context, context_language,
+                                              question, question_langauge,
+                                              answer_text, answer_language,
+                                              split, title, id)
+
+                    if row != None:
                         dataframe_rows.append(row)
-                        allow_val_split=False
+                        allow_val_split = False
 
     print("Data extraction completed!")
 
@@ -157,10 +179,21 @@ def tokenize_dataframe(df, words_tokenizer, chars_tokenizer):
     Tokenize the entire dataframe.
     '''
 
-    df["Context words"] = df["Context words"].apply(lambda words: tokenizer.pad_truncate_tokenize_words(words, words_tokenizer, config.MAX_CONTEXT_WORDS))
-    df["Question words"] = df["Question words"].apply(lambda words: tokenizer.pad_truncate_tokenize_words(words, words_tokenizer, config.MAX_QUERY_WORDS))
-    df["Context chars"] = df["Context chars"].apply(lambda chars: tokenizer.pad_truncate_tokenize_chars_sequence(chars, chars_tokenizer, config.MAX_CONTEXT_WORDS, config.MAX_CHARS))
-    df["Question chars"] = df["Question chars"].apply(lambda chars: tokenizer.pad_truncate_tokenize_chars_sequence(chars, chars_tokenizer, config.MAX_QUERY_WORDS, config.MAX_CHARS))
+    df["Context words"] = df.apply(
+    lambda row: tokenizer.pad_truncate_tokenize_words(row["Context words"], row["Context language"], words_tokenizer, config.MAX_CONTEXT_WORDS),
+    axis=1
+    )
+    df["Question words"] = df.apply(
+    lambda row: tokenizer.pad_truncate_tokenize_words(row["Question words"], row["Question language"], words_tokenizer, config.MAX_QUERY_WORDS),
+    axis=1
+    )
+
+    df["Context chars"] = df["Context chars"].apply(
+        lambda chars: tokenizer.pad_truncate_tokenize_chars_sequence(chars, chars_tokenizer, config.MAX_CONTEXT_WORDS,
+                                                                     config.MAX_CHARS))
+    df["Question chars"] = df["Question chars"].apply(
+        lambda chars: tokenizer.pad_truncate_tokenize_chars_sequence(chars, chars_tokenizer, config.MAX_QUERY_WORDS,
+                                                                     config.MAX_CHARS))
 
     return df
 
@@ -169,7 +202,7 @@ def build_dataframe():
     '''
     Apply all the required steps to build the dataframe:
      1. Extract data;
-     2. Setup and Load GloVe;
+     2. Setup and Load GloVe/fastText;
      3. Build tokenizers for words and characters;
      4. Build and tokenize the dataframe.
     '''
@@ -179,20 +212,36 @@ def build_dataframe():
 
     print("Tokenization started...")
 
-    glove_manager.setup_files()
-    glove_dict = glove_manager.load_glove()
+    if config.USE_GLOVE:
+        glove_manager.setup_files()
+        glove_dict = glove_manager.load_glove()
+    else:
+        #Fill a dictionary made up of (language, word)->embedding
+        glove_dict = dict()
+        for lan in config.LANGUAGES:
+            glove_dict = fast_text_manager.load_fast_text(lan, glove_dict)
 
     unique_words = tokenizer.get_unique_words(dataframe_rows)
-    print("Word tokenizer built succesfully!")
+    print("Word tokenizer built successfully!")
 
     unique_chars = tokenizer.get_unique_chars(dataframe_rows)
-    print("Char tokenizer built succesfully!")
+    print("Char tokenizer built successfully!")
 
     words_tokenizer = tokenizer.build_words_tokenizer(unique_words, glove_dict)
     chars_tokenizer = tokenizer.build_chars_tokenizer(unique_chars)
 
     dataframe = pd.DataFrame(dataframe_rows)
-    dataframe = dataframe[["Title", "Question ID" ,"Context words", "Context chars", "Question words", "Question chars", "Labels", "Split"]]
+    dataframe = dataframe[
+        ["Title",
+         "Question ID",
+         "Context words",
+         "Context chars",
+         "Context language",
+         "Question words",
+         "Question chars",
+         "Question language",
+         "Labels",
+         "Split"]]
 
     dataframe = tokenize_dataframe(dataframe, words_tokenizer, chars_tokenizer)
 
@@ -234,7 +283,8 @@ def load_dataframe(save=True, force_rebuild=False):
     Load all the dataframe-related files or build them from scratch.
     '''
 
-    if not check_savings([config.DATAFRAME_PATH, config.WORDS_TOKENIZER_PATH, config.CHARS_TOKENIZER_PATH]) or force_rebuild:
+    if not check_savings(
+            [config.DATAFRAME_PATH, config.WORDS_TOKENIZER_PATH, config.CHARS_TOKENIZER_PATH]) or force_rebuild:
         dataframe, words_tokenizer, chars_tokenizer, glove_dict = build_dataframe()
         if save:
             save_dataframe(dataframe, words_tokenizer, chars_tokenizer)
@@ -246,8 +296,17 @@ def load_dataframe(save=True, force_rebuild=False):
             words_tokenizer = pickle.load(handle)
         with open(config.CHARS_TOKENIZER_PATH, 'rb') as handle:
             chars_tokenizer = pickle.load(handle)
-        glove_manager.setup_files()
-        glove_dict = glove_manager.load_glove()
+
+        if config.USE_GLOVE:
+            glove_manager.setup_files()
+            glove_dict = glove_manager.load_glove()
+        else:
+            # Fill a dictionary made up of (language, word)->embedding
+            glove_dict = dict()
+            for lan in config.LANGUAGES:
+                glove_dict = fast_text_manager.load_fast_text(lan, glove_dict)
+
+        # glove_dict = glove_manager.load_glove()
         return dataframe, words_tokenizer, chars_tokenizer, glove_dict
 
 
@@ -259,16 +318,16 @@ def build_embedding_matrix(words_tokenizer, glove_dict):
     vocab_size = len(words_tokenizer)
 
     # Initialize matrix
-    embedding_matrix = np.zeros((vocab_size, glove_manager.EMBEDDING_SIZE), dtype=np.float32)
+    embedding_matrix = np.zeros((vocab_size, glove_manager.EMBEDDING_SIZE), dtype=np.float16)
 
     print("Building embedding matrix started...")
 
     # Fill matrix with Glove's embeddings
     for word, token in tqdm(words_tokenizer.items()):
         if word in glove_dict:
-            embedding_matrix[token-1] = glove_dict[word]
+            embedding_matrix[token - 1] = glove_dict[word]
         else:
-            embedding_matrix[token-1] = UNK_PLACEHOLDER
+            embedding_matrix[token - 1] = UNK_PLACEHOLDER
 
     print("Building embedding matrix completed!")
 

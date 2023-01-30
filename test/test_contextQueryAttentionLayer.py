@@ -40,10 +40,10 @@ class TestContextQueryAttentionLayer(TestCase):
         # Arrange
         layer = ContextQueryAttentionLayer(dropout_rate=0.1, l2_rate=3e-7)
 
-        context = np.random.rand(self.BATCH_SIZE, self.N_CONTEXT, self.N_DIM).astype(np.float32)
-        query = np.random.rand(self.BATCH_SIZE, self.N_QUERY, self.N_DIM).astype(np.float32)
+        context = np.random.rand(self.BATCH_SIZE, self.N_CONTEXT, self.N_DIM).astype(np.float16)
+        query = np.random.rand(self.BATCH_SIZE, self.N_QUERY, self.N_DIM).astype(np.float16)
 
-        expected_result = np.zeros((self.BATCH_SIZE, self.N_CONTEXT * self.N_QUERY, self.N_DIM * 3), dtype=np.float32)
+        expected_result = np.zeros((self.BATCH_SIZE, self.N_CONTEXT * self.N_QUERY, self.N_DIM * 3), dtype=np.float16)
 
         for b in range(self.BATCH_SIZE):
             idx = 0
@@ -56,7 +56,7 @@ class TestContextQueryAttentionLayer(TestCase):
                     idx += 1
         expected_result = layer.w(expected_result)
         expected_result = np.reshape(expected_result, (self.BATCH_SIZE, self.N_CONTEXT, self.N_QUERY)).astype(
-            np.float32)
+            np.float16)
 
         # Act
         result = layer.build_similarity_matrix(context, query)
@@ -67,8 +67,8 @@ class TestContextQueryAttentionLayer(TestCase):
     def test_build_softmaxed_matrices(self):
         # Arrange
         layer = ContextQueryAttentionLayer(dropout_rate=0.1, l2_rate=3e-7)
-        context = np.random.rand(self.BATCH_SIZE, self.N_CONTEXT, self.N_DIM).astype(np.float32)
-        query = np.random.rand(self.BATCH_SIZE, self.N_QUERY, self.N_DIM).astype(np.float32)
+        context = np.random.rand(self.BATCH_SIZE, self.N_CONTEXT, self.N_DIM).astype(np.float16)
+        query = np.random.rand(self.BATCH_SIZE, self.N_QUERY, self.N_DIM).astype(np.float16)
 
         c_processed_mask = np.expand_dims(self.c_mask, 2)
         q_processed_mask = np.expand_dims(self.q_mask, 1)
@@ -89,8 +89,8 @@ class TestContextQueryAttentionLayer(TestCase):
 
         # Arrange
         layer = ContextQueryAttentionLayer(dropout_rate=0.1, l2_rate=3e-7)
-        context = np.random.rand(self.BATCH_SIZE, self.N_CONTEXT, self.N_DIM).astype(np.float32)
-        query = np.random.rand(self.BATCH_SIZE, self.N_QUERY, self.N_DIM).astype(np.float32)
+        context = np.random.rand(self.BATCH_SIZE, self.N_CONTEXT, self.N_DIM).astype(np.float16)
+        query = np.random.rand(self.BATCH_SIZE, self.N_QUERY, self.N_DIM).astype(np.float16)
 
         similarity_matrix = layer.build_similarity_matrix(context, query)
         context_softmaxed_matrix, query_softmaxed_matrix = layer.build_softmaxed_matrices(
@@ -100,11 +100,11 @@ class TestContextQueryAttentionLayer(TestCase):
         context_to_query, query_to_context = layer.build_attention_matrices(
             context, query, context_softmaxed_matrix, query_softmaxed_matrix)
 
-        expected_context_to_query = np.matmul(context_softmaxed_matrix, query, dtype=np.float32)
+        expected_context_to_query = np.matmul(context_softmaxed_matrix, query, dtype=np.float16)
         expected_query_to_context = \
             np.matmul(
-                np.matmul(context_softmaxed_matrix, np.transpose(query_softmaxed_matrix, (0, 2, 1)), dtype=np.float32),
-                context, dtype=np.float32
+                np.matmul(context_softmaxed_matrix, np.transpose(query_softmaxed_matrix, (0, 2, 1)), dtype=np.float16),
+                context, dtype=np.float16
             )
 
         # Assert
@@ -114,8 +114,8 @@ class TestContextQueryAttentionLayer(TestCase):
     def test_build_output(self):
         # Arrange
         layer = ContextQueryAttentionLayer(dropout_rate=0.1, l2_rate=3e-7)
-        context = np.random.rand(self.BATCH_SIZE, self.N_CONTEXT, self.N_DIM).astype(np.float32)
-        query = np.random.rand(self.BATCH_SIZE, self.N_QUERY, self.N_DIM).astype(np.float32)
+        context = np.random.rand(self.BATCH_SIZE, self.N_CONTEXT, self.N_DIM).astype(np.float16)
+        query = np.random.rand(self.BATCH_SIZE, self.N_QUERY, self.N_DIM).astype(np.float16)
 
         similarity_matrix = layer.build_similarity_matrix(context, query)
         context_softmaxed_matrix, query_softmaxed_matrix = layer.build_softmaxed_matrices(
@@ -129,9 +129,7 @@ class TestContextQueryAttentionLayer(TestCase):
                                           context_to_query,
                                           np.multiply(context, context_to_query),
                                           np.multiply(context, query_to_context)),
-                                         axis=-1).astype(np.float32)
+                                         axis=-1).astype(np.float16)
 
         # Assert
         np.testing.assert_equal(output, expexted_output)
-
-

@@ -30,7 +30,7 @@ class TestEncoding(TestCase):
     def test_call_getEncoding(self):
 
         # Arrange
-        expected_result = np.zeros((1, self.MAX_WORDS, self.EMB_SIZE), dtype=np.float32)
+        expected_result = np.zeros((1, self.MAX_WORDS, self.EMB_SIZE), dtype=np.float16)
         for b in range(1):
             for i in range(self.MAX_WORDS):
                 for j in range(self.EMB_SIZE):

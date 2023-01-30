@@ -74,7 +74,7 @@ def build_embedding_matrix(words_tokenizer, glove_dict):
     vocab_size = len(words_tokenizer)+1
 
     # Initialize matrix, padding is considered
-    embedding_matrix = np.zeros((vocab_size, glove_manager.EMBEDDING_SIZE), dtype=np.float32)
+    embedding_matrix = np.zeros((vocab_size, glove_manager.EMBEDDING_SIZE), dtype=np.float16)
 
     print("Building embedding matrix started...")
 

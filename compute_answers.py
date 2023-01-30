@@ -1,11 +1,14 @@
 import os
 import sys
 import json
+
+from tensorflow.keras import mixed_precision
 from tqdm import tqdm
 import pickle
 import pandas as pd
 import preprocessing.glove_manager as glove_manager
 import preprocessing.preprocess as preprocess
+from preprocessing import fast_text_manager
 from preprocessing.dataframe_builder import tokenize_dataframe, build_embedding_matrix
 from model.question_answer_model import QACNNnet
 from model.inference import get_predictions
@@ -39,8 +42,14 @@ def load_dictionaries():
     with open(config.CHARS_TOKENIZER_PATH, 'rb') as handle:
         chars_tokenizer = pickle.load(handle)
 
-    glove_manager.setup_files()
-    glove_dict = glove_manager.load_glove()
+    if config.USE_GLOVE:
+        glove_manager.setup_files()
+        glove_dict = glove_manager.load_glove()
+    else:
+        # Fill a dictionary made up of (language, word)->embedding
+        glove_dict = dict()
+        for lan in config.LANGUAGES:
+            glove_dict = fast_text_manager.load_fast_text(lan, glove_dict)
 
     return words_tokenizer, chars_tokenizer, glove_dict
 
@@ -72,8 +81,10 @@ def build_dataframe_row(context, question, title, id, corpus):
         "Question ID":id,
         "Context words":preprocessed_context,
         "Context chars":preprocessed_context_chars,
+        "Context language": "en",
         "Question words":preprocessed_question,
         "Question chars":preprocessed_question_chars,
+        "Question language": "en"
     }
 
     return row
@@ -126,7 +137,7 @@ def build_dataframe(data_path):
     words_tokenizer, chars_tokenizer, glove_dict = load_dictionaries()
 
     dataframe = pd.DataFrame(dataframe_rows)
-    dataframe = dataframe[["Title", "Question ID" ,"Context words", "Context chars", "Question words", "Question chars"]]
+    dataframe = dataframe[["Title", "Question ID" ,"Context words", "Context chars", "Context language", "Question words", "Question chars", "Question language"]]
 
     dataframe = tokenize_dataframe(dataframe, words_tokenizer, chars_tokenizer)
 
@@ -199,7 +210,8 @@ def build_model(input_embedding_params, embedding_encoder_params, conv_input_pro
 
     # Compile the model
     model.compile(
-        optimizer=optimizer
+        # optimizer=optimizer
+        optimizer=mixed_precision.LossScaleOptimizer(optimizer)
     )
 
     return model
@@ -280,7 +292,7 @@ def run_predictions(data_path):
     # convert the raw_predictions to predictions that leverage the inferencea algorithm
     # (see the relation for more details)
     inputs = tf.keras.Input(shape=(2, config.MAX_CONTEXT_WORDS))
-    outputs = PredLayer()(inputs)
+    outputs = PredLayer(dtype=tf.float32)(inputs)
 
     refine_pred_model = tf.keras.Model(inputs=inputs, outputs=outputs)
     pred_start, pred_end = refine_pred_model.predict(raw_predictions, batch_size=config.BATCH_SIZE, verbose=1)
@@ -297,6 +309,11 @@ def run_predictions(data_path):
 
 
 # Main:
+
+policyConfig = 'mixed_float16'
+policy = tf.keras.mixed_precision.Policy(policyConfig)
+mixed_precision.set_global_policy(policy)
+
 args = sys.argv
 if len(args)==2:
     data_path = args[1]

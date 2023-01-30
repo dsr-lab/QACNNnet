@@ -31,7 +31,7 @@ class OutputLayer(layers.Layer):
         self.w2 = layers.Dense(units=1, use_bias=False,
                                kernel_regularizer=l2)
 
-        self.softmax_layer = layers.Softmax(axis=-1)
+        self.softmax_layer = layers.Softmax(axis=-1, dtype='float32')
 
     def compute_probabilities(self, input_1, input_2, start, mask):
         '''
@@ -67,6 +67,6 @@ class OutputLayer(layers.Layer):
 
         # Stack the probabilities to get a single output
         output = self.stack([start_probabilities, end_probabilities])
-        output = layers.Reshape((2, m0.shape[1]))(output)
+        output = layers.Reshape((2, m0.shape[1]), dtype='float32')(output)
 
         return output

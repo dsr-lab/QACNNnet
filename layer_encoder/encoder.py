@@ -2,6 +2,8 @@ import tensorflow as tf
 from tensorflow.keras import layers
 
 from layer_encoder import positional_encoding, stochastic_dropout
+from utils import assert_tensor_validity
+from layer_encoder.custom_multi_layer_attention import MultiHeadAttention
 
 
 class EncodingLayer(layers.Layer):
@@ -65,6 +67,7 @@ class EncodingLayer(layers.Layer):
         }
 
         self_attention_layer_params = {
+            "dtype": 'float32',
             "num_heads": n_heads,
             "key_dim": d_model,
             "kernel_regularizer": l2,
@@ -81,7 +84,8 @@ class EncodingLayer(layers.Layer):
         self.conv_layers = [layers.SeparableConv1D(**self.conv_layer_params) for _ in range(n_conv_layers)]
 
         # Self attention
-        self.self_attention_layer = layers.MultiHeadAttention(**self_attention_layer_params)
+        #self.self_attention_layer = layers.MultiHeadAttention(**self_attention_layer_params)
+        self.self_attention_layer = MultiHeadAttention(**self_attention_layer_params)
 
         # Feed-forward
         self.ff1 = layers.Conv1D(d_model, 1, activation='relu',
@@ -156,7 +160,7 @@ class EncodingLayer(layers.Layer):
 
             # Apply dropout
             if (layer_num % 2 == 0 and type(layer) == layers.SeparableConv1D) or \
-                    type(layer) == layers.MultiHeadAttention or \
+                    type(layer) == MultiHeadAttention or \
                     feed_forward:
                 norm_x = self.dropout(norm_x)
 
@@ -164,10 +168,10 @@ class EncodingLayer(layers.Layer):
             if feed_forward:
                 f_x = self.ff1(norm_x)
                 f_x = self.ff2(f_x)
-            elif type(layer) != layers.MultiHeadAttention:
+            elif type(layer) != MultiHeadAttention:
                 f_x = layer(norm_x)
             else:
-                f_x = layer(norm_x, norm_x,attention_mask=attention_mask)
+                f_x = layer(norm_x, norm_x, attention_mask=attention_mask)
 
             # Residual block
             if can_apply_residual_block:
@@ -196,6 +200,7 @@ class EncodingLayer(layers.Layer):
                                                         embedding_size)
 
         attention_mask = self.compute_attention_mask(mask)
+        # assert_tensor_validity(attention_mask, "attention_mask")
 
         current_layer_num = 0
 
@@ -207,14 +212,19 @@ class EncodingLayer(layers.Layer):
         # 2. Convolution block
         for conv_layer in self.conv_layers:
             x = self.apply_layer(x, current_layer_num, conv_layer, training)
+            assert_tensor_validity(x, f"xConvLayerNum{current_layer_num}")
             current_layer_num += 1
 
         # 3. Self-attention block
+        # breakpoint()
         x = self.apply_layer(x, current_layer_num, self.self_attention_layer, training, attention_mask=attention_mask)
+
+        assert_tensor_validity(x, f"xAttentionBlock")
         current_layer_num += 1
 
         # 4. Feed-forward block
         x = self.apply_layer(x, current_layer_num, None, training, feed_forward=True)
+        assert_tensor_validity(x, f"feedForwardBlock")
 
         return x
 

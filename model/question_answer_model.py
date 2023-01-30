@@ -6,6 +6,7 @@ from layer_context_query_attention.context_query_attention import ContextQueryAt
 from layer_encoder.encoder import EncoderLayer
 from layer_input_embedding.input_embedding_layer import InputEmbeddingLayer
 from layer_model_output.model_output import OutputLayer
+from utils import assert_tensor_validity
 
 
 class QACNNnet(tf.keras.Model):
@@ -91,23 +92,36 @@ class QACNNnet(tf.keras.Model):
         context_encoded = self.embedding_encoder(context_embedded, training=training, mask=context_mask)
         query_encoded = self.embedding_encoder(query_embedded, training=training, mask=query_mask)
 
+        assert_tensor_validity(context_encoded, "context_encoded")
+        assert_tensor_validity(query_encoded, "query_encoded")
+
         # 3. Context-query attention block
         attention_output = self.context_query_attention([context_encoded, query_encoded], [context_mask, query_mask])
+        assert_tensor_validity(attention_output, "attention_output1")
         attention_output = self.conv_1d(attention_output)  # Used for obtaining back the expected number of channels
+        assert_tensor_validity(attention_output, "attention_output2")
         attention_output = tf.keras.layers.Dropout(self.dropout_rate)(attention_output)
+        assert_tensor_validity(attention_output, "attention_output3")
+
+
 
         # 4. Model encoder blocks
         m0 = self.model_encoder(attention_output, training=training, mask=context_mask)
+        assert_tensor_validity(m0, "m0")
         m1 = self.model_encoder(m0, training=training, mask=context_mask)
+        assert_tensor_validity(m1, "m1")
 
         # Apply dropout after 2 blocks
         # (Created here, and not in the init, for avoiding to see the dropout layer in the model summary)
         m1 = tf.keras.layers.Dropout(self.dropout_rate)(m1)
+        assert_tensor_validity(m1, "m1dropout")
 
         m2 = self.model_encoder(m1, training=training, mask=context_mask)
+        assert_tensor_validity(m1, "m2")
 
         # 5. Output block
         output = self.model_output([m0, m1, m2], mask=context_mask)
+        assert_tensor_validity(output, "output")
 
         return output
 
@@ -122,18 +136,28 @@ class QACNNnet(tf.keras.Model):
             # Compute the loss value
             # self.compiled_loss(y, y_pred, regularization_losses=self.losses)
             loss = qa_loss(y, y_pred)
+
             loss += sum(self.losses)
+            scaled_loss = self.optimizer.get_scaled_loss(loss)
+
+            assert_tensor_validity(loss, "loss")
+            assert_tensor_validity(scaled_loss, "scaled_loss")
 
         # Compute gradients
         trainable_vars = self.trainable_variables
-        gradients = tape.gradient(loss, trainable_vars)
+        scaled_gradients = tape.gradient(scaled_loss, trainable_vars)
+        gradients = self.optimizer.get_unscaled_gradients(scaled_gradients)
 
         # Gradients clipping
-        capped_grads, _ = tf.clip_by_global_norm(
-            gradients, 5.0)
+        capped_grads, _ = tf.clip_by_global_norm(gradients, 5.0)
+
+        # assert_tensor_validity(scaled_gradients, "scaled_gradients")
+        # assert_tensor_validity(gradients, "gradients")
+        # assert_tensor_validity(capped_grads, "capped_grads")
 
         # Update weights
         self.optimizer.apply_gradients(zip(capped_grads, trainable_vars))
+        #self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
         # Update the metrics
         self.loss_tracker.update_state(loss)

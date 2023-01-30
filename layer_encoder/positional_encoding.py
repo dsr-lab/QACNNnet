@@ -2,6 +2,8 @@ import numpy as np
 import tensorflow as tf
 
 # This module contains those methods that allow to compute vectors for positional layer_encoder.
+from utils import assert_tensor_validity
+
 
 def get_angles(pos, i, d_model):
     '''
@@ -22,7 +24,7 @@ def get_angles(pos, i, d_model):
     Angles associated with each position.
     '''
 
-    angle_rates = 1 / np.power(10000, (2 * (i // 2)) / np.float32(d_model))
+    angle_rates = 1 / np.power(10000, (2 * (i // 2)) / np.float16(d_model))
     return pos * angle_rates
 
 
@@ -57,4 +59,7 @@ def get_encoding(length, d_model):
     # Get positional layer_encoder for each position
     pos_encoding = angle_rads[np.newaxis, ...]
 
-    return tf.cast(pos_encoding, dtype=np.float32)
+    assert_tensor_validity(pos_encoding, "pos_encoding")
+    assert_tensor_validity(tf.cast(pos_encoding, dtype=np.float16), "pos_encodingCasted")
+
+    return tf.cast(pos_encoding, dtype=np.float16)

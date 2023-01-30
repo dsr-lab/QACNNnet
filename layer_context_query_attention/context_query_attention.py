@@ -78,8 +78,8 @@ class ContextQueryAttentionLayer (layers.Layer):
         repeated_c_mask = layers.Reshape((n,m)) (repeated_c_mask)
 
         # Prepare softmax layers
-        softmax_context_layer = layers.Softmax(axis=2)
-        softmax_query_layer = layers.Softmax(axis=1)
+        softmax_context_layer = layers.Softmax(axis=2, dtype="float32")
+        softmax_query_layer = layers.Softmax(axis=1, dtype="float32")
 
         # Compute softmax with masks for both context and query tensors
         context_softmaxed_matrix = softmax_context_layer(similarity_matrix, mask=repeated_q_mask)

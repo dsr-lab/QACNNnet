@@ -14,8 +14,8 @@ class TestWordEmbeddingLayer(TestCase):
         vocab_size = 4
         max_input_length = 8
 
-        # Force float32 precision, otherwise the comparison with tensors would not work correctly.
-        emb_matrix = np.random.rand(vocab_size, emb_size).astype(np.float32)
+        # Force float16 precision, otherwise the comparison with tensors would not work correctly.
+        emb_matrix = np.random.rand(vocab_size, emb_size).astype(np.float16)
 
         # 0 is padding reserved, and it is considered in the layer itself
         n_special_words = 1  # just the <UNK>
@@ -33,7 +33,7 @@ class TestWordEmbeddingLayer(TestCase):
         )
 
         # Create the expected output result
-        expexted_result = np.zeros((len(sentences_input), max_input_length, emb_size), dtype=np.float32)
+        expexted_result = np.zeros((len(sentences_input), max_input_length, emb_size), dtype=np.float16)
         for i, sentence in enumerate(sentences_input):
             for j, token in enumerate(sentence):
                 if token != 0:
@@ -48,4 +48,3 @@ class TestWordEmbeddingLayer(TestCase):
         # Assert
         # ####################
         np.testing.assert_array_equal(result, expexted_result)
-

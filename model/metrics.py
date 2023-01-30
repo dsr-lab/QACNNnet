@@ -1,5 +1,8 @@
+import sys
+
 import tensorflow as tf
 from model.inference import get_predictions
+from utils import assert_tensor_validity
 
 
 class F1Score(tf.keras.metrics.Metric):
@@ -121,7 +124,7 @@ class F1Score(tf.keras.metrics.Metric):
         Effectively compute the F1-SCORE. (Refer to the relation for further detail)
         '''
 
-        epsilon = 1e-8
+        epsilon = 1e-6
         len_true_token = tf.cast(len_true_token, tf.float32)
         len_pred_token = tf.cast(len_pred_token, tf.float32)
         len_common_tokens = tf.cast(len_common_tokens, tf.float32)
@@ -190,7 +193,7 @@ class EMScore(tf.keras.metrics.Metric):
         common_tokens = tf.reduce_sum(common_tokens)
 
         # Count the number of total true tokens
-        epsilon = 1e-8
+        epsilon = 1e-6
         true_tokens = tf.reduce_sum(tf.cast(true_tokens_mask, tf.dtypes.float32))
 
         # Compute the em_score
@@ -275,16 +278,21 @@ def qa_loss(y_true, y_pred):
         Tensor containing the predictions. Valid shape is (batch_size, 2, n_words)
     '''
 
-    epsilon = 1e-8
+    epsilon = 1e-6
 
     # Clip values for numerical stability
-    y_pred = tf.clip_by_value(y_pred, 1e-8, 1. - 1e-8)
+    y_pred = tf.clip_by_value(y_pred, epsilon, 1. - epsilon)
 
     assert y_true.shape[1] == 2
     assert y_pred.shape[1] == 2
 
     y_true_start, y_true_end = tf.split(y_true, num_or_size_splits=2, axis=1)
     y_pred_start, y_pred_end = tf.split(y_pred, num_or_size_splits=2, axis=1)
+
+    # assert_tensor_validity(y_true, "y_true")
+    assert_tensor_validity(y_pred, "y_pred")  # This contains nan at a certain point
+    # assert_tensor_validity(y_true_start, "y_true_start")
+    # assert_tensor_validity(y_true_end, "y_true_end")
 
     # Get the probabilities of the corresponding ground truth
     p1 = tf.gather(params=y_pred_start, indices=y_true_start, axis=-1, batch_dims=-1)
@@ -304,6 +312,26 @@ def qa_loss(y_true, y_pred):
     neg_log_sum = neg_log_p1 + neg_log_p2
 
     loss = tf.reduce_mean(neg_log_sum)
+
+    assert_tensor_validity(p1, "p1")  # This contains nan at a certain point
+    assert_tensor_validity(p2, "p2")
+    assert_tensor_validity(log_p1, "log_p1")
+    assert_tensor_validity(log_p2, "log_p2")
+    assert_tensor_validity(neg_log_p1, "neg_log_p1")
+    assert_tensor_validity(neg_log_p2, "neg_log_p2")
+    assert_tensor_validity(neg_log_sum, "neg_log_sum")
+
+    '''
+    tf.print("p1:", p1, output_stream=sys.stdout)
+    tf.print("p2:", p2, output_stream=sys.stdout)
+    tf.print("log_p1:", log_p1, output_stream=sys.stdout)
+    tf.print("log_p2:", log_p2, output_stream=sys.stdout)
+    tf.print("neg_log_p1:", neg_log_p1, output_stream=sys.stdout)
+    tf.print("neg_log_p2:", neg_log_p2, output_stream=sys.stdout)
+    tf.print("neg_log_sum:", neg_log_sum, output_stream=sys.stdout)
+    tf.print("loss:", loss, output_stream=sys.stdout)
+    tf.print("****************************************")
+    '''
 
     return loss
 
@@ -325,4 +353,3 @@ def _split_start_end_indices(y_true, y_pred):
     y_pred_start, y_pred_end = tf.split(y_pred, num_or_size_splits=2, axis=1)
 
     return y_true_start, y_true_end, y_pred_start, y_pred_end
-

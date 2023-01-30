@@ -190,7 +190,7 @@ class TestMetrics(TestCase):
             prev_f1_score = f1_score.result()
             prev_batch_idx = f1_score.batch_idx - 1
 
-            current_f1_score = tf.constant(score, dtype=tf.dtypes.float32)
+            current_f1_score = tf.constant(score, dtype=tf.dtypes.float16)
             current_batch_idx = f1_score.batch_idx
 
             new_f1_score = ((prev_f1_score * prev_batch_idx) + current_f1_score) / f1_score.batch_idx
@@ -199,7 +199,7 @@ class TestMetrics(TestCase):
             f1_score.f1_score.assign(new_f1_score)
 
         result = f1_score.result()
-        expected_result = tf.constant(np.mean(current_f1_scores), dtype=tf.dtypes.float32)
+        expected_result = tf.constant(np.mean(current_f1_scores), dtype=tf.dtypes.float16)
 
         # Assert
         np.testing.assert_equal(result, expected_result)

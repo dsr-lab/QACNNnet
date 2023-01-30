@@ -8,7 +8,10 @@ import config
 # ##################################
 # FILE PATHS
 # ##################################
-DATA_PATH = os.path.join("data", "training_set.json")
+# DATA_PATH = os.path.join("data", "training_set.json")
+DATA_PATH = os.path.join("data", "testF4_en_fr_de_backtranslateMixed_queryOFF_context_ON_answer_ON.json")
+
+
 DATAFRAME_PATH = os.path.join("data", "training_dataframe.pkl")
 WORDS_TOKENIZER_PATH = os.path.join("data", "words_tokenizer.pkl")
 CHARS_TOKENIZER_PATH = os.path.join("data", "chars_tokenizer.pkl")
@@ -28,7 +31,13 @@ PREPROCESSING_OPTIONS = {
     "lemmatize": False
 }
 
+# LANGUAGES = ["en", "fr", "es"]
+# LANGUAGES = ["en", "es"]
+LANGUAGES = ["en", "fr"]
+
 DEBUG = False
+USE_GENERATOR = False
+USE_GLOVE = False
 EAGER_MODE = False
 SAVE_WEIGHTS = True
 LOAD_WEIGHTS = True
