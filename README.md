@@ -1,5 +1,5 @@
 # QACNNnet
-This repository contains a project whose goal is to solve a very interesting and challenging NLP task: Question Answering.
+This repository contains a project whose goal is to solve an interesting and challenging NLP task: Question Answering.
 
 
 ## Description
