@@ -12,6 +12,8 @@ However, the datasets previously agreed with the professors have been pushed to 
 
 Moreover, the the embedding layer of the model has been updated so as to support fastText (in place of GloVe). 
 
+Finally, note that all the theoretical information about the applied data augmentation can be found in the **docs** folder.
+
 ## Description
 QACNNet is the neural network that has been created for solving the question answering task, and it is mainly composed by CNNs along with attentions.
 
