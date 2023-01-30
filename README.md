@@ -1,6 +1,16 @@
 # QACNNnet
-This repository contains a project whose goal is to solve an interesting and challenging NLP task: Question Answering.
+This repository contains a project whose goal is to solve an interesting and challenging NLP task: the Question Answering.
 
+# Branches
+Currently there are two branches:
+* **main**: this branch contains the latest features required for the **PROJECT WORK IN NLP**, and it has new files purposely created for appling data augmentation to the original SQuAD dataset.
+* **releases/QACNNnet-v1**: this branch contains the first version of the model, and it was released for the **NLP exam**.
+
+# Data augmentation
+For supporting the data augmentation, a new package called **augmentation** has been added to the project. This package contains some modules that can be conveniently used for generating new augmented datasets. 
+However, the datasets previously agreed with the professors have been pushed to the repository. Therefore it should not be necessary to rerun these modules, unless new augmented datasets are required.
+
+Moreover, the the embedding layer of the model has been updated so as to support fastText (in place of GloVe). 
 
 ## Description
 QACNNet is the neural network that has been created for solving the question answering task, and it is mainly composed by CNNs along with attentions.
